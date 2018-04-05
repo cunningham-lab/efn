@@ -15,7 +15,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       initialize_optimization_parameters, load_constraint_info, \
                       approxKL
 
-def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=0, param_network=False):
+def train_network(constraint_id, flow_id, cost_type,  L=1, n_k=50, lr_order=-3, random_seed=0, param_network=False):
     D_Z, K_eta, params, constraint_type = load_constraint_info(constraint_id);
     layers, num_linear_lyrs, num_planar_lyrs, K = construct_flow(flow_id, D_Z);
     assert(isinstance(K, int) and K >= 0);
@@ -27,7 +27,7 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
     num_iters = 100000;
     opt_method = 'adam';
     lr = 10**lr_order
-    check_diagnostics_rate = 100;
+    check_diagnostics_rate = 1;
 
     np.random.seed(0);
 
@@ -61,7 +61,7 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
     else:
         D_X = D_Z;
 
-    savedir = resdir + '/tb/' + '%s_%s_seed=%d/' % (constraint_id, flow_id, random_seed);
+    savedir = resdir + '/tb/' + '%s_%s_%s_seed=%d/' % (constraint_id, flow_id, cost_type, random_seed);
 
     if (constraint_type == 'normal'):
         mu_targs = params['mu_targs'];
@@ -118,9 +118,7 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
                 b_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_b', shape=b_shape, \
                                            dtype=tf.float32, \
                                            initializer=tf.glorot_uniform_initializer());
-                print(A_shape, b_shape, h.shape);
                 param_ij = tf.matmul(h, A_ij) + b_ij;
-                print(param_ij, param_dims[j]);
                 param_ij = tf.reshape(param_ij, (n,) + param_dims[j]);
                 layer_i_params.append(param_ij);
             theta.append(layer_i_params);
@@ -209,7 +207,10 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
 
-        cost += RSS_k[0,0];
+        if (cost_type == 'reg'):
+            cost += RSS_k[0,0];
+        elif (cost_type == 'KL'):
+            cost += tf.reduce_mean(y_k - tf.matmul(Tx_k, _eta_k));
 
     cost_grad = tf.gradients(cost, all_params);
 
@@ -389,6 +390,13 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
                 summary_writer.add_summary(summary, i);
 
             if (np.mod(i, check_diagnostics_rate)==0):
+                """
+                plt.figure();
+                plt.scatter(_X[:,0,0], _X[:,1,0], 40*np.ones((n,)), _Tx[:,4]);
+                plt.colorbar();
+                plt.show();
+                """
+
                 train_R2s[check_it,:] = _R2s;
                 # compute KL
                 training_KL = [];
@@ -459,7 +467,7 @@ def train_network(constraint_id, flow_id, L=1, n_k=50, lr_order=-3, random_seed=
                 check_it += 1;
 
                 if (not param_network):
-                    if (_R2s[0] > .99):
+                    if (_R2s[0] > .9999):
                         print('Test successful!');
                         print('We can learn the %s distribution with a %s flow network' % (constraint_id, flow_id));
                         break;
@@ -483,23 +491,24 @@ if __name__ == '__main__':    # parse command line parameters
     n_args = len(sys.argv);
     constraint_id = str(sys.argv[1]);
     flow_id = str(sys.argv[2]);
-    L = int(sys.argv[3]);
-    if (n_args > 4):
-        n_k= int(sys.argv[4]);
+    cost_type = str(sys.argv[3]);
+    L = int(sys.argv[4]);
+    if (n_args > 5):
+        n_k= int(sys.argv[5]);
     else:
         n_k = 50;
-    if (n_args > 5):
-        lr_order = float(sys.argv[5]);
+    if (n_args > 6):
+        lr_order = float(sys.argv[6]);
     else:
         lr_order = -3;
-    if (n_args > 6):
-        random_seed = int(sys.argv[6]);
+    if (n_args > 7):
+        random_seed = int(sys.argv[7]);
     else:
         random_seed = 0;
-    if (n_args > 7):
-        param_network_input = sys.argv[7];
+    if (n_args > 8):
+        param_network_input = sys.argv[8];
         param_network = not (str(param_network_input) == 'False');
     else:
         param_network = False;
 
-    train_network(constraint_id, flow_id, L, n_k, lr_order, random_seed, param_network);
+    train_network(constraint_id, flow_id, cost_type, L, n_k, lr_order, random_seed, param_network);
