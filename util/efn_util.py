@@ -49,6 +49,22 @@ def load_constraint_info(constraint_id):
         D = D_X-D;
     return D, K_eta, params, constraint_type;
 
+def load_constraint_lims(constraint_id):
+    datadir = 'constraints/';
+    fname = datadir + '%s.npz' % constraint_id;
+    confile = np.load(fname);
+    if (constraint_id[:6] == 'normal'):
+        constraint_type = 'normal';
+    if (constraint_type == 'normal'):
+        mean_lims = confile['mean_lims'];
+        var_lims = confile['var_lims'];
+        cor_lims = confile['cor_lims'];
+        param_lims = {'mean_lims':mean_lims, 'var_lims':var_lims, \
+                      'cor_lims':cor_lims};
+        D_Z =2;
+        ncons = D_Z + D_Z*D_Z;
+    return param_lims, ncons, constraint_type;
+
 def construct_flow(flow_id, D_Z):
     datadir = 'flows/';
     fname = datadir + '%s.npz' % flow_id;
@@ -74,28 +90,29 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
         Sigma = params['Sigma'];
         dist = multivariate_normal(mean=mu, cov=Sigma);
         log_P = dist.logpdf(X_k);
+        KL = np.sum(np.multiply(Q, log_Q - log_P));
         if (plot):
             n = X_k.shape[0];
             sizes = 40*np.ones((n,1));
             minval = min(np.min(log_Q), np.min(log_P));
             maxval = max(np.max(log_Q), np.max(log_P));
+            print(KL);
             fig = plt.figure(figsize=(12,4));
             fig.add_subplot(1,3,1);
             plt.scatter(X_k[:,0], X_k[:,1], sizes, log_Q, vmin=minval, vmax=maxval);
             plt.colorbar();
+            plt.title('Sigma: [%.3f, %.3f, %.3f], logQ' % (Sigma[0,0], Sigma[0,1], Sigma[1,1]));
             fig.add_subplot(1,3,2);
             plt.scatter(X_k[:,0], X_k[:,1], sizes, log_P);
+            plt.title('log P');
             plt.colorbar();
             fig.add_subplot(1,3,3);
             plt.scatter(X_k[:,0], X_k[:,1], sizes, log_Q-log_P);
+            plt.title('logQ - logP');
             plt.colorbar();
             plt.show();
 
-    Elogdiffs = log_Q - log_P;
-    KL = np.sum(np.multiply(Q, log_Q - log_P));
     return KL;
-
-    
 
 
 def computeMoments(X, constraint_id):
@@ -134,9 +151,7 @@ def getEtas(constraint_id, K_eta):
         Sigma_targs = confile['Sigma_targs'];
         etas = [];
         for k in range(K_eta):
-            eta1 = np.float32(np.dot(np.linalg.inv(Sigma_targs[k,:,:]), np.expand_dims(mu_targs[k,:], 2)));
-            eta2 = np.float32(-np.linalg.inv(Sigma_targs[k,:,:]) / 2);
-            eta = np.concatenate((eta1, np.reshape(eta2, [D_Z*D_Z, 1])), 0);
+            eta = normal_eta(mu_targs[k,:], Sigma_targs[k,:,:]);
             etas.append(eta);
 
         mu_OL_targs = confile['mu_OL_targs'];
@@ -145,7 +160,7 @@ def getEtas(constraint_id, K_eta):
         for k in range(K_eta):
             ol_eta1 = np.float32(np.dot(np.linalg.inv(Sigma_OL_targs[k,:,:]), np.expand_dims(mu_OL_targs[k,:], 2)));
             ol_eta2 = np.float32(-np.linalg.inv(Sigma_OL_targs[k,:,:]) / 2);
-            ol_eta = np.concatenate((eta1, np.reshape(eta2, [D_Z*D_Z, 1])), 0);
+            ol_eta = np.concatenate((ol_eta1, np.reshape(ol_eta2, [D_Z*D_Z, 1])), 0);
             off_lattice_etas.append(ol_eta);
 
 
@@ -162,6 +177,41 @@ def getEtas(constraint_id, K_eta):
             ol_eta = np.expand_dims(alpha_OL_targs[k,:], 1);
             off_lattice_etas.append(ol_eta);
     return etas, off_lattice_etas;
+
+def normal_eta(mu, Sigma):
+    D_Z = mu.shape[0];
+    eta1 = np.float32(np.dot(np.linalg.inv(Sigma), np.expand_dims(mu, 2)));
+    eta2 = np.float32(-np.linalg.inv(Sigma) / 2);
+    eta = np.concatenate((eta1, np.reshape(eta2, [D_Z*D_Z, 1])), 0);
+    return eta;
+
+
+def drawEtas(constraint_id, K_eta, n_k):
+    param_lims, ncons, constraint_type = load_constraint_lims(constraint_id);
+    n = K_eta * n_k;
+    if (constraint_type == 'normal'):
+        D_Z = 2;
+        mu_targs = np.zeros((K_eta, D_Z));
+        Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
+
+        mean_lims = param_lims['mean_lims'];
+        var_lims = param_lims['var_lims'];
+        cor_lims = param_lims['cor_lims'];
+        eta = np.zeros((n, ncons));
+        for k in range(K_eta):
+            k_start = k*n_k;
+            mu_k = np.random.uniform(mean_lims[0], mean_lims[1], (D_Z,));
+            vars_k = np.random.uniform(var_lims[0], var_lims[1], (D_Z,));
+            corr_k = np.random.uniform(cor_lims[0], cor_lims[1]);
+            offdiag_k = corr_k*np.sqrt(vars_k[0])*np.sqrt(vars_k[1]);
+            Sigma_k = np.array([[vars_k[0], offdiag_k], [offdiag_k, vars_k[1]]]);
+            eta_k = normal_eta(mu_k, Sigma_k);
+            for i in range(n_k):
+                eta[k_start+i,:] = eta_k[:,0];
+            mu_targs[k,:] = mu_k;
+            Sigma_targs[k,:,:] = Sigma_k;
+    params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
+    return eta, params;
 
 def autocovariance(X, tau_max, T, batch_size):
     # need to finish this
@@ -487,3 +537,6 @@ def kernel_two_sample_test(X, Y, kernel_function='rbf', iterations=10000,
         print("p-value ~= %s \t (resolution : %s)" % (p_value, 1.0/iterations))
 
     return mmd2u, mmd2u_null, p_value
+
+def factors(n):
+    return [f for f in range(1,n+1) if n%f==0]
