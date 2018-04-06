@@ -365,6 +365,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
         #while ((i < (cost_grad_lag)) or (not has_converged)): 
         convergence_it = 0;
         while (i < max_iters):
+            print(i);
             if (i == array_cur_len):
                 if (dynamics):
                     As = np.concatenate((As, np.zeros((array_cur_len, K, D_Z, D_Z))), axis=0);
@@ -502,8 +503,10 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
                 mean_test_R2 = np.mean(_test_R2s);
                 mean_test_KL = np.mean(testing_KL);
-                if (mean_test_R2 > .999 and mean_test_KL < .2):
+                if (mean_test_R2 > .999 and mean_test_KL < .02):
                     print('Test successful!');
+                    print('mean test R2 = %.4f' % mean_test_R2);
+                    print('mean test KL = %.4f' % mean_test_KL);
                     print('We can learn the %s distribution with a %s flow network' % (constraint_id, flow_id));
                     break;
                 else:
@@ -521,7 +524,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
         # save all the hyperparams
         if not os.path.exists(savedir):
-                print('Making directory %s' % savedir);
+                print('Making directory %s' % savedir );
                 os.makedirs(savedir);
         #saveParams(params, savedir);
         # save the model

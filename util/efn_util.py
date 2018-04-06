@@ -45,8 +45,8 @@ def load_constraint_info(constraint_id):
         alpha_targs = confile['alpha_targs'];
         alpha_OL_targs = confile['alpha_targs'];
         params = {'alpha_targs':alpha_targs, 'alpha_OL_targs':alpha_OL_targs};
-        K_eta, D_X = alpha_targs.shape - 1;
-        D = D_X-D;
+        K_eta, D_X = alpha_targs.shape;
+        D = D_X-1;
     return D, K_eta, params, constraint_type;
 
 def load_constraint_lims(constraint_id):
@@ -111,6 +111,9 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
             plt.title('logQ - logP');
             plt.colorbar();
             plt.show();
+    if (constraint_type == 'dirichlet'):
+        raise NotImplementedError('dirichlet KL');
+        
 
     return KL;
 
@@ -285,27 +288,26 @@ def time_invariant_flow(Z, layers, theta, constraint_type):
 
     # final layer translates to the support
     if (constraint_type == 'dirichlet'):
-        raise NotImplementedError('dirichlet exp fam');
         # TODO this needs to be compatable with current shaping of Z
-        Z = tf.exp(Z) / (tf.reduce_sum(tf.exp(Z) ,axis=0) + 1); 
+        Z = tf.exp(Z) / tf.expand_dims((tf.reduce_sum(tf.exp(Z) ,axis=1) + 1), 1); 
         # compute the jacobian using matrix determinant lemma
         u = Z;
         Adiag = u;
         Ainvdiag = 1.0 / u;
         v = -u;
-        g_det_jacobian = (1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=0))*tf.reduce_prod(Adiag, axis=0);
+        g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=1)), tf.reduce_prod(Adiag, axis=1));
         g_log_det_jacobian = tf.log(g_det_jacobian);
         sum_log_det_jacobians += g_log_det_jacobian;
-        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=0), 0)), axis=0);
+        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
 
     return Z, sum_log_det_jacobians;
 
 
 def adam_updates(params, cost_or_grads, lr=0.001, mom1=0.9, mom2=0.999):
     ''' Adam optimizer '''
-    updates = []
+    updates = [];
     if type(cost_or_grads) is not list:
-        grads = tf.gradients(cost_or_grads, params)
+        grads = tf.gradients(cost_or_grads, params);
     else:
         grads = cost_or_grads
     t = tf.Variable(1., 'adam_t')
