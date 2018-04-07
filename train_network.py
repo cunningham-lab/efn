@@ -28,10 +28,10 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
     n_k = int(n / K_eta);
 
     # optimization hyperparameters
-    max_iters = 5000;
+    max_iters = 50000;
     opt_method = 'adam';
     lr = 10**lr_order
-    check_diagnostics_rate = 25;
+    check_diagnostics_rate = 2000;
 
     np.random.seed(0);
 
@@ -167,7 +167,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
         Z_AR, base_log_p_z, Sigma_Z_AR = latent_dynamics(Z0, A, sigma_eps, T);
     else:
         # evaluate unit normal 
-        p0 = tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/tf.sqrt(2.0*np.pi), axis=1); 
+        p0 = tf.expand_dims(tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/tf.sqrt(2.0*np.pi), axis=1), 1); 
         base_log_p_z = tf.log(p0);
         # TODO more care taken care for time series
         num_dyn_param_vals = 0;
@@ -194,7 +194,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
     Tx = computeMoments(X, constraint_id);
 
     # exponential family optimization
-    y = log_p_zs;
+    y = tf.reshape(tf.transpose(log_p_zs, [0, 2, 1]), [T*batch_size, 1]);
     y_mc = y - tf.reduce_mean(y);
     var_y = tf.reduce_mean(tf.square(y_mc));
     TSS = tf.reduce_sum(tf.square(y_mc));
@@ -365,7 +365,6 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
         #while ((i < (cost_grad_lag)) or (not has_converged)): 
         convergence_it = 0;
         while (i < max_iters):
-            print(i);
             if (i == array_cur_len):
                 if (dynamics):
                     As = np.concatenate((As, np.zeros((array_cur_len, K, D_Z, D_Z))), axis=0);
@@ -433,7 +432,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                 for k in range(K_eta):
                     k_start = k*n_k;
                     k_end = (k+1)*n_k;
-                    _y_k = _log_p_zs[k_start:k_end];
+                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_test_k, 1]);
                     _X_k = _X[k_start:k_end, :, :];
                     _X_k = np.reshape(np.transpose(_X_k, [0, 2, 1]), [T*n_k, D_X]);
                     if (constraint_type == 'normal'):
@@ -445,7 +444,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                             params_k = {'mu':mu_targs[k], 'Sigma':Sigma_targs[k]};
                     elif (constraint_type == 'dirichlet'):
                         params_k = {'alpha':alpha_targs[k]};
-                    training_KL.append(approxKL(_y_k, _X_k, constraint_type, params_k));
+                    training_KL.append(approxKL(_y_k, _X_k, constraint_type, params_k, True));
                 train_KLs[check_it,:] = training_KL;
 
                 feed_dict = {Z0:z_i, eta:_off_lattice_eta};
@@ -457,7 +456,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                 for k in range(K_eta_params):
                     k_start = k*n_test_k;
                     k_end = (k+1)*n_test_k;
-                    _y_k = _log_p_zs[k_start:k_end];
+                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_test_k, 1]);
                     _X_k = _X_off_lattice[k_start:k_end, :, :];
                     _X_k = np.reshape(np.transpose(_X_k, [0, 2, 1]), [T*n_test_k, D_X]);
                     if (constraint_type == 'normal'):

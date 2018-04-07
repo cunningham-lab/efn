@@ -2,10 +2,11 @@ import tensorflow as tf
 import numpy as np
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
-from scipy.stats import ttest_1samp, multivariate_normal
+from scipy.stats import ttest_1samp, multivariate_normal, dirichlet
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
+from dirichlet import simplex
 
 p_eps = 10e-6;
 def initialize_optimization_parameters(sess, optimizer, all_params):
@@ -91,29 +92,27 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
         dist = multivariate_normal(mean=mu, cov=Sigma);
         log_P = dist.logpdf(X_k);
         KL = np.sum(np.multiply(Q, log_Q - log_P));
+    if (constraint_type == 'dirichlet'):
+        alpha = params['alpha'];
+        dist = dirichlet(alpha);
+        log_P = dist.logpdf(X_k.T);
+        KL = np.sum(np.multiply(Q, log_Q - log_P));
         if (plot):
-            n = X_k.shape[0];
-            sizes = 40*np.ones((n,1));
-            minval = min(np.min(log_Q), np.min(log_P));
-            maxval = max(np.max(log_Q), np.max(log_P));
-            print(KL);
-            fig = plt.figure(figsize=(12,4));
+            print(log_Q.shape, log_P.shape);
+            batch_size = X_k.shape[0];
+            X_true = np.random.dirichlet(alpha, (batch_size,));
+            fig = plt.figure(figsize=(12, 4));
             fig.add_subplot(1,3,1);
-            plt.scatter(X_k[:,0], X_k[:,1], sizes, log_Q, vmin=minval, vmax=maxval);
+            simplex.scatter(X_k, connect=False, c=log_Q);
             plt.colorbar();
-            plt.title('Sigma: [%.3f, %.3f, %.3f], logQ' % (Sigma[0,0], Sigma[0,1], Sigma[1,1]));
             fig.add_subplot(1,3,2);
-            plt.scatter(X_k[:,0], X_k[:,1], sizes, log_P);
-            plt.title('log P');
+            simplex.scatter(X_true, connect=False, c=log_P);
             plt.colorbar();
             fig.add_subplot(1,3,3);
-            plt.scatter(X_k[:,0], X_k[:,1], sizes, log_Q-log_P);
-            plt.title('logQ - logP');
+            simplex.scatter(X_k, connect=False, c=log_Q-log_P);
             plt.colorbar();
             plt.show();
-    if (constraint_type == 'dirichlet'):
-        raise NotImplementedError('dirichlet KL');
-        
+
 
     return KL;
 
@@ -297,7 +296,7 @@ def time_invariant_flow(Z, layers, theta, constraint_type):
         v = -u;
         g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=1)), tf.reduce_prod(Adiag, axis=1));
         g_log_det_jacobian = tf.log(g_det_jacobian);
-        sum_log_det_jacobians += g_log_det_jacobian;
+        sum_log_det_jacobians += tf.expand_dims(g_log_det_jacobian, 2);
         Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
 
     return Z, sum_log_det_jacobians;
