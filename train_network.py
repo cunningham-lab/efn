@@ -13,25 +13,33 @@ from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       latent_dynamics, time_invariant_flow, construct_flow, \
                       initialize_optimization_parameters, load_constraint_info, \
-                      approxKL, drawEtas
+                      approxKL, drawEtas, checkH
 
-def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
-                  stochastic_eta=True, param_network=True, lr_order=-3, random_seed=0):
-    D_Z, K_eta_params, params, constraint_type = load_constraint_info(constraint_id);
+def train_network(constraint_id, D_Z, flow_id, cost_type, L=1, units_per_layer=4, n=100, K_eta=10, \
+                  stochastic_eta=True, single_dist=False, lr_order=-3, random_seed=0):
+    if (single_dist):
+        D_Z, K_eta_params, params, constraint_type = load_constraint_info(constraint_id);
+    else:
+        constraint_type = constraint_id;
+
+    if (constraint_type == 'normal'):
+        ncons = D_Z+D_Z**2;
+    elif (constraint_type == 'dirichlet'):
+        ncons = D_Z+1;
+
     layers, num_linear_lyrs, num_planar_lyrs, K = construct_flow(flow_id, D_Z);
     assert(isinstance(K, int) and K >= 0);
-    if (not stochastic_eta or K_eta is None):
-        K_eta = K_eta_params;
     dynamics = K > 0;
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     assert(np.mod(n, K_eta) == 0);
     n_k = int(n / K_eta);
+    n_test_k = n_k;
 
     # optimization hyperparameters
-    max_iters = 50000;
+    max_iters = 100000;
     opt_method = 'adam';
     lr = 10**lr_order
-    check_diagnostics_rate = 2000;
+    check_diagnostics_rate = 500;
 
     np.random.seed(0);
 
@@ -40,11 +48,11 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
     tf.set_random_seed(random_seed);
 
     # save tensorboard summary in intervals
-    tb_save_every = 10;
+    tb_save_every = 50;
 
     #sigma_eps_buf = 1e-8;
     tb_save_flow_param = False;
-    np_save_flow_param = True;
+    np_save_flow_param = False;
 
 
     # set file I/O stuff
@@ -67,32 +75,34 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
 
-    savedir = resdir + '/tb/' + '%s_%s_%s/' % (constraint_id, flow_id, eta_str);
+    savedir = resdir + '/tb/' + '%s_D=%d_%s_L=%d_upl=%d/' % (constraint_id, D_X, flow_id, L, units_per_layer);
 
-    if (constraint_type == 'normal'):
-        mu_targs = params['mu_targs'];
-        Sigma_targs = params['Sigma_targs'];
-        mu_OL_targs = params['mu_OL_targs'];
-        Sigma_OL_targs = params['Sigma_OL_targs'];
-    elif (constraint_type == 'dirichlet'):
-        alpha_targs = params['alpha_targs'];
-        alpha_OL_targs = params['alpha_OL_targs'];
+    if (single_dist):
+        if (constraint_type == 'normal'):
+            mu_targs = params['mu_targs'];
+            Sigma_targs = params['Sigma_targs'];
+            mu_OL_targs = params['mu_OL_targs'];
+            Sigma_OL_targs = params['Sigma_OL_targs'];
+        elif (constraint_type == 'dirichlet'):
+            alpha_targs = params['alpha_targs'];
+            alpha_OL_targs = params['alpha_OL_targs'];
 
-    # get etas based on constraint_id
-    _etas, _off_lattice_etas = getEtas(constraint_id, K_eta);
-    ncons = _etas[0].shape[0];
-
-    assert(np.mod(n, K_eta_params) == 0);
-    n_test_k = int(n / K_eta_params);
     if (not stochastic_eta):
-        _eta = np.zeros((n, ncons));
-    _off_lattice_eta = np.zeros((n,ncons));
-    for k in range(K_eta_params):
-        k_start = k*n_test_k;
-        for i in range(n_test_k):
-            if (not stochastic_eta):
-                _eta[k_start+i,:] = _etas[k][:,0];
-            _off_lattice_eta[k_start+i,:] = _off_lattice_etas[k][:,0];
+        # get etas based on constraint_id
+        _etas, _off_lattice_etas = getEtas(constraint_id, K_eta);
+        ncons = _etas[0].shape[0];
+
+        assert(np.mod(n, K_eta_params) == 0);
+        n_test_k = int(n / K_eta_params);
+        if (not stochastic_eta):
+            _eta = np.zeros((n, ncons));
+        _off_lattice_eta = np.zeros((n,ncons));
+        for k in range(K_eta_params):
+            k_start = k*n_test_k;
+            for i in range(n_test_k):
+                if (not stochastic_eta):
+                    _eta[k_start+i,:] = _etas[k][:,0];
+                _off_lattice_eta[k_start+i,:] = _off_lattice_etas[k][:,0];
 
     # Placeholder for initial condition of latent dynamical process
     if (dynamics):
@@ -105,11 +115,11 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
     # construct the parameter network
     nlayers = len(layers);
-    if (param_network):
+    if (not single_dist):
         h = eta;
         for i in range(L):
             with tf.variable_scope('ParamNetLayer%d' % (i+1)):
-                h = tf.layers.dense(h, ncons); # each layer will have ncons nodes (can change this)
+                h = tf.layers.dense(h, units_per_layer, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
         theta = [];
         for i in range(nlayers):
             layer = layers[i];
@@ -120,7 +130,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
             # read each parameter out of the last layer.
             for j in range(nparams):
                 num_elems = np.prod(param_dims[j]);
-                A_shape = (ncons, num_elems);
+                A_shape = (units_per_layer, num_elems);
                 b_shape = (1, num_elems);
                 A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
                                            dtype=tf.float32, \
@@ -178,7 +188,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
         Z, sum_log_det_jacobian = time_invariant_flow(Z_AR, layers, theta, constraint_type);
     else:
         Z = Z_AR;
-        sum_log_det_jacobian = tf.zeros((batch_size*T,1));
+        sum_log_det_jacobian = tf.zeros((batch_size,1,T));
 
     # generative model is fully specified
     all_params = tf.trainable_variables();
@@ -191,7 +201,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
     X_cov = tf.div(tf.matmul(X, tf.transpose(X, [0, 2, 1])), T); # this is [n x D x D]
 
     # set up the constraint computation
-    Tx = computeMoments(X, constraint_id);
+    Tx = computeMoments(X, constraint_type, D_X);
 
     # exponential family optimization
     y = tf.reshape(tf.transpose(log_p_zs, [0, 2, 1]), [T*batch_size, 1]);
@@ -222,10 +232,10 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
     cost_grad = tf.gradients(cost, all_params);
 
     testR2s = [];
-    for k in range(K_eta_params):
+    for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
-        k_start = k*n_test_k;
-        k_end = (k+1)*n_test_k;
+        k_start = k*n_k;
+        k_end = (k+1)*n_k;
         y_k = y[k_start:k_end,:];
         Tx_k = Tx[k_start:k_end,:];
         _eta_k = tf.expand_dims(eta[k_start,:], 1);
@@ -291,13 +301,12 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
     num_diagnostic_checks = (max_iters // check_diagnostics_rate) + 1;
     train_R2s = np.zeros((num_diagnostic_checks, K_eta));
-    test_R2s = np.zeros((num_diagnostic_checks, K_eta_params));
+    test_R2s = np.zeros((num_diagnostic_checks, K_eta));
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
-    test_KLs = np.zeros((num_diagnostic_checks, K_eta_params));
+    test_KLs = np.zeros((num_diagnostic_checks, K_eta));
     check_it = 0;
     with tf.Session() as sess:
-        if (param_network):
-            print('D=%d, T=%d, K=%d, n=%d, lr=10^%.1f' % (D_Z, T, K, n, np.log10(lr)));
+        print('D=%d, T=%d, K=%d, n=%d, lr=10^%.1f' % (D_Z, T, K, n, np.log10(lr)));
         grads_and_vars = [];
         for i in range(len(all_params)):
             grads_and_vars.append((cost_grad[i], all_params[i]));
@@ -306,7 +315,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
         z_i = np.random.normal(np.zeros((n,D_Z,num_zi)), 1.0);
         if (stochastic_eta):
-            _eta, eta_draw_params = drawEtas(constraint_id, K_eta, n_k);
+            _eta, eta_draw_params = drawEtas(constraint_type, D_Z, K_eta, n_k);
         feed_dict = {Z0:z_i, eta:_eta};
         if (dynamics):
             cost_i, A_i, X_cov_i, _sigma_epsilon_i, _flow_params, _cost_grads, summary = \
@@ -379,7 +388,8 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 
             z_i = np.random.normal(np.zeros((n,D_Z,num_zi)), 1.0);
             if (stochastic_eta):
-                _eta, eta_draw_params = drawEtas(constraint_id, K_eta, n_k);
+                _eta, eta_draw_params = drawEtas(constraint_type, D_Z, K_eta, n_k);
+                _eta_test, eta_test_draw_params = drawEtas(constraint_type, D_Z, K_eta, n_k);
             feed_dict = {Z0:z_i, eta:_eta};
             if (dynamics):
                 ts, cost_i, A_i, X_cov_i, _sigma_epsilon_i, _X, _flow_params, _cost_grads, _R2s, summary = \
@@ -427,12 +437,14 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                 """
 
                 train_R2s[check_it,:] = _R2s;
+                print('train R2s');
+                print(_R2s[:10]);
                 # compute KL
                 training_KL = [];
                 for k in range(K_eta):
                     k_start = k*n_k;
                     k_end = (k+1)*n_k;
-                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_test_k, 1]);
+                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_k, 1]);
                     _X_k = _X[k_start:k_end, :, :];
                     _X_k = np.reshape(np.transpose(_X_k, [0, 2, 1]), [T*n_k, D_X]);
                     if (constraint_type == 'normal'):
@@ -443,27 +455,42 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                         else:
                             params_k = {'mu':mu_targs[k], 'Sigma':Sigma_targs[k]};
                     elif (constraint_type == 'dirichlet'):
-                        params_k = {'alpha':alpha_targs[k]};
-                    training_KL.append(approxKL(_y_k, _X_k, constraint_type, params_k, True));
+                        if (stochastic_eta):
+                            eta_alpha_targs = eta_test_draw_params['alpha_targs'];
+                            params_k = {'alpha':eta_alpha_targs[k]};
+                        else:
+                            params_k = {'alpha':alpha_targs[k]};
+                    training_KL.append(approxKL(_y_k, _X_k, constraint_type, params_k));
                 train_KLs[check_it,:] = training_KL;
 
-                feed_dict = {Z0:z_i, eta:_off_lattice_eta};
+                feed_dict = {Z0:z_i, eta:_eta_test};
                 _X_off_lattice, _log_p_zs, _test_R2s  = sess.run([X, log_p_zs, testR2s], feed_dict);
                 test_R2s[check_it,:] = _test_R2s;
-
+                print('test R2s');
+                print(_test_R2s[:10]);
                 # compute KL
                 testing_KL = [];
-                for k in range(K_eta_params):
-                    k_start = k*n_test_k;
-                    k_end = (k+1)*n_test_k;
-                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_test_k, 1]);
+                for k in range(K_eta):
+                    k_start = k*n_k;
+                    k_end = (k+1)*n_k;
+                    _y_k = np.reshape(np.transpose(_log_p_zs[k_start:k_end,:,:], [0, 2, 1]), [T*n_k, 1]);
                     _X_k = _X_off_lattice[k_start:k_end, :, :];
-                    _X_k = np.reshape(np.transpose(_X_k, [0, 2, 1]), [T*n_test_k, D_X]);
+                    _X_k = np.reshape(np.transpose(_X_k, [0, 2, 1]), [T*n_k, D_X]);
                     if (constraint_type == 'normal'):
-                        params_k = {'mu':mu_OL_targs[k], 'Sigma':Sigma_OL_targs[k]};
+                        if (stochastic_eta):
+                            eta_mu_targs = eta_test_draw_params['mu_targs'];
+                            eta_Sigma_targs = eta_test_draw_params['Sigma_targs'];
+                            params_k = {'mu':eta_mu_targs[k], 'Sigma':eta_Sigma_targs[k]};
+                        else:
+                            params_k = {'mu':mu_OL_targs[k], 'Sigma':Sigma_OL_targs[k]};
                     elif (constraint_type == 'dirichlet'):
-                        params_k = {'alpha':alpha_OL_targs[k]};
+                        if (stochastic_eta):
+                            eta_alpha_targs = eta_test_draw_params['alpha_targs'];
+                            params_k = {'alpha':eta_alpha_targs[k]};
+                        else:
+                            params_k = {'alpha':alpha_OL_targs[k]};
                     testing_KL.append(approxKL(_y_k, _X_k, constraint_type, params_k));
+                    checkH(_y_k, constraint_type, params_k);
                 test_KLs[check_it,:] = testing_KL;
                 
                 print(42*'*');
@@ -513,12 +540,7 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
                     print('mean test R2 = %.4f' % mean_test_R2);
                     print('mean test KL = %.4f' % mean_test_KL);
 
-
-           
-
             sys.stdout.flush();
-
-
             i += 1;
 
         # save all the hyperparams
@@ -533,18 +555,20 @@ def train_network(constraint_id, flow_id, cost_type,  L=1, n=100, K_eta=None, \
 if __name__ == '__main__':    # parse command line parameters
     n_args = len(sys.argv);
     constraint_id = str(sys.argv[1]);
-    flow_id = str(sys.argv[2]);
-    cost_type = str(sys.argv[3]);
-    L = int(sys.argv[4]);
-    n= int(sys.argv[5]);
-    K_eta = int(sys.argv[6]);
-    stochastic_eta_input = sys.argv[7];
-    param_network_input = sys.argv[8];
-    lr_order = float(sys.argv[9]);
-    random_seed = int(sys.argv[10]);
+    D_Z = int(sys.argv[2]); 
+    flow_id = str(sys.argv[3]);
+    cost_type = str(sys.argv[4]);
+    L = int(sys.argv[5]);
+    units_per_layer = int(sys.argv[6]);
+    n= int(sys.argv[7]);
+    K_eta = int(sys.argv[8]);
+    stochastic_eta_input = sys.argv[9];
+    single_dist_input = sys.argv[10];
+    lr_order = float(sys.argv[11]);
+    random_seed = int(sys.argv[12]);
     
     stochastic_eta = not (str(stochastic_eta_input) == 'False');
-    param_network = not (str(param_network_input) == 'False');
+    single_dist = not (str(single_dist_input) == 'False');
 
-    train_network(constraint_id, flow_id, cost_type, L, n, K_eta, \
-                  stochastic_eta, param_network, lr_order, random_seed);
+    train_network(constraint_id, flow_id, cost_type, L, units_per_layer, n, K_eta, \
+                  stochastic_eta, single_dist, lr_order, random_seed);

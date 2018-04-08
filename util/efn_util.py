@@ -2,11 +2,12 @@ import tensorflow as tf
 import numpy as np
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
-from scipy.stats import ttest_1samp, multivariate_normal, dirichlet
+from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
 from dirichlet import simplex
+
 
 p_eps = 10e-6;
 def initialize_optimization_parameters(sess, optimizer, all_params):
@@ -50,22 +51,6 @@ def load_constraint_info(constraint_id):
         D = D_X-1;
     return D, K_eta, params, constraint_type;
 
-def load_constraint_lims(constraint_id):
-    datadir = 'constraints/';
-    fname = datadir + '%s.npz' % constraint_id;
-    confile = np.load(fname);
-    if (constraint_id[:6] == 'normal'):
-        constraint_type = 'normal';
-    if (constraint_type == 'normal'):
-        mean_lims = confile['mean_lims'];
-        var_lims = confile['var_lims'];
-        cor_lims = confile['cor_lims'];
-        param_lims = {'mean_lims':mean_lims, 'var_lims':var_lims, \
-                      'cor_lims':cor_lims};
-        D_Z =2;
-        ncons = D_Z + D_Z*D_Z;
-    return param_lims, ncons, constraint_type;
-
 def construct_flow(flow_id, D_Z):
     datadir = 'flows/';
     fname = datadir + '%s.npz' % flow_id;
@@ -85,45 +70,75 @@ def construct_flow(flow_id, D_Z):
 
 def approxKL(y_k, X_k, constraint_type, params, plot=False):
     log_Q = y_k[:,0];
-    Q = np.exp(log_Q);
     if (constraint_type == 'normal'):
         mu = params['mu'];
         Sigma = params['Sigma'];
         dist = multivariate_normal(mean=mu, cov=Sigma);
         log_P = dist.logpdf(X_k);
-        KL = np.sum(np.multiply(Q, log_Q - log_P));
+        KL = np.mean(log_Q - log_P);
+        if (plot):
+            batch_size = X_k.shape[0];
+            X_true = np.random.multivariate_normal(mu, Sigma, (batch_size,));
+            log_P_true = dist.logpdf(X_true);
+            xmin = min(np.min(X_k[:,0]), np.min(X_true[:,0]));
+            xmax = max(np.max(X_k[:,0]), np.max(X_true[:,0]));
+            ymin = min(np.min(X_k[:,1]), np.min(X_true[:,1]));
+            ymax = max(np.max(X_k[:,1]), np.max(X_true[:,1]));
+            fig = plt.figure(figsize=(8, 4));
+            fig.add_subplot(1,2,1);
+            plt.scatter(X_k[:,0], X_k[:,1], c=log_Q);
+            plt.xlim([xmin, xmax]);
+            plt.ylim([ymin, ymax]);
+            plt.colorbar();
+            plt.title('mu: [%.1f, %.1f] Sigma: [%.2f, %.2f, %.2f]' % (mu[0], mu[1], Sigma[0,0], Sigma[0,1], Sigma[1,1]));
+            fig.add_subplot(1,2,2);
+            plt.scatter(X_true[:,0], X_true[:,1], c=log_P_true);
+            plt.xlim([xmin, xmax]);
+            plt.ylim([ymin, ymax]);
+            plt.colorbar();
+            plt.show();
     if (constraint_type == 'dirichlet'):
         alpha = params['alpha'];
         dist = dirichlet(alpha);
         log_P = dist.logpdf(X_k.T);
-        KL = np.sum(np.multiply(Q, log_Q - log_P));
+        KL = np.mean(log_Q - log_P);
         if (plot):
-            print(log_Q.shape, log_P.shape);
             batch_size = X_k.shape[0];
             X_true = np.random.dirichlet(alpha, (batch_size,));
+            log_P_true = dist.logpdf(X_true);
             fig = plt.figure(figsize=(12, 4));
             fig.add_subplot(1,3,1);
             simplex.scatter(X_k, connect=False, c=log_Q);
             plt.colorbar();
             fig.add_subplot(1,3,2);
-            simplex.scatter(X_true, connect=False, c=log_P);
+            simplex.scatter(X_true, connect=False, c=log_P_true);
             plt.colorbar();
             fig.add_subplot(1,3,3);
             simplex.scatter(X_k, connect=False, c=log_Q-log_P);
             plt.colorbar();
             plt.show();
-
-
     return KL;
 
+def checkH(y_k, constraint_type, params):
+    log_Q = y_k[:,0];
+    H = np.mean(-log_Q);
+    if (constraint_type == 'normal'):
+        mu = params['mu'];
+        Sigma = params['Sigma'];
+        dist = multivariate_normal(mean=mu, cov=Sigma);
+        H_true = dist.entropy();
+    if (constraint_type == 'dirichlet'):
+        alpha = params['alpha'];
+        dist = dirichlet(alpha);
+        H_true = dist.entropy();
+    #print('H = %.3f/%.3f' % (H, H_true));
+    return None;
 
-def computeMoments(X, constraint_id):
+def computeMoments(X, constraint_type, D_X):
     X_shape = tf.shape(X);
     batch_size = X_shape[0];
-    D_Z, K_eta, params, constraint_type = load_constraint_info(constraint_id);
     T = X_shape[2];
     if (constraint_type == 'normal'):
-        D_X = D_Z;
         cov_con_mask = np.triu(np.ones((D_X,D_X), dtype=np.bool_), 0);
         X_flat = tf.reshape(tf.transpose(X, [0, 2, 1]), [T*batch_size, D_X]); # samps x D
         Tx_mean = X_flat;
@@ -133,14 +148,11 @@ def computeMoments(X, constraint_id):
         Tx_cov = tf.reshape(XXT, [T*batch_size, D_X*D_X]);
         Tx = tf.concat((Tx_mean, Tx_cov), axis=1);
     elif (constraint_type == 'dirichlet'):
-        D_X = D_Z + 1;
         X_flat = tf.reshape(tf.transpose(X, [0, 2, 1]), [T*batch_size, D_X]); # samps x D
         Tx_log = tf.log(X_flat);
         Tx = Tx_log;
     else:
         raise NotImplementedError;
-
-
     return Tx;
 
 def getEtas(constraint_id, K_eta):
@@ -188,31 +200,38 @@ def normal_eta(mu, Sigma):
     return eta;
 
 
-def drawEtas(constraint_id, K_eta, n_k):
-    param_lims, ncons, constraint_type = load_constraint_lims(constraint_id);
+def drawEtas(constraint_type, D_Z, K_eta, n_k):
     n = K_eta * n_k;
     if (constraint_type == 'normal'):
-        D_Z = 2;
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
-
-        mean_lims = param_lims['mean_lims'];
-        var_lims = param_lims['var_lims'];
-        cor_lims = param_lims['cor_lims'];
+        ncons = D_Z+D_Z**2;
         eta = np.zeros((n, ncons));
+        df_fac = 2;
+        df = df_fac*D_Z;
+        Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
         for k in range(K_eta):
             k_start = k*n_k;
-            mu_k = np.random.uniform(mean_lims[0], mean_lims[1], (D_Z,));
-            vars_k = np.random.uniform(var_lims[0], var_lims[1], (D_Z,));
-            corr_k = np.random.uniform(cor_lims[0], cor_lims[1]);
-            offdiag_k = corr_k*np.sqrt(vars_k[0])*np.sqrt(vars_k[1]);
-            Sigma_k = np.array([[vars_k[0], offdiag_k], [offdiag_k, vars_k[1]]]);
+            mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
+            Sigma_k = Sigma_dist.rvs(1);
             eta_k = normal_eta(mu_k, Sigma_k);
             for i in range(n_k):
                 eta[k_start+i,:] = eta_k[:,0];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
-    params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
+        params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
+    if (constraint_type == 'dirichlet'):
+        D_X = D_Z + 1;
+        eta = np.zeros((n, D_X));
+        alpha_targs = np.zeros((K_eta, D_X));
+        for k in range(K_eta):
+            k_start = k*n_k;
+            alpha_k = np.random.uniform(0.01, 4, (D_X,));
+            eta_k = alpha_k;
+            for i in range(n_k):
+                eta[k_start+i,:] = eta_k;
+            alpha_targs[k,:] = alpha_k;
+        params = {'alpha_targs':alpha_targs};
     return eta, params;
 
 def autocovariance(X, tau_max, T, batch_size):
@@ -284,7 +303,8 @@ def time_invariant_flow(Z, layers, theta, constraint_type):
         theta_layer = theta[i];
         layer.connect_parameter_network(theta_layer);
         Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-
+    #print('Z shape 1', Z.shape);
+    #print('sldj shape 1', sum_log_det_jacobians.shape)
     # final layer translates to the support
     if (constraint_type == 'dirichlet'):
         # TODO this needs to be compatable with current shaping of Z
@@ -298,6 +318,8 @@ def time_invariant_flow(Z, layers, theta, constraint_type):
         g_log_det_jacobian = tf.log(g_det_jacobian);
         sum_log_det_jacobians += tf.expand_dims(g_log_det_jacobian, 2);
         Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
+    #print('Z shape 2', Z.shape);
+    #print('sldj shape 2', sum_log_det_jacobians.shape)    
 
     return Z, sum_log_det_jacobians;
 

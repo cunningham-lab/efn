@@ -46,8 +46,8 @@ class PlanarFlowLayer(Layer):
         log_det_jacobian = tf.log(p_eps+tf.abs(1.0 + tf.matmul(tf.transpose(u, [0,2,1]), phi)));
         sum_log_det_jacobians += log_det_jacobian;
         # compute z for this layer
-        term1 = tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z) + b);
-        z = z + tf.matmul(u, term1);
+        nonlin_term = tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z) + b);
+        z = z + tf.matmul(u, nonlin_term);
         return z, sum_log_det_jacobians;
 
 
@@ -81,7 +81,8 @@ class LinearFlowLayer(Layer):
         z = tf.matmul(A, z) + b;
         T = tf.shape(z)[2];
         log_det_jacobian = tf.log(p_eps+tf.abs(tf.matrix_determinant(A)));
-        log_det_jacobian = tf.tile(tf.expand_dims(log_det_jacobian, 1), [1, T]);
+        log_det_jacobian = tf.expand_dims(tf.expand_dims(log_det_jacobian, 1), 2);
+        log_det_jacobian = tf.tile(log_det_jacobian, [1, 1, T]);
         sum_log_det_jacobians += log_det_jacobian;
         return z, sum_log_det_jacobians;
 
