@@ -6,7 +6,7 @@ from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
-from dirichlet import simplex
+#from dirichlet import simplex
 
 
 p_eps = 10e-6;
@@ -102,6 +102,7 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
         dist = dirichlet(alpha);
         log_P = dist.logpdf(X_k.T);
         KL = np.mean(log_Q - log_P);
+        """
         if (plot):
             batch_size = X_k.shape[0];
             X_true = np.random.dirichlet(alpha, (batch_size,));
@@ -117,6 +118,7 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
             simplex.scatter(X_k, connect=False, c=log_Q-log_P);
             plt.colorbar();
             plt.show();
+        """
     return KL;
 
 def checkH(y_k, constraint_type, params):

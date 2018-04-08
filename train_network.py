@@ -306,13 +306,13 @@ def train_network(constraint_id, D_Z, flow_id, cost_type, L=1, units_per_layer=4
     test_KLs = np.zeros((num_diagnostic_checks, K_eta));
     check_it = 0;
     with tf.Session() as sess:
+        init_op = tf.global_variables_initializer();
+        sess.run(init_op);
+
         print('D=%d, T=%d, K=%d, n=%d, lr=10^%.1f' % (D_Z, T, K, n, np.log10(lr)));
         grads_and_vars = [];
         for i in range(len(all_params)):
             grads_and_vars.append((cost_grad[i], all_params[i]));
-        init_op = tf.global_variables_initializer();
-        sess.run(init_op);
-
         z_i = np.random.normal(np.zeros((n,D_Z,num_zi)), 1.0);
         if (stochastic_eta):
             _eta, eta_draw_params = drawEtas(constraint_type, D_Z, K_eta, n_k);
@@ -363,9 +363,10 @@ def train_network(constraint_id, D_Z, flow_id, cost_type, L=1, units_per_layer=4
             optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr);
 
         train_step = optimizer.apply_gradients(grads_and_vars);
-        initialize_optimization_parameters(sess, optimizer, all_params);
-        slot_names = optimizer.get_slot_names();
-        debug_opt_var = optimizer.get_slot(all_params[0], slot_names[0]);
+        
+        init_op = tf.global_variables_initializer();
+        sess.run(init_op);
+
         # SGD iteration
         i = 1;
 
