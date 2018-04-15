@@ -65,7 +65,6 @@ def construct_theta_network(eta, flow_layers, L_theta, upl_theta):
     for i in range(L_flow):
         layer = flow_layers[i];
         layer_name, param_names, param_dims = layer.get_layer_info();
-        #print(layer_name, param_names, param_dims);
         nparams = len(param_names);
         layer_i_params = [];
         # read each parameter out of the last layer.
@@ -91,7 +90,6 @@ def declare_theta(flow_layers):
     for i in range(L_flow):
         layer = flow_layers[i];
         layer_name, param_names, param_dims = layer.get_layer_info();
-        #print(layer_name, param_names, param_dims);
         nparams = len(param_names);
         layer_i_params = [];
         for j in range(nparams):
@@ -197,8 +195,6 @@ def connect_flow(Z, layers, theta, constraint_type):
         theta_layer = theta[i];
         layer.connect_parameter_network(theta_layer);
         Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-    #print('Z shape 1', Z.shape);
-    #print('sldj shape 1', sum_log_det_jacobians.shape)
     # final layer translates to the support
     if (constraint_type == 'dirichlet'):
         # TODO need to redo this
@@ -208,12 +204,11 @@ def connect_flow(Z, layers, theta, constraint_type):
         Adiag = u;
         Ainvdiag = 1.0 / u;
         v = -u;
-        g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=1)), tf.reduce_prod(Adiag, axis=1));
+        g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=2)), tf.reduce_prod(Adiag, axis=2));
         g_log_det_jacobian = tf.log(g_det_jacobian);
-        sum_log_det_jacobians += tf.expand_dims(g_log_det_jacobian, 2);
-        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
-    #print('Z shape 2', Z.shape);
-    #print('sldj shape 2', sum_log_det_jacobians.shape)    
+        g_log_det_jacobian = tf.reduce_sum(g_log_det_jacobian, 2); # sum across the temporal dimension
+        sum_log_det_jacobians += g_log_det_jacobian;
+        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=2), 2)), axis=2);
 
     return Z, sum_log_det_jacobians;
 
@@ -283,7 +278,7 @@ def checkH(y_k, constraint_type, params):
         alpha = params['alpha'];
         dist = dirichlet(alpha);
         H_true = dist.entropy();
-    #print('H = %.3f/%.3f' % (H, H_true));
+    print('H = %.3f/%.3f' % (H, H_true));
     return None;
 
 def computeMoments(X, constraint_type, D_X, T):
@@ -398,7 +393,7 @@ def drawEtas(constraint_type, D_Z, K_eta, n_k):
         params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
     if (constraint_type == 'dirichlet'):
         D_X = D_Z + 1;
-        eta = np.zeros((n, D_X));
+        eta = np.zeros((K_eta, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
         for k in range(K_eta):
             alpha_k = np.random.uniform(0.01, 4, (D_X,));
