@@ -73,14 +73,17 @@ class LinearFlowLayer(Layer):
     def forward_and_jacobian(self, z, sum_log_det_jacobians):
         if (not self.param_network):
             batch_size = tf.shape(z)[0];
-            A = tf.tile(tf.expand_dims(self.A, 0), [batch_size, 1, 1]);
-            b = tf.tile(tf.expand_dims(self.b, 0), [batch_size, 1, 1]);
+            A = self.A;
+            b = tf.expand_dims(self.b, 0);
+            z = tf.tensordot(A, z, [[1], [1]]);
+            z = tf.transpose(z, [1, 0, 2]) + b;
+            log_det_jacobian = tf.multiply(tf.log(p_eps + tf.abs(tf.matrix_determinant(A))), tf.ones((batch_size,)));
         else:
             A = self.A;
             b = self.b;
-        z = tf.matmul(A, z) + b;
+            z = tf.matmul(self.A, z) + self.b;
+            log_det_jacobian = tf.log(p_eps+tf.abs(tf.matrix_determinant(A)));
         T = tf.shape(z)[2];
-        log_det_jacobian = tf.log(p_eps+tf.abs(tf.matrix_determinant(A)));
         log_det_jacobian = tf.expand_dims(tf.expand_dims(log_det_jacobian, 1), 2);
         log_det_jacobian = tf.tile(log_det_jacobian, [1, 1, T]);
         sum_log_det_jacobians += log_det_jacobian;
