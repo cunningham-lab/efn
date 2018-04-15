@@ -6,26 +6,29 @@ from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
+import datetime
+import os
 #from dirichlet import simplex
 
-
 p_eps = 10e-6;
-def initialize_optimization_parameters(sess, optimizer, all_params):
-    nparams = len(all_params);
-    slot_names = optimizer.get_slot_names();
-    num_slot_names = len(slot_names);
-    for i in range(nparams):
-        param = all_params[i];
-        for j in range(num_slot_names):
-            slot_name = slot_names[j];
-            opt_var = optimizer.get_slot(param, slot_name);
-            sess.run(opt_var.initializer);
-    # Adam optimizer is the only tf optimizer that has this slot variable issue
-    # href https://github.com/tensorflow/tensorflow/issues/8057
-    if (isinstance(optimizer, tf.train.AdamOptimizer)):
-        sess.run(optimizer._beta1_power.initializer);
-        sess.run(optimizer._beta2_power.initializer);
-    return None;
+
+def setup_IO(constraint_id, D, flow_id, L, units_per_layer, stochastic_eta):
+# set file I/O stuff
+    now = datetime.datetime.now();
+    datestr = now.strftime("%Y-%m-%d_%H")
+    resdir = 'results/' + datestr;
+    if (not os.path.exists(resdir)):
+        print('creating save directory:\n %s' % resdir);
+        # This is an issue when processes are started in parallel.
+        try:
+            os.makedirs(resdir);
+        except FileExistsError:
+            print('%s already exists. Continuing.');
+
+    eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
+
+    savedir = resdir + '/tb/' + '%s_D=%d_%s_L=%d_upl=%d/' % (constraint_id, D, flow_id, L, units_per_layer);
+    return savedir
 
 def load_constraint_info(constraint_id):
     datadir = 'constraints/';
@@ -51,13 +54,14 @@ def load_constraint_info(constraint_id):
         D = D_X-1;
     return D, K_eta, params, constraint_type;
 
-def construct_flow(flow_id, D_Z):
+def construct_flow(flow_id, D_Z, T):
     datadir = 'flows/';
     fname = datadir + '%s.npz' % flow_id;
     flowfile = np.load(fname);
     num_linear_lyrs = int(flowfile['num_linear_layers']);
     num_planar_lyrs = int(flowfile['num_planar_layers']);
     K = int(flowfile['K']);
+    assert(K >= 0);
     layers = [];
     for i in range(num_linear_lyrs):
         layers.append(LinearFlowLayer('LinearFlow%d' % (i+1), dim=D_Z));
@@ -65,7 +69,41 @@ def construct_flow(flow_id, D_Z):
         layers.append(PlanarFlowLayer('PlanarFlow%d' % (i+1), dim=D_Z));
     nlayers = len(layers); 
 
-    return layers, num_linear_lyrs, num_planar_lyrs, K;
+    dynamics = K > 0;
+
+    # Placeholder for initial condition of latent dynamical process
+    if (dynamics):
+        num_zi = 1;
+    else:
+        num_zi = T;
+    Z0 = tf.placeholder(tf.float32, shape=(None, D_Z, num_zi));
+    batch_size = tf.shape(Z0)[0];
+
+    if (dynamics):
+        # Note: The vector autoregressive parameters are vectorized for convenience in the 
+        # unbiased gradient computation. 
+        # Update, no need to vectorize. Fix this when implementing dynamics
+        A_init = tf.random_normal((K*D_Z*D_Z,1), 0.0, 1.0, dtype=tf.float32);
+        #A_init = np.array([[0.5], [0.0], [0.0], [0.5]], np.float32);
+        log_sigma_eps_init = tf.abs(tf.random_normal((D,1), 0.0, 0.1, dtype=tf.float32));
+        noise_level = np.log(.02);
+        log_sigma_eps_init = noise_level*np.array([[1.0], [1.0]], np.float32);
+        A_vectorized = tf.get_variable('A_vectorized', dtype=tf.float32, initializer=A_init);
+        A = tf.reshape(A_vectorized, [K,D_Z,D_Z]);
+        log_sigma_eps = tf.get_variable('log_sigma_eps', dtype=tf.float32, initializer=log_sigma_eps_init);
+        sigma_eps = tf.exp(log_sigma_eps);
+        num_dyn_param_vals = K*D_Z*D_Z + D_Z;
+        # contruct latent dynamics 
+        Z_AR, base_log_p_z, Sigma_Z_AR = latent_dynamics(Z0, A, sigma_eps, T);
+    else:
+        # evaluate unit normal 
+        p0 = tf.expand_dims(tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/tf.sqrt(2.0*np.pi), axis=1), 1); 
+        base_log_p_z = tf.log(p0);
+        # TODO more care taken care for time series
+        num_dyn_param_vals = 0;
+        Z_AR = Z0;
+
+    return layers, Z0, Z_AR, base_log_p_z, K, batch_size, num_zi, num_dyn_param_vals;
 
 
 def approxKL(y_k, X_k, constraint_type, params, plot=False):
