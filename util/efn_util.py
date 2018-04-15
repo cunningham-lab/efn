@@ -310,6 +310,30 @@ def computeMoments(X, constraint_type, D_X, T):
         raise NotImplementedError; 
     return Tx;
 
+def cost_fn(eta, log_p_zs, Tx, K_eta, cost_type):
+    y = log_p_zs
+    cost = 0.0;
+    R2s = [];
+    for k in range(K_eta):
+        # get eta-specific log-probs and T(x)'s
+        y_k = tf.expand_dims(y[k,:], 1);
+        Tx_k = Tx[k,:,:];
+        eta_k = tf.expand_dims(eta[k,:], 1);
+        # compute optimial linear regression offset term for eta
+        alpha_k = tf.reduce_mean(y_k - tf.matmul(Tx_k, eta_k));
+        residuals = y_k - tf.matmul(Tx_k, eta_k) - alpha_k;
+        RSS_k = tf.matmul(tf.transpose(residuals), residuals);
+        y_k_mc = y_k - tf.reduce_mean(y_k);
+        TSS_k = tf.reduce_sum(tf.square(y_k_mc));
+        # compute the R^2 of the exponential family fit
+        R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
+        if (cost_type == 'reg'):
+            cost += RSS_k[0,0];
+        elif (cost_type == 'KL'):
+            cost += tf.reduce_mean(y_k - tf.matmul(Tx_k, eta_k));
+
+    return cost, R2s;
+
 def getEtas(constraint_id, K_eta):
     D_Z, K_eta, params, constraint_type = load_constraint_info(constraint_id);
     datadir = 'constraints/'

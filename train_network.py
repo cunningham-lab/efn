@@ -12,7 +12,7 @@ from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       latent_dynamics, connect_flow, construct_flow, \
                       load_constraint_info, setup_IO, construct_theta_network, \
-                      approxKL, drawEtas, checkH, declare_theta
+                      approxKL, drawEtas, checkH, declare_theta, cost_fn
 
 def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, M_eta=100, K_eta=None, \
                   stochastic_eta=True, single_dist=False, lr_order=-3, random_seed=0):
@@ -105,26 +105,7 @@ def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, 
     # set up the constraint computation
     Tx = computeMoments(X, constraint_type, D, T);
     # exponential family optimization
-    y = log_p_zs
-    cost = 0.0;
-    R2s = [];
-    for k in range(K_eta):
-        # get eta-specific log-probs and T(x)'s
-        y_k = tf.expand_dims(y[k,:], 1);
-        Tx_k = Tx[k,:,:];
-        eta_k = tf.expand_dims(eta[k,:], 1);
-        # compute optimial linear regression offset term for eta
-        alpha_k = tf.reduce_mean(y_k - tf.matmul(Tx_k, eta_k));
-        residuals = y_k - tf.matmul(Tx_k, eta_k) - alpha_k;
-        RSS_k = tf.matmul(tf.transpose(residuals), residuals);
-        y_k_mc = y_k - tf.reduce_mean(y_k);
-        TSS_k = tf.reduce_sum(tf.square(y_k_mc));
-        # compute the R^2 of the exponential family fit
-        R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        if (cost_type == 'reg'):
-            cost += RSS_k[0,0];
-        elif (cost_type == 'KL'):
-            cost += tf.reduce_mean(y_k - tf.matmul(Tx_k, eta_k));
+    cost, R2s = cost_fn(eta, log_p_zs, Tx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
 
     # set optimization hyperparameters
@@ -202,7 +183,7 @@ def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, 
             #X_covs[0, :, :] = np.mean(X_cov_i, 0);
         else:
             cost_i, X_cov_i, _flow_params, _cost_grads, _X, _y, _Tx, summary = \
-                    sess.run([cost, X_cov, flow_params, cost_grad, X, y, Tx, summary_op], feed_dict);
+                    sess.run([cost, X_cov, flow_params, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
             #X_covs[0, :, :] = np.mean(X_cov_i, 0);
 
         #np.savez('notebooks/debug.npz', Z0=z_i, X=_X, y=_y, Tx=_Tx, eta=_etas[0]);
@@ -307,13 +288,6 @@ def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, 
                 summary_writer.add_summary(summary, i);
 
             if (np.mod(i, check_diagnostics_rate)==0):
-                """
-                plt.figure();
-                plt.scatter(_X[:,0,0], _X[:,1,0], 40*np.ones((n,)), _Tx[:,4]);
-                plt.colorbar();
-                plt.show();
-                """
-
                 train_R2s[check_it,:] = _R2s;
                 print('train R2s');
                 print(_R2s[:10]);
