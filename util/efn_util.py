@@ -12,7 +12,7 @@ import os
 
 p_eps = 10e-6;
 
-def setup_IO(constraint_id, D, flow_id, L, units_per_layer, stochastic_eta):
+def setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta):
 # set file I/O stuff
     now = datetime.datetime.now();
     datestr = now.strftime("%Y-%m-%d_%H")
@@ -27,7 +27,7 @@ def setup_IO(constraint_id, D, flow_id, L, units_per_layer, stochastic_eta):
 
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
 
-    savedir = resdir + '/tb/' + '%s_D=%d_%s_L=%d_upl=%d/' % (constraint_id, D, flow_id, L, units_per_layer);
+    savedir = resdir + '/tb/' + '%s_D=%d_%s_L=%d_upl=%d/' % (exp_fam, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl']);
     return savedir
 
 def load_constraint_info(constraint_id):
@@ -54,7 +54,9 @@ def load_constraint_info(constraint_id):
         D = D_X-1;
     return D, K_eta, params, constraint_type;
 
-def construct_theta_network(eta, flow_layers, L_theta, upl_theta):
+def construct_theta_network(eta, flow_layers, theta_nn_hps):
+    L_theta = theta_nn_hps['L']
+    upl_theta = theta_nn_hps['upl'];
     L_flow = len(flow_layers);
     h = eta;
     K = tf.shape(eta)[0];
@@ -179,7 +181,7 @@ def latent_dynamics(Z0, A, sigma_eps, T):
     log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
     return Z_AR, log_p_Z_AR, Sigma_Z_AR;
 
-def connect_flow(Z, layers, theta, constraint_type):
+def connect_flow(Z, layers, theta, exp_fam):
     Z_shape = tf.shape(Z);
     K = Z_shape[0];
     M = Z_shape[1];
@@ -196,7 +198,7 @@ def connect_flow(Z, layers, theta, constraint_type):
         layer.connect_parameter_network(theta_layer);
         Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
     # final layer translates to the support
-    if (constraint_type == 'dirichlet'):
+    if (exp_fam == 'dirichlet'):
         # TODO need to redo this
         Z = tf.exp(Z) / tf.expand_dims((tf.reduce_sum(tf.exp(Z) ,axis=2) + 1), 2); 
         # compute the jacobian using matrix determinant lemma
@@ -213,9 +215,9 @@ def connect_flow(Z, layers, theta, constraint_type):
     return Z, sum_log_det_jacobians;
 
 
-def approxKL(y_k, X_k, constraint_type, params, plot=False):
+def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
-    if (constraint_type == 'normal'):
+    if (exp_fam == 'normal'):
         mu = params['mu'];
         Sigma = params['Sigma'];
         dist = multivariate_normal(mean=mu, cov=Sigma);
@@ -242,7 +244,7 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
             plt.ylim([ymin, ymax]);
             plt.colorbar();
             plt.show();
-    if (constraint_type == 'dirichlet'):
+    if (exp_fam == 'dirichlet'):
         alpha = params['alpha'];
         dist = dirichlet(alpha);
         log_P = dist.logpdf(X_k.T);
@@ -266,27 +268,27 @@ def approxKL(y_k, X_k, constraint_type, params, plot=False):
         """
     return KL;
 
-def checkH(y_k, constraint_type, params):
+def checkH(y_k, exp_fam, params):
     log_Q = y_k[:,0];
     H = np.mean(-log_Q);
-    if (constraint_type == 'normal'):
+    if (exp_fam == 'normal'):
         mu = params['mu'];
         Sigma = params['Sigma'];
         dist = multivariate_normal(mean=mu, cov=Sigma);
         H_true = dist.entropy();
-    if (constraint_type == 'dirichlet'):
+    if (exp_fam == 'dirichlet'):
         alpha = params['alpha'];
         dist = dirichlet(alpha);
         H_true = dist.entropy();
     print('H = %.3f/%.3f' % (H, H_true));
     return None;
 
-def computeMoments(X, constraint_type, D_X, T):
+def computeMoments(X, exp_fam, D_X, T):
     X_shape = tf.shape(X);
     K = X_shape[0];
     M = X_shape[1];
     if (T==1):
-        if (constraint_type == 'normal'):
+        if (exp_fam == 'normal'):
             cov_con_mask = np.triu(np.ones((D_X,D_X), dtype=np.bool_), 0);
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D_X]); # samps x D
             Tx_mean = X_flat;
@@ -295,7 +297,7 @@ def computeMoments(X, constraint_type, D_X, T):
             #Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(X_cov, [1,2,0]), _cov_con_mask)); # [n x (D*(D-1)/2 )]
             Tx_cov = tf.reshape(XXT, [K,M, D_X*D_X]);
             Tx = tf.concat((Tx_mean, Tx_cov), axis=2);
-        elif (constraint_type == 'dirichlet'):
+        elif (exp_fam == 'dirichlet'):
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D_X]); # samps x D
             Tx_log = tf.log(X_flat);
             Tx = Tx_log;
@@ -374,8 +376,8 @@ def normal_eta(mu, Sigma):
     return eta;
 
 
-def drawEtas(constraint_type, D_Z, K_eta, n_k):
-    if (constraint_type == 'normal'):
+def drawEtas(exp_fam, D_Z, K_eta, n_k):
+    if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
         ncons = D_Z+D_Z**2;
@@ -391,7 +393,7 @@ def drawEtas(constraint_type, D_Z, K_eta, n_k):
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
         params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
-    if (constraint_type == 'dirichlet'):
+    if (exp_fam == 'dirichlet'):
         D_X = D_Z + 1;
         eta = np.zeros((K_eta, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
