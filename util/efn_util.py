@@ -54,9 +54,10 @@ def load_constraint_info(constraint_id):
         D = D_X-1;
     return D, K_eta, params, constraint_type;
 
-def construct_theta_network(eta, flow_layers, L_theta, upl_theta, n):
+def construct_theta_network(eta, flow_layers, L_theta, upl_theta):
     L_flow = len(flow_layers);
     h = eta;
+    batch_size = tf.shape(eta)[0];
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
             h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
@@ -79,7 +80,24 @@ def construct_theta_network(eta, flow_layers, L_theta, upl_theta, n):
                                        dtype=tf.float32, \
                                        initializer=tf.glorot_uniform_initializer());
             param_ij = tf.matmul(h, A_ij) + b_ij;
-            param_ij = tf.reshape(param_ij, (n,) + param_dims[j]);
+            param_ij = tf.reshape(param_ij, (batch_size,) + param_dims[j]);
+            layer_i_params.append(param_ij);
+        theta.append(layer_i_params);
+    return theta;
+
+def declare_theta(flow_layers):
+    L_flow = len(flow_layers);
+    theta =[];
+    for i in range(L_flow):
+        layer = flow_layers[i];
+        layer_name, param_names, param_dims = layer.get_layer_info();
+        #print(layer_name, param_names, param_dims);
+        nparams = len(param_names);
+        layer_i_params = [];
+        for j in range(nparams):
+            param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
+                                       dtype=tf.float32, \
+                                       initializer=tf.glorot_uniform_initializer());
             layer_i_params.append(param_ij);
         theta.append(layer_i_params);
     return theta;

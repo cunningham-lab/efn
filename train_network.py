@@ -12,7 +12,7 @@ from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       latent_dynamics, time_invariant_flow, construct_flow, \
                       load_constraint_info, setup_IO, construct_theta_network, \
-                      approxKL, drawEtas, checkH
+                      approxKL, drawEtas, checkH, declare_theta
 
 def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, M=100, K_eta=None, \
                   stochastic_eta=True, single_dist=False, lr_order=-3, random_seed=0):
@@ -39,6 +39,8 @@ def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, 
     
     n = M*K_eta;
     M_test = M;
+    print('n', 'M', 'K_eta');
+    print(n, M, K_eta);
 
     # optimization hyperparameters
     max_iters = 100000;
@@ -85,22 +87,9 @@ def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, 
     # construct the parameter network
     L_flow = len(flow_layers);
     if (not single_dist):
-        theta = construct_theta_network(eta, flow_layers, L_theta, upl_theta, n);
-
+        theta = construct_theta_network(eta, flow_layers, L_theta, upl_theta);
     else: # or just declare the parameters
-        theta =[];
-        for i in range(L_flow):
-            layer = flow_layers[i];
-            layer_name, param_names, param_dims = layer.get_layer_info();
-            #print(layer_name, param_names, param_dims);
-            nparams = len(param_names);
-            layer_i_params = [];
-            for j in range(nparams):
-                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                           dtype=tf.float32, \
-                                           initializer=tf.glorot_uniform_initializer());
-                layer_i_params.append(param_ij);
-            theta.append(layer_i_params);
+        theta = declare_theta(flow_layers);
 
     # construct time-invariant 
     if (L_flow > 0):
