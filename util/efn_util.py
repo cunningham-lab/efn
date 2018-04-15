@@ -57,7 +57,7 @@ def load_constraint_info(constraint_id):
 def construct_theta_network(eta, flow_layers, L_theta, upl_theta):
     L_flow = len(flow_layers);
     h = eta;
-    batch_size = tf.shape(eta)[0];
+    K = tf.shape(eta)[0];
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
             h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
@@ -80,7 +80,7 @@ def construct_theta_network(eta, flow_layers, L_theta, upl_theta):
                                        dtype=tf.float32, \
                                        initializer=tf.glorot_uniform_initializer());
             param_ij = tf.matmul(h, A_ij) + b_ij;
-            param_ij = tf.reshape(param_ij, (batch_size,) + param_dims[j]);
+            param_ij = tf.reshape(param_ij, (K,) + param_dims[j]);
             layer_i_params.append(param_ij);
         theta.append(layer_i_params);
     return theta;
@@ -108,8 +108,8 @@ def construct_flow(flow_id, D_Z, T):
     flowfile = np.load(fname);
     num_linear_lyrs = int(flowfile['num_linear_layers']);
     num_planar_lyrs = int(flowfile['num_planar_layers']);
-    K = int(flowfile['K']);
-    assert(K >= 0);
+    P = int(flowfile['P']); # order of VAR dynamics
+    assert(P >= 0);
     layers = [];
     for i in range(num_linear_lyrs):
         layers.append(LinearFlowLayer('LinearFlow%d' % (i+1), dim=D_Z));
@@ -117,7 +117,7 @@ def construct_flow(flow_id, D_Z, T):
         layers.append(PlanarFlowLayer('PlanarFlow%d' % (i+1), dim=D_Z));
     nlayers = len(layers); 
 
-    dynamics = K > 0;
+    dynamics = P > 0;
 
     # Placeholder for initial condition of latent dynamical process
     if (dynamics):
@@ -125,33 +125,97 @@ def construct_flow(flow_id, D_Z, T):
     else:
         num_zi = T;
 
-    Z0 = tf.placeholder(tf.float32, shape=(None, D_Z, num_zi));
-    batch_size = tf.shape(Z0)[0];
+    Z0 = tf.placeholder(tf.float32, shape=(None, None, D_Z, num_zi));
+    K = tf.shape(Z0)[0];
+    M = tf.shape(Z0)[1];
     if (dynamics):
         # Note: The vector autoregressive parameters are vectorized for convenience in the 
         # unbiased gradient computation. 
         # Update, no need to vectorize. Fix this when implementing dynamics
-        A_init = tf.random_normal((K*D_Z*D_Z,1), 0.0, 1.0, dtype=tf.float32);
+        A_init = tf.random_normal((P*D_Z*D_Z,1), 0.0, 1.0, dtype=tf.float32);
         #A_init = np.array([[0.5], [0.0], [0.0], [0.5]], np.float32);
-        log_sigma_eps_init = tf.abs(tf.random_normal((D,1), 0.0, 0.1, dtype=tf.float32));
+        log_sigma_eps_init = tf.abs(tf.random_normal((D_Z,1), 0.0, 0.1, dtype=tf.float32));
         noise_level = np.log(.02);
         log_sigma_eps_init = noise_level*np.array([[1.0], [1.0]], np.float32);
         A_vectorized = tf.get_variable('A_vectorized', dtype=tf.float32, initializer=A_init);
-        A = tf.reshape(A_vectorized, [K,D_Z,D_Z]);
+        A = tf.reshape(A_vectorized, [P,D_Z,D_Z]);
         log_sigma_eps = tf.get_variable('log_sigma_eps', dtype=tf.float32, initializer=log_sigma_eps_init);
         sigma_eps = tf.exp(log_sigma_eps);
-        num_dyn_param_vals = K*D_Z*D_Z + D_Z;
+        num_dyn_param_vals = P*D_Z*D_Z + D_Z;
         # contruct latent dynamics 
         Z_AR, base_log_p_z, Sigma_Z_AR = latent_dynamics(Z0, A, sigma_eps, T);
     else:
         # evaluate unit normal 
-        p0 = tf.expand_dims(tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/tf.sqrt(2.0*np.pi), axis=1), 1); 
-        base_log_p_z = tf.log(p0);
-        # TODO more care taken care for time series
+        assert(T==1); # TODO more care taken care for time series
+        p0 = tf.expand_dims(tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/tf.sqrt(2.0*np.pi), axis=2), 2); 
+        base_log_p_z = tf.log(p0[:,:,0,0]);
         num_dyn_param_vals = 0;
         Z_AR = Z0;
 
-    return layers, Z0, Z_AR, base_log_p_z, K, dynamics, batch_size, num_zi, num_dyn_param_vals;
+    return layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_dyn_param_vals;
+
+def latent_dynamics(Z0, A, sigma_eps, T):
+    P = A.shape[0];
+    D = tf.shape(A)[1];
+    K = tf.shape(Z0)[0];
+    M = tf.shape(Z0)[1];
+    batch_size = tf.multiply(K,M);
+    Z_AR = Z0;
+    for t in range(1, T):
+        Z_AR_pred_t = tf.zeros((K, M, D));
+        for i in range(P):
+            if (t-(i+1) >= 0):
+                Z_AR_pred_t += tf.transpose(tf.tensordot(A[i,:,:], Z_AR[:,:,:,t-(i+1)], [[1], [2]]), [1,2,0]);
+        epsilon = tf.transpose(tf.multiply(sigma_eps, tf.random_normal((D,K,M),0,1)), [1,2,0]);
+        Z_AR_t = Z_AR_pred_t + epsilon;
+
+        Z_AR = tf.concat((Z_AR, tf.expand_dims(Z_AR_t, 3)), axis=3);
+
+    Sigma_eps = tf.diag(tf.square(sigma_eps[:,0]));
+    Sigma_Z_AR = compute_VAR_cov_tf(A, Sigma_eps, D, P, T);
+    Sigma_Z_AR = Sigma_Z_AR;
+    
+    Z_AR_dist = tf.contrib.distributions.MultivariateNormalFullCovariance(tf.zeros((D*T,)), Sigma_Z_AR);
+
+    Z_AR_dist_shaped = tf.reshape(tf.transpose(Z_AR, [0, 1, 3, 2]), (K,M,D*T));
+    log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
+    return Z_AR, log_p_Z_AR, Sigma_Z_AR;
+
+def connect_flow(Z, layers, theta, constraint_type):
+    Z_shape = tf.shape(Z);
+    K = Z_shape[0];
+    M = Z_shape[1];
+    D = Z_shape[2];
+    T = Z_shape[3];
+
+    sum_log_det_jacobians = 0.0;
+    nlayers = len(layers);
+    if (nlayers == 0):
+        sum_log_det_jacobian = tf.zeros((K,M));
+    for i in range(nlayers):
+        layer = layers[i];
+        theta_layer = theta[i];
+        layer.connect_parameter_network(theta_layer);
+        Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
+    #print('Z shape 1', Z.shape);
+    #print('sldj shape 1', sum_log_det_jacobians.shape)
+    # final layer translates to the support
+    if (constraint_type == 'dirichlet'):
+        # TODO need to redo this
+        Z = tf.exp(Z) / tf.expand_dims((tf.reduce_sum(tf.exp(Z) ,axis=2) + 1), 2); 
+        # compute the jacobian using matrix determinant lemma
+        u = Z;
+        Adiag = u;
+        Ainvdiag = 1.0 / u;
+        v = -u;
+        g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=1)), tf.reduce_prod(Adiag, axis=1));
+        g_log_det_jacobian = tf.log(g_det_jacobian);
+        sum_log_det_jacobians += tf.expand_dims(g_log_det_jacobian, 2);
+        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
+    #print('Z shape 2', Z.shape);
+    #print('sldj shape 2', sum_log_det_jacobians.shape)    
+
+    return Z, sum_log_det_jacobians;
 
 
 def approxKL(y_k, X_k, constraint_type, params, plot=False):
@@ -222,25 +286,28 @@ def checkH(y_k, constraint_type, params):
     #print('H = %.3f/%.3f' % (H, H_true));
     return None;
 
-def computeMoments(X, constraint_type, D_X):
+def computeMoments(X, constraint_type, D_X, T):
     X_shape = tf.shape(X);
-    batch_size = X_shape[0];
-    T = X_shape[2];
-    if (constraint_type == 'normal'):
-        cov_con_mask = np.triu(np.ones((D_X,D_X), dtype=np.bool_), 0);
-        X_flat = tf.reshape(tf.transpose(X, [0, 2, 1]), [T*batch_size, D_X]); # samps x D
-        Tx_mean = X_flat;
-        XXT = tf.matmul(tf.expand_dims(X_flat, 2), tf.expand_dims(X_flat, 1));
+    K = X_shape[0];
+    M = X_shape[1];
+    if (T==1):
+        if (constraint_type == 'normal'):
+            cov_con_mask = np.triu(np.ones((D_X,D_X), dtype=np.bool_), 0);
+            X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D_X]); # samps x D
+            Tx_mean = X_flat;
+            XXT = tf.matmul(tf.expand_dims(X_flat, 3), tf.expand_dims(X_flat, 2));
 
-        #Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(X_cov, [1,2,0]), _cov_con_mask)); # [n x (D*(D-1)/2 )]
-        Tx_cov = tf.reshape(XXT, [T*batch_size, D_X*D_X]);
-        Tx = tf.concat((Tx_mean, Tx_cov), axis=1);
-    elif (constraint_type == 'dirichlet'):
-        X_flat = tf.reshape(tf.transpose(X, [0, 2, 1]), [T*batch_size, D_X]); # samps x D
-        Tx_log = tf.log(X_flat);
-        Tx = Tx_log;
+            #Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(X_cov, [1,2,0]), _cov_con_mask)); # [n x (D*(D-1)/2 )]
+            Tx_cov = tf.reshape(XXT, [K,M, D_X*D_X]);
+            Tx = tf.concat((Tx_mean, Tx_cov), axis=2);
+        elif (constraint_type == 'dirichlet'):
+            X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D_X]); # samps x D
+            Tx_log = tf.log(X_flat);
+            Tx = Tx_log;
+        else: 
+            raise NotImplementedError;
     else:
-        raise NotImplementedError;
+        raise NotImplementedError; 
     return Tx;
 
 def getEtas(constraint_id, K_eta):
@@ -289,22 +356,19 @@ def normal_eta(mu, Sigma):
 
 
 def drawEtas(constraint_type, D_Z, K_eta, n_k):
-    n = K_eta * n_k;
     if (constraint_type == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
         ncons = D_Z+D_Z**2;
-        eta = np.zeros((n, ncons));
+        eta = np.zeros((K_eta, ncons));
         df_fac = 2;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
         for k in range(K_eta):
-            k_start = k*n_k;
             mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
             Sigma_k = Sigma_dist.rvs(1);
             eta_k = normal_eta(mu_k, Sigma_k);
-            for i in range(n_k):
-                eta[k_start+i,:] = eta_k[:,0];
+            eta[k,:] = eta_k[:,0];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
         params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
@@ -313,11 +377,9 @@ def drawEtas(constraint_type, D_Z, K_eta, n_k):
         eta = np.zeros((n, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
         for k in range(K_eta):
-            k_start = k*n_k;
             alpha_k = np.random.uniform(0.01, 4, (D_X,));
             eta_k = alpha_k;
-            for i in range(n_k):
-                eta[k_start+i,:] = eta_k;
+            eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
         params = {'alpha_targs':alpha_targs};
     return eta, params;
@@ -351,65 +413,6 @@ def autocovariance(X, tau_max, T, batch_size):
     Tx_autocov = 0;
     Rx_autocov = 0;
     return Tx_autocov, Rx_autocov;
-
-def latent_dynamics(Z0, A, sigma_eps, T):
-    k = A.shape[0];
-    D = tf.shape(A)[1];
-    batch_size = tf.shape(Z0)[0];
-    Z_AR = Z0;
-    for t in range(1, T):
-        Z_AR_pred_t = tf.zeros((batch_size, D));
-        for i in range(k):
-            if (t-(i+1) >= 0):
-                Z_AR_pred_t += tf.transpose(tf.matmul(A[i,:,:], tf.transpose(Z_AR[:,:,t-(i+1)])));
-        epsilon = tf.transpose(tf.multiply(sigma_eps, tf.random_normal((D, batch_size),0,1)));
-        Z_AR_t = Z_AR_pred_t + epsilon;
-
-        Z_AR = tf.concat((Z_AR, tf.expand_dims(Z_AR_t, 2)), axis=2);
-
-    Sigma_eps = tf.diag(tf.square(sigma_eps[:,0]));
-    Sigma_Z_AR = compute_VAR_cov_tf(A, Sigma_eps, D, k, T);
-    Sigma_Z_AR = Sigma_Z_AR;
-    
-    Z_AR_dist = tf.contrib.distributions.MultivariateNormalFullCovariance(tf.zeros((D*T,)), Sigma_Z_AR);
-
-    Z_AR_dist_shaped = tf.reshape(tf.transpose(Z_AR, [0, 2, 1]), (batch_size, D*T));
-    log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
-    return Z_AR, log_p_Z_AR, Sigma_Z_AR;
-
-
-def time_invariant_flow(Z, layers, theta, constraint_type):
-    Z_shape = tf.shape(Z);
-    batch_size = Z_shape[0];
-    D = Z_shape[1];
-    T = Z_shape[2];
-
-    sum_log_det_jacobians = 0.0;
-    nlayers = len(layers);
-    for i in range(nlayers):
-        layer = layers[i];
-        theta_layer = theta[i];
-        layer.connect_parameter_network(theta_layer);
-        Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-    #print('Z shape 1', Z.shape);
-    #print('sldj shape 1', sum_log_det_jacobians.shape)
-    # final layer translates to the support
-    if (constraint_type == 'dirichlet'):
-        # TODO this needs to be compatable with current shaping of Z
-        Z = tf.exp(Z) / tf.expand_dims((tf.reduce_sum(tf.exp(Z) ,axis=1) + 1), 1); 
-        # compute the jacobian using matrix determinant lemma
-        u = Z;
-        Adiag = u;
-        Ainvdiag = 1.0 / u;
-        v = -u;
-        g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=1)), tf.reduce_prod(Adiag, axis=1));
-        g_log_det_jacobian = tf.log(g_det_jacobian);
-        sum_log_det_jacobians += tf.expand_dims(g_log_det_jacobian, 2);
-        Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=1), 1)), axis=1);
-    #print('Z shape 2', Z.shape);
-    #print('sldj shape 2', sum_log_det_jacobians.shape)    
-
-    return Z, sum_log_det_jacobians;
 
 
 def adam_updates(params, cost_or_grads, lr=0.001, mom1=0.9, mom2=0.999):

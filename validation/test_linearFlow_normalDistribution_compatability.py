@@ -32,7 +32,7 @@ for i in range(0, numdists):
 		X_true = np.random.multivariate_normal(mu, Sigma, M);
 		print(X_true.shape);
 		plt.figure();
-		plt.scatter(X[:,0,0], X[:,1,0], color=[0,0,.8]);
+		plt.scatter(X[0,:,0,0], X[0,:,1,0], color=[0,0,.8]);
 		plt.scatter(X_true[:,0], X_true[:,1], color=[.8,0,0]);
 		plt.xlabel('x_1');
 		plt.ylabel('x_2');
