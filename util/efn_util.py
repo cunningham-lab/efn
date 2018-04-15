@@ -54,6 +54,36 @@ def load_constraint_info(constraint_id):
         D = D_X-1;
     return D, K_eta, params, constraint_type;
 
+def construct_theta_network(eta, flow_layers, L_theta, upl_theta, n):
+    L_flow = len(flow_layers);
+    h = eta;
+    for i in range(L_theta):
+        with tf.variable_scope('ParamNetLayer%d' % (i+1)):
+            h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
+    theta = [];
+    for i in range(L_flow):
+        layer = flow_layers[i];
+        layer_name, param_names, param_dims = layer.get_layer_info();
+        #print(layer_name, param_names, param_dims);
+        nparams = len(param_names);
+        layer_i_params = [];
+        # read each parameter out of the last layer.
+        for j in range(nparams):
+            num_elems = np.prod(param_dims[j]);
+            A_shape = (upl_theta, num_elems);
+            b_shape = (1, num_elems);
+            A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
+                                       dtype=tf.float32, \
+                                       initializer=tf.glorot_uniform_initializer());
+            b_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_b', shape=b_shape, \
+                                       dtype=tf.float32, \
+                                       initializer=tf.glorot_uniform_initializer());
+            param_ij = tf.matmul(h, A_ij) + b_ij;
+            param_ij = tf.reshape(param_ij, (n,) + param_dims[j]);
+            layer_i_params.append(param_ij);
+        theta.append(layer_i_params);
+    return theta;
+
 def construct_flow(flow_id, D_Z, T):
     datadir = 'flows/';
     fname = datadir + '%s.npz' % flow_id;
@@ -76,9 +106,9 @@ def construct_flow(flow_id, D_Z, T):
         num_zi = 1;
     else:
         num_zi = T;
+
     Z0 = tf.placeholder(tf.float32, shape=(None, D_Z, num_zi));
     batch_size = tf.shape(Z0)[0];
-
     if (dynamics):
         # Note: The vector autoregressive parameters are vectorized for convenience in the 
         # unbiased gradient computation. 
@@ -103,7 +133,7 @@ def construct_flow(flow_id, D_Z, T):
         num_dyn_param_vals = 0;
         Z_AR = Z0;
 
-    return layers, Z0, Z_AR, base_log_p_z, K, batch_size, num_zi, num_dyn_param_vals;
+    return layers, Z0, Z_AR, base_log_p_z, K, dynamics, batch_size, num_zi, num_dyn_param_vals;
 
 
 def approxKL(y_k, X_k, constraint_type, params, plot=False):

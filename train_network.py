@@ -11,10 +11,10 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       latent_dynamics, time_invariant_flow, construct_flow, \
-                      load_constraint_info, setup_IO, \
+                      load_constraint_info, setup_IO, construct_theta_network, \
                       approxKL, drawEtas, checkH
 
-def train_network(constraint_id, D, flow_id, cost_type, L=1, units_per_layer=4, M=100, K_eta=None, \
+def train_network(constraint_id, D, flow_id, cost_type, L_theta=1, upl_theta=4, M=100, K_eta=None, \
                   stochastic_eta=True, single_dist=False, lr_order=-3, random_seed=0):
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     if (single_dist):
@@ -35,7 +35,7 @@ def train_network(constraint_id, D, flow_id, cost_type, L=1, units_per_layer=4, 
     # good practice
     tf.reset_default_graph();
 
-    layers, Z0, Z_AR, base_log_p_z, K, dynamics, batch_size, num_zi, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, K, dynamics, batch_size, num_zi, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
     
     n = M*K_eta;
     M_test = M;
@@ -54,7 +54,7 @@ def train_network(constraint_id, D, flow_id, cost_type, L=1, units_per_layer=4, 
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(constraint_id, D, flow_id, L, units_per_layer, stochastic_eta);
+    savedir = setup_IO(constraint_id, D, flow_id, L_theta, upl_theta, stochastic_eta);
     eta = tf.placeholder(tf.float32, shape=(None, ncons));
 
     if (single_dist):
@@ -83,40 +83,14 @@ def train_network(constraint_id, D, flow_id, cost_type, L=1, units_per_layer=4, 
                 _eta_test[k_start+i,:] = _etas_test[k][:,0];
 
     # construct the parameter network
-    nlayers = len(layers);
+    L_flow = len(flow_layers);
     if (not single_dist):
-        h = eta;
-        for i in range(L):
-            with tf.variable_scope('ParamNetLayer%d' % (i+1)):
-                h = tf.layers.dense(h, units_per_layer, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
-        theta = [];
-        for i in range(nlayers):
-            layer = layers[i];
-            layer_name, param_names, param_dims = layer.get_layer_info();
-            #print(layer_name, param_names, param_dims);
-            nparams = len(param_names);
-            layer_i_params = [];
-            # read each parameter out of the last layer.
-            for j in range(nparams):
-                num_elems = np.prod(param_dims[j]);
-                A_shape = (units_per_layer, num_elems);
-                b_shape = (1, num_elems);
-                A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
-                                           dtype=tf.float32, \
-                                           initializer=tf.glorot_uniform_initializer());
-                b_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_b', shape=b_shape, \
-                                           dtype=tf.float32, \
-                                           initializer=tf.glorot_uniform_initializer());
-                param_ij = tf.matmul(h, A_ij) + b_ij;
-                param_ij = tf.reshape(param_ij, (n,) + param_dims[j]);
-                layer_i_params.append(param_ij);
-            theta.append(layer_i_params);
-
+        theta = construct_theta_network(eta, flow_layers, L_theta, upl_theta, n);
 
     else: # or just declare the parameters
         theta =[];
-        for i in range(nlayers):
-            layer = layers[i];
+        for i in range(L_flow):
+            layer = flow_layers[i];
             layer_name, param_names, param_dims = layer.get_layer_info();
             #print(layer_name, param_names, param_dims);
             nparams = len(param_names);
@@ -129,8 +103,8 @@ def train_network(constraint_id, D, flow_id, cost_type, L=1, units_per_layer=4, 
             theta.append(layer_i_params);
 
     # construct time-invariant 
-    if (nlayers > 0):
-        Z, sum_log_det_jacobian = time_invariant_flow(Z_AR, layers, theta, constraint_type);
+    if (L_flow > 0):
+        Z, sum_log_det_jacobian = time_invariant_flow(Z_AR, flow_layers, theta, constraint_type);
     else:
         Z = Z_AR;
         sum_log_det_jacobian = tf.zeros((batch_size,1,T));
@@ -504,8 +478,8 @@ if __name__ == '__main__':    # parse command line parameters
     D_Z = int(sys.argv[2]); 
     flow_id = str(sys.argv[3]);
     cost_type = str(sys.argv[4]);
-    L = int(sys.argv[5]);
-    units_per_layer = int(sys.argv[6]);
+    L_theta = int(sys.argv[5]);
+    upl_theta = int(sys.argv[6]);
     n= int(sys.argv[7]);
     K_eta = int(sys.argv[8]);
     stochastic_eta_input = sys.argv[9];
@@ -516,5 +490,5 @@ if __name__ == '__main__':    # parse command line parameters
     stochastic_eta = not (str(stochastic_eta_input) == 'False');
     single_dist = not (str(single_dist_input) == 'False');
 
-    train_network(constraint_id, flow_id, cost_type, L, units_per_layer, n, K_eta, \
+    train_network(constraint_id, flow_id, cost_type, L_theta, upl_theta, n, K_eta, \
                   stochastic_eta, single_dist, lr_order, random_seed);
