@@ -31,8 +31,6 @@ class PlanarFlowLayer(Layer):
     def forward_and_jacobian(self, z, sum_log_det_jacobians, reuse=False):
         M = tf.shape(z)[1];
         if (not self.param_network):
-            print(z.shape);
-            print(self.u.shape);
             u = tf.expand_dims(tf.tile(tf.expand_dims(self.u, 0), [M, 1, 1]), 0);
             w = tf.expand_dims(tf.tile(tf.expand_dims(self.w, 0), [M, 1, 1]), 0);
             b = tf.expand_dims(tf.tile(tf.expand_dims(self.b, 0), [M, 1, 1]), 0);

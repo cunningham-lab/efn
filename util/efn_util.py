@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
 import datetime
 import os
-#from dirichlet import simplex
+from dirichlet import simplex
 
 p_eps = 10e-6;
 
@@ -27,32 +27,11 @@ def setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta):
 
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
 
-    savedir = resdir + '/tb/' + '%s_D=%d_%s_L=%d_upl=%d/' % (exp_fam, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl']);
+    if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
+        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_%s_L=%d_upl=%d/' % (exp_fam, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl']);
+    else:
+        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s/' % (exp_fam, D, flow_id);
     return savedir
-
-def load_constraint_info(constraint_id):
-    datadir = 'constraints/';
-    fname = datadir + '%s.npz' % constraint_id;
-    confile = np.load(fname);
-    if (constraint_id[:6] == 'normal'):
-        constraint_type = 'normal';
-    elif (constraint_id[:9] == 'dirichlet'):
-        constraint_type = 'dirichlet';
-    if (constraint_type == 'normal'):
-        mu_targs = confile['mu_targs'];
-        mu_OL_targs = confile['mu_OL_targs'];
-        Sigma_targs = confile['Sigma_targs'];
-        Sigma_OL_targs = confile['Sigma_OL_targs'];
-        params = {'mu_targs':mu_targs, 'mu_OL_targs':mu_OL_targs, \
-                  'Sigma_targs':Sigma_targs, 'Sigma_OL_targs':Sigma_OL_targs};
-        K_eta, D = mu_targs.shape;
-    elif (constraint_type == 'dirichlet'):
-        alpha_targs = confile['alpha_targs'];
-        alpha_OL_targs = confile['alpha_targs'];
-        params = {'alpha_targs':alpha_targs, 'alpha_OL_targs':alpha_OL_targs};
-        K_eta, D_X = alpha_targs.shape;
-        D = D_X-1;
-    return D, K_eta, params, constraint_type;
 
 def construct_theta_network(eta, flow_layers, theta_nn_hps):
     L_theta = theta_nn_hps['L']
@@ -249,11 +228,10 @@ def approxKL(y_k, X_k, exp_fam, params, plot=False):
         dist = dirichlet(alpha);
         log_P = dist.logpdf(X_k.T);
         KL = np.mean(log_Q - log_P);
-        """
         if (plot):
             batch_size = X_k.shape[0];
             X_true = np.random.dirichlet(alpha, (batch_size,));
-            log_P_true = dist.logpdf(X_true);
+            log_P_true = dist.logpdf(X_true.T);
             fig = plt.figure(figsize=(12, 4));
             fig.add_subplot(1,3,1);
             simplex.scatter(X_k, connect=False, c=log_Q);
@@ -265,7 +243,6 @@ def approxKL(y_k, X_k, exp_fam, params, plot=False):
             simplex.scatter(X_k, connect=False, c=log_Q-log_P);
             plt.colorbar();
             plt.show();
-        """
     return KL;
 
 def checkH(y_k, exp_fam, params):
