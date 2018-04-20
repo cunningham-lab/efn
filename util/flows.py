@@ -27,7 +27,9 @@ class PlanarFlowLayer(Layer):
         self.b = theta_layer[2];
         self.param_network = (len(self.u.shape) == 3);
         if (self.param_network):
-            raise NotImplementedError
+            wdotu = tf.matmul(tf.transpose(self.w, [0, 2, 1]), self.u);
+            mwdotu = -1 + tf.log(1 + tf.exp(wdotu));
+            self.uhat = self.u + tf.divide(tf.multiply((mwdotu - wdotu),self.w), tf.expand_dims(tf.reduce_sum(tf.square(self.w),1), 1));
         else:
             wdotu = tf.matmul(tf.transpose(self.w), self.u);
             mwdotu = -1 + tf.log(1 + tf.exp(wdotu));
@@ -46,15 +48,12 @@ class PlanarFlowLayer(Layer):
             w = tf.tile(tf.expand_dims(self.w, 1), [1, M, 1, 1]);
             b = tf.tile(tf.expand_dims(self.b, 1), [1, M, 1, 1]);
 
-        print(u.shape, w.shape, b.shape);
         # helper function phi_k(z_{k-1})
         # derivative of tanh(x) is (1-tanh^2(x))
         phi = tf.matmul(w, (1.0 - tf.tanh(tf.matmul(tf.transpose(w, [0,1,3,2]), z) + b)**2));
         # compute the running sum of log-determinant of jacobians
         input_to_log_abs = tf.matmul(tf.transpose(u, [0,1,3,2]), phi);
         log_det_jacobian = tf.log(tf.abs(1.0 + input_to_log_abs));
-        if (not (sum_log_det_jacobians==0.0)):
-            print('sldjs before', sum_log_det_jacobians.shape);
         sum_log_det_jacobians += log_det_jacobian[:,:,0,0];
         # compute z for this layer
         nonlin_term = tf.tanh(tf.matmul(tf.transpose(w, [0,1,3,2]), z) + b);

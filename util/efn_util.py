@@ -65,7 +65,6 @@ def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
     return theta;
 
 def declare_theta(flow_layers):
-    debug = False;
     L_flow = len(flow_layers);
     theta =[];
     for i in range(L_flow):
@@ -73,35 +72,20 @@ def declare_theta(flow_layers):
         layer_name, param_names, param_dims = layer.get_layer_info();
         nparams = len(param_names);
         layer_i_params = [];
-        if (debug and i==0):
-            u_init = np.expand_dims(np.array([.78, 1.3]), 1);
-            w_init = np.expand_dims(np.array([-.15, -1.28]), 1);
-            b_init = .6*np.ones((1,1), np.float64);
-            param_u = tf.get_variable(layer_name+'_'+param_names[0], \
+        for j in range(nparams):
+            if (j < 1):
+                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
                                            dtype=tf.float64, \
-                                           initializer=u_init);
-            param_w = tf.get_variable(layer_name+'_'+param_names[1], \
+                                           initializer=tf.glorot_uniform_initializer());
+            elif (j==1):
+                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
                                            dtype=tf.float64, \
-                                           initializer=w_init);
-            param_b = tf.get_variable(layer_name+'_'+param_names[2], \
+                                           initializer=tf.glorot_uniform_initializer());
+            elif (j==2):
+                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
                                            dtype=tf.float64, \
-                                           initializer=b_init);
-            layer_i_params = [param_u, param_w, param_b];
-        else:
-            for j in range(nparams):
-                if (j < 1):
-                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                               dtype=tf.float64, \
-                                               initializer=tf.glorot_uniform_initializer());
-                elif (j==1):
-                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                               dtype=tf.float64, \
-                                               initializer=tf.glorot_uniform_initializer());
-                elif (j==2):
-                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                               dtype=tf.float64, \
-                                               initializer=tf.glorot_uniform_initializer());
-                layer_i_params.append(param_ij);
+                                           initializer=tf.glorot_uniform_initializer());
+            layer_i_params.append(param_ij);
         theta.append(layer_i_params);
     return theta;
 
@@ -184,12 +168,14 @@ def latent_dynamics(Z0, A, sigma_eps, T):
     log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
     return Z_AR, log_p_Z_AR, Sigma_Z_AR;
 
-def connect_flow(Z, layers, theta, exp_fam, K_eta, M_eta):
+def connect_flow(Z, layers, theta, exp_fam):
     Z_shape = tf.shape(Z);
+    K = Z_shape[0];
+    M = Z_shape[1];
     D = Z_shape[2];
     T = Z_shape[3];
 
-    sum_log_det_jacobians = tf.zeros((K_eta,M_eta), dtype=tf.float64);
+    sum_log_det_jacobians = tf.zeros((K,M), dtype=tf.float64);
     nlayers = len(layers);
     input_to_log_abs_list = [];
     log_det_jac_list = [];
@@ -224,10 +210,10 @@ def connect_flow(Z, layers, theta, exp_fam, K_eta, M_eta):
         sum_log_det_jacobians += log_dets[:,:,0];
         #Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=2), 2)), axis=2);
 
-    return Z_simplex, sum_log_det_jacobians, Z_pf, log_det_jac_list, input_to_log_abs_list
+    return Z_simplex, sum_log_det_jacobians;
 
 
-def approxKL(z_i, y_k, X_k, exp_fam, params, plot=False):
+def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
     #log_Q0 = y0_k[:,0];
     Q = np.exp(log_Q);
@@ -269,9 +255,9 @@ def approxKL(z_i, y_k, X_k, exp_fam, params, plot=False):
         X_k = np.float64(X_k);
         X_k = X_k / np.expand_dims(np.sum(X_k, 1), 1);
         log_P = dist.logpdf(X_k.T);
+        KL = np.mean(log_Q - log_P);
         #print('******** KL **********');
-        print(log_Q.shape, log_P.shape);
-        print(np.mean(log_Q), np.mean(log_P));
+        """
         n = 100;
         KLs = np.zeros((n,));
         n_i = batch_size // 10;
@@ -282,29 +268,29 @@ def approxKL(z_i, y_k, X_k, exp_fam, params, plot=False):
             X_i = X_k[inds_i, :];
             log_P_i = dist.logpdf(X_i.T);
             KLs[i] = np.mean(log_Q_i - log_P_i);
-        KL = np.mean(log_Q - log_P);
+        KL = np.mean(KLs);
         print(KL);
         #print(KL);
         if (plot):
             log_diff = log_Q - log_P;
             minval = min([np.min(log_Q), np.min(log_P), np.min(log_diff)]);
             maxval = max([np.max(log_Q), np.max(log_P), np.max(log_diff)]);
-            batch_size = X_k.shape[0];
             #X_true = np.random.dirichlet(alpha, (batch_size,));
             #log_P_true = dist.logpdf(X_true.T);
             fig = plt.figure(figsize=(8, 8));
             fig.add_subplot(2,2,1);
-            simplex.scatter(X_k, connect=False, c=log_Q, vmin=minval, vmax=maxval);
+            redfac = 100;
+            simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_Q[:batch_size//redfac], vmin=minval, vmax=maxval);
             plt.colorbar();
             plt.title('colored by log Q(z | theta, eta)');
 
             fig.add_subplot(2,2,2);
-            pts = simplex.scatter(X_k, connect=False, c=log_P, vmin=minval, vmax=maxval);
+            pts = simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_P[:batch_size//redfac], vmin=minval, vmax=maxval);
             plt.colorbar();
             plt.title('colored by log P_true(z | eta)');
 
             fig.add_subplot(2,2,3);
-            pts = simplex.scatter(X_k, connect=False, c=log_diff, vmin=minval, vmax=maxval);
+            pts = simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_diff[:batch_size//redfac], vmin=minval, vmax=maxval);
             plt.colorbar();
             plt.title('colored by log Q - log P_true');
 
@@ -312,7 +298,6 @@ def approxKL(z_i, y_k, X_k, exp_fam, params, plot=False):
             pts = plt.hist(KLs);
             plt.title('hist of resampled KLs');
             plt.show();
-            """
             buf = .2;
             xmin = min(np.min(z_i[:,0]), np.min(z_i[:,0])) - buf;
             xmax = max(np.max(z_i[:,0]), np.max(z_i[:,0])) + buf;
@@ -481,7 +466,7 @@ def drawEtas(exp_fam, D_Z, K_eta, n_k):
         eta = np.zeros((K_eta, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
         for k in range(K_eta):
-            alpha_k = np.random.uniform(1, 3, (D_X,));
+            alpha_k = np.random.uniform(.2, 4, (D_X,));
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;

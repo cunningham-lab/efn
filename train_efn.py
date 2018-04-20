@@ -16,7 +16,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       computeLogBaseMeasure, check_convergence
 
 def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
-              theta_nn_hps, lr_order=-3, random_seed=0, check_rate=200):
+              theta_nn_hps, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     cost_grad_lag = 100;
     pthresh = 0.1;
@@ -45,7 +45,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     n = K_eta*M_eta;
 
     # optimization hyperparameters
-    max_iters = 100000;
     opt_method = 'adam';
     lr = 10**lr_order
     # save tensorboard summary in intervals
@@ -57,8 +56,8 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta);
-    eta = tf.placeholder(tf.float32, shape=(None, ncons));
+    savedir = setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
+    eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
@@ -74,7 +73,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     #theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian, Z_pf = connect_flow(Z_AR, flow_layers, theta, exp_fam, K_eta, M_eta);
+    Z, sum_log_det_jacobian = connect_flow(Z_AR, flow_layers, theta, exp_fam);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -275,16 +274,15 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                 summary_writer.add_summary(summary, i);
 
             if (np.mod(i, check_rate)==0):
-                has_converged = (i==10000);#check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
+                #check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 train_R2s[check_it,:] = _R2s;
                 # compute KL
                 training_KL = [];
                 z_i = np.random.normal(np.zeros((K_eta, 100*M_eta, D_Z, num_zi)), 1.0);
                 feed_dict = {Z0:z_i, eta:_eta};
-                _X, _log_p_zs, _base_log_p_z, _Z_pf = sess.run([X, log_p_zs, base_log_p_z, Z_pf], feed_dict);
+                _X, _log_p_zs, _base_log_p_z = sess.run([X, log_p_zs, base_log_p_z], feed_dict);
                 for k in range(K_eta):
                     _y_k = np.expand_dims(_log_p_zs[k,:], 1);
-                    _y0_k = np.expand_dims(_base_log_p_z[k,:], 1);
                     _X_k = _X[k, :, :, 0];
                     # TODO update this for time series
                     if (exp_fam == 'normal'):
@@ -294,8 +292,8 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                     elif (exp_fam == 'dirichlet'):
                         eta_alpha_targs = eta_draw_params['alpha_targs'];
                         params_k = {'alpha':eta_alpha_targs[k]};
-                    training_KL.append(approxKL(_Z_pf[0,:,:,0], _y_k, _y0_k, _X_k, exp_fam, params_k),);
-                train_KLs[check_it,:] = training_KL;
+                    training_KL.append(approxKL(_y_k, _X_k, exp_fam, params_k, True));
+                train_KLs[check_it,:] = np.array(training_KL);
 
                 feed_dict = {Z0:z_i, eta:_eta_test};
                 _X_off_lattice, _log_p_zs, _base_log_p_z, _test_R2s  = sess.run([X, log_p_zs, base_log_p_z, R2s], feed_dict);
@@ -304,7 +302,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                 testing_KL = [];
                 for k in range(K_eta):
                     _y_k = np.expand_dims(_log_p_zs[k,:], 1);
-                    _y0_k = np.expand_dims(_base_log_p_z[k,:], 1);
                     _X_k = _X_off_lattice[k, :, :, 0];
                     # TODO update this for time series
                     if (exp_fam == 'normal'):
@@ -314,7 +311,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                     elif (exp_fam == 'dirichlet'):
                         eta_alpha_targs = eta_test_draw_params['alpha_targs'];
                         params_k = {'alpha':eta_alpha_targs[k]};
-                    testing_KL.append(approxKL(z_i, _y_k, _y0_k, _X_k, exp_fam, params_k));
+                    testing_KL.append(approxKL(_y_k, _X_k, exp_fam, params_k));
                     checkH(_y_k, exp_fam, params_k);
                 test_KLs[check_it,:] = testing_KL;
                 
@@ -323,10 +320,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                 print('cost', cost_i);
                 print('training R2', _R2s);
                 print('training KL', training_KL);
-                if (has_converged):
-                    print('converged!!!');
-                else:
-                    print('not yet!!!');
                     #print('saving to %s  ...' % savedir);
                     #print(42*'*');
                 if (np_save_flow_param):
@@ -369,7 +362,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         #saveParams(params, savedir);
         # save the model
         saver.save(sess, savedir + 'model');
-    return _X, _R2s, train_KLs, i;
+    return _X, train_R2s, train_KLs, i;
 
 if __name__ == '__main__':    # parse command line parameters
     n_args = len(sys.argv);
