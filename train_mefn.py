@@ -11,17 +11,20 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, construct_theta_network, normal_eta, \
-                      approxKL, drawEtas, checkH, declare_theta, cost_fn
+                      setup_IO, normal_eta, \
+                      approxKL, drawEtas, checkH, declare_theta, cost_fn, \
+                      computeLogBaseMeasure, check_convergence
 
-def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, random_seed=0):
+def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, random_seed=0, check_rate=1000):
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
+    cost_grad_lag = check_rate;
+    pthresh = 0.1;
+ 
     D = params['D'];
     if (exp_fam == 'dirichlet'):
         D_Z = D-1;
     else:
         D_Z = D;
-
     if (exp_fam == 'normal'):
         ncons = D_Z+D_Z**2;
     elif (exp_fam == 'dirichlet'):
@@ -40,21 +43,19 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
     n = K_eta*M_eta;
 
     # optimization hyperparameters
-    max_iters = 100000;
-    opt_method = 'adam';
+    max_iters = 50000;
     lr = 10**lr_order
-    check_diagnostics_rate = 3000;
     # save tensorboard summary in intervals
-    tb_save_every = 50;
-    tb_save_flow_param = False;
+    tb_save_every = 1;
+    tb_save_flow_param = True;
     np_save_flow_param = False;
 
     # seed RNGs
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, D, flow_id, {}, False);
-    eta = tf.placeholder(tf.float32, shape=(None, ncons));
+    savedir = setup_IO(exp_fam, D, flow_id, {}, False, random_seed);
+    eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (exp_fam == 'normal'):
         mu_targ = params['mu'];
@@ -73,7 +74,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
     theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian = connect_flow(Z_AR, flow_layers, theta, exp_fam);
+    Z, sum_log_det_jacobian, Z_pf, log_det_jac_list, input_to_log_abs_list = connect_flow(Z_AR, flow_layers, theta, exp_fam, K_eta, M_eta);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -84,9 +85,14 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
     X_cov = tf.div(tf.matmul(X, tf.transpose(X, [0, 1, 3, 2])), T); # this is [n x D x D]
     # set up the constraint computation
     Tx = computeMoments(X, exp_fam, D, T);
+    Bx = computeLogBaseMeasure(X, exp_fam, D, T);
     # exponential family optimization
-    cost, R2s = cost_fn(eta, log_p_zs, Tx, K_eta, cost_type)
+    cost, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
+
+    # create readout of Tx*eta
+    eta_dummy = tf.expand_dims(eta[0,:],1);
+    Txeta = tf.matmul(Tx[0,:,:], eta_dummy);
 
     # set optimization hyperparameters
     saver = tf.train.Saver();
@@ -98,6 +104,9 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
     for k in range(K_eta):
         tf.summary.scalar('R2%d' % (k+1), R2s[k]);
     tf.summary.scalar('cost', cost);
+    for k in range(L_flow):
+        tf.summary.histogram('layer%d u^T phi' % (k+1), input_to_log_abs_list[k]);
+        tf.summary.histogram('layer%d log det jacs' % (k+1), log_det_jac_list[k]);
 
     # log parameter values throughout optimization
 
@@ -137,7 +146,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
     cost_grad_vals = np.zeros((array_init_len, num_dyn_param_vals + num_flow_param_vals));
     array_cur_len = array_init_len;
 
-    num_diagnostic_checks = (max_iters // check_diagnostics_rate) + 1;
+    num_diagnostic_checks = (max_iters // check_rate) + 1;
     train_R2s = np.zeros((num_diagnostic_checks, K_eta));
     test_R2s = np.zeros((num_diagnostic_checks, K_eta));
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
@@ -189,14 +198,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
                 cgv_ind += 1;
 
         # reset optimizer
-        if (opt_method == 'adam'):
-            optimizer = tf.train.AdamOptimizer(learning_rate=lr);
-        elif (opt_method == 'adadelta'):
-            optimizer = tf.train.AdadeltaOptimizer(learning_rate=lr);
-        elif (opt_method == 'adagrad'):
-            optimizer = tf.train.AdagradOptimizer(learning_rate=lr);
-        elif (opt_method == 'graddesc'):
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr);
+        optimizer = tf.train.AdamOptimizer(learning_rate=lr);
 
         train_step = optimizer.apply_gradients(grads_and_vars);
         
@@ -218,7 +220,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
                 #X_covs = np.concatenate((X_covs, np.zeros((array_cur_len, D, D))), axis=0);
                 if (np_save_flow_param):
                     flow_param_vals = np.concatenate((flow_param_vals, np.zeros((array_cur_len, num_flow_param_vals))), axis=0);
-                    cost_grad_vals = np.concatenate((cost_grad_vals, np.zeros((array_cur_len, num_flow_param_vals))), axis=0);
+                cost_grad_vals = np.concatenate((cost_grad_vals, np.zeros((array_cur_len, num_flow_param_vals))), axis=0);
                 
                 # double array lengths
                 array_cur_len = 2*array_cur_len;
@@ -248,55 +250,91 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
                             flow_param_vals[i,fpv_ind] = param[jj,0];
                         fpv_ind += 1;
 
-                cgv_ind = 0;
-                for j in range(nparams):
-                    grad = _cost_grads[j];
-                    grad_len = len(grad);
-                    for jj in range(grad_len):
-                        if (len(grad.shape)==1):
-                            cost_grad_vals[i, cgv_ind] = grad[jj];
-                        else:
-                            cost_grad_vals[i, cgv_ind] = grad[jj,0];
-                        cgv_ind += 1;
+            cgv_ind = 0;
+            for j in range(nparams):
+                grad = _cost_grads[j];
+                grad_len = len(grad);
+                for jj in range(grad_len):
+                    if (len(grad.shape)==1):
+                        cost_grad_vals[i, cgv_ind] = grad[jj];
+                    else:
+                        cost_grad_vals[i, cgv_ind] = grad[jj,0];
+                    cgv_ind += 1;
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
-            if (np.mod(i, check_diagnostics_rate)==0):
+            if (np.mod(i, check_rate)==0):
+                #has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
+                has_converged = False;
                 train_R2s[check_it,:] = _R2s;
-                print('train R2s');
-                print(_R2s[:10]);
                 # compute KL
                 training_KL = [];
                 _y = np.expand_dims(_log_p_zs[0,:], 1);
-                print(_X.shape);
                 _X = _X[0, :, :, 0];
-                training_KL.append(approxKL(_y, _X, exp_fam, params, True));
+                _Z_pf, _input_to_log_abs, _log_det_jacs = sess.run([Z_pf, input_to_log_abs_list, log_det_jac_list] , feed_dict);
+                training_KL.append(approxKL(_Z_pf[0,:,:,0], _y, _X, exp_fam, params, True));
                 train_KLs[check_it,:] = training_KL;
+                for f_ind in range(L_flow):
+                    input_to_log_abs_i = _input_to_log_abs[f_ind];
+                    log_det_jacs_i = _log_det_jacs[f_ind];
+                    # compute best approx I can get to what this should be
+                    n = input_to_log_abs_i.shape[1];
+                    best_approx = np.zeros((n,));
+                    for ii in range(n):
+                        val = input_to_log_abs_i[0,ii,0,0];
+                        if (val < -1):
+                            best_approx[ii] = np.log1p(-val-2);
+                        else:
+                            best_approx[ii] = np.log1p(val);
+                    sizes = 10*np.ones((n,));
+                    if (True):
+                        plt.figure();
+                        plt.scatter(input_to_log_abs_i[0,:,0,0], log_det_jacs_i[0,:,0,0], sizes);
+                        plt.scatter(input_to_log_abs_i[0,:,0,0], best_approx, sizes);
+                        diff = log_det_jacs_i[0,:,0,0]-best_approx;
+                        print(f_ind, np.sum(np.square(diff)));
+                        plt.plot(input_to_log_abs_i[0,:,0,0], diff);
+                        plt.title('layer %d' % (f_ind+1));
+                        plt.show();
+
+                """
+                # check that true probability is proportional to eta*Tx
+                if (exp_fam == 'normal'):
+                    dist = scipy.stats.multivariate_normal(mean=mu_targ, cov=Sigma_targ);
+                    log_P = dist.logpdf(_X);
+                elif (exp_fam == 'dirichlet'):
+                    dist = scipy.stats.dirichlet(alpha_targ);
+                    log_P = dist.logpdf(_X.T);
+                _Txeta = sess.run(Txeta, feed_dict);
+                print(log_P.shape, _Txeta.shape);
+                plt.figure();
+                plt.scatter(log_P, _Txeta[:,0]);
+                plt.show();
+                """
 
                 feed_dict = {Z0:z_i, eta:_eta_test};
                 _X_off_lattice, _log_p_zs, _test_R2s  = sess.run([X, log_p_zs, R2s], feed_dict);
                 test_R2s[check_it,:] = _test_R2s;
-                print('test R2s');
-                print(_test_R2s[:10]);
                 # compute KL
                 testing_KL = [];
                 _y = np.expand_dims(_log_p_zs[0,:], 1);
                 _X = _X_off_lattice[0, :, :, 0];
-                testing_KL.append(approxKL(_y, _X, exp_fam, params));
+                testing_KL.append(approxKL(z_i[0,:,:,0], _y, _X, exp_fam, params));
                 checkH(_y, exp_fam, params);
                 test_KLs[check_it,:] = testing_KL;
                 
                 print(42*'*');
                 print('it = %d ' % i);
-                if (False):
-                    print('cost', cost_i);
-                    print('training R2', _R2s);
-                    print('training KL', training_KL);
-                    print('test R2', _test_R2s);
-                    print('testing KL', testing_KL);
-                    #print('saving to %s  ...' % savedir);
-                    #print(42*'*');
+                print('cost', cost_i);
+                print('training R2', _R2s);
+                print('training KL', training_KL);
+                if (has_converged):
+                    print('converged!!!');
+                else:
+                    print('not yet!!!');
+                #print('saving to %s  ...' % savedir);
+                #print(42*'*');
                 if (np_save_flow_param):
                     if (dynamics):
                         np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, flow_param_vals=flow_param_vals, cost_grad_vals=cost_grad_vals, \
@@ -321,18 +359,12 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
                 
                 check_it += 1;
 
-                mean_test_R2 = np.mean(_test_R2s);
-                mean_test_KL = np.mean(testing_KL);
-                if (mean_test_R2 > .999 and mean_test_KL < .02):
-                    print('Test successful!');
-                    print('mean test R2 = %.4f' % mean_test_R2);
-                    print('mean test KL = %.4f' % mean_test_KL);
-                    print('We can learn the %s distribution with a %s flow network' % (exp_fam, flow_id));
+                mean_train_R2 = np.mean(_R2s);
+                mean_train_KL = np.mean(training_KL);
+                if (has_converged):
+                    print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
                     break;
-                else:
-                    print('still learning...');
-                    print('mean test R2 = %.4f' % mean_test_R2);
-                    print('mean test KL = %.4f' % mean_test_KL);
+
 
             sys.stdout.flush();
             i += 1;
@@ -344,4 +376,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, lr_order=-3, rand
         #saveParams(params, savedir);
         # save the model
         saver.save(sess, savedir + 'model');
-    return _X, _R2s, i;
+    if (len(_X.shape) > 2):
+        assert(len(_X.shape) == 4);
+        _X = _X[0, :, :, 0];
+    return _log_p_zs, _X, train_R2s, train_KLs, i;

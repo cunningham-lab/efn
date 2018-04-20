@@ -26,29 +26,42 @@ class PlanarFlowLayer(Layer):
         self.w = theta_layer[1];
         self.b = theta_layer[2];
         self.param_network = (len(self.u.shape) == 3);
+        if (self.param_network):
+            raise NotImplementedError
+        else:
+            wdotu = tf.matmul(tf.transpose(self.w), self.u);
+            mwdotu = -1 + tf.log(1 + tf.exp(wdotu));
+            self.uhat = self.u + tf.divide((mwdotu - wdotu)*self.w, tf.reduce_sum(tf.square(self.w)));
+
         return None;
             
     def forward_and_jacobian(self, z, sum_log_det_jacobians, reuse=False):
         M = tf.shape(z)[1];
         if (not self.param_network):
-            u = tf.expand_dims(tf.tile(tf.expand_dims(self.u, 0), [M, 1, 1]), 0);
+            u = tf.expand_dims(tf.tile(tf.expand_dims(self.uhat, 0), [M, 1, 1]), 0);
             w = tf.expand_dims(tf.tile(tf.expand_dims(self.w, 0), [M, 1, 1]), 0);
             b = tf.expand_dims(tf.tile(tf.expand_dims(self.b, 0), [M, 1, 1]), 0);
         else:
-            u = tf.tile(tf.expand_dims(self.u, 1), [1, M, 1, 1]);
+            u = tf.tile(tf.expand_dims(self.uhat, 1), [1, M, 1, 1]);
             w = tf.tile(tf.expand_dims(self.w, 1), [1, M, 1, 1]);
             b = tf.tile(tf.expand_dims(self.b, 1), [1, M, 1, 1]);
 
+        print(u.shape, w.shape, b.shape);
         # helper function phi_k(z_{k-1})
         # derivative of tanh(x) is (1-tanh^2(x))
-        phi = tf.matmul(w, (1.0 - tf.square(tf.tanh(tf.matmul(tf.transpose(w, [0,1,3,2]), z) + b))));
+        phi = tf.matmul(w, (1.0 - tf.tanh(tf.matmul(tf.transpose(w, [0,1,3,2]), z) + b)**2));
         # compute the running sum of log-determinant of jacobians
-        log_det_jacobian = tf.log(tf.abs(1.0 + tf.matmul(tf.transpose(u, [0,1,3,2]), phi)));
+        input_to_log_abs = tf.matmul(tf.transpose(u, [0,1,3,2]), phi);
+        log_det_jacobian = tf.log(tf.abs(1.0 + input_to_log_abs));
+        if (not (sum_log_det_jacobians==0.0)):
+            print('sldjs before', sum_log_det_jacobians.shape);
         sum_log_det_jacobians += log_det_jacobian[:,:,0,0];
         # compute z for this layer
         nonlin_term = tf.tanh(tf.matmul(tf.transpose(w, [0,1,3,2]), z) + b);
-        z = z + tf.matmul(u, nonlin_term);
-        return z, sum_log_det_jacobians;
+        additive_term = tf.matmul(u, nonlin_term);
+        z = z + additive_term;
+
+        return z, sum_log_det_jacobians, log_det_jacobian, input_to_log_abs;
 
 
 class LinearFlowLayer(Layer):
@@ -79,7 +92,7 @@ class LinearFlowLayer(Layer):
             b = tf.expand_dims(tf.expand_dims(self.b, 0), 0);
             z = tf.tensordot(A, z, [[1], [2]]);
             z = tf.transpose(z, [1, 2, 0, 3]) + b;
-            log_det_jacobian = tf.multiply(tf.log(p_eps + tf.abs(tf.matrix_determinant(A))), tf.ones((batch_size,)));
+            log_det_jacobian = tf.multiply(tf.log(p_eps + tf.abs(tf.matrix_determinant(A))), tf.ones((batch_size,), dtype=tf.float64));
         else:
             M = tf.shape(z)[1];
             A = tf.tile(tf.expand_dims(self.A, 1), [1, M, 1, 1]);
