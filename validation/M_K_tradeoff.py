@@ -7,24 +7,24 @@ os.chdir('../');
 
 exp_fam = 'dirichlet';
 D = int(sys.argv[1]);
-flow_id = 'planar8';
+flow_id = str(sys.argv[2]);
 cost_type = 'KL';
 ncons = D+1;
-L_theta = int(sys.argv[2]);
-upl_fac = int(sys.argv[3]);
+L_theta = int(sys.argv[3]);
+upl_fac = int(sys.argv[4]);
 upl_theta = upl_fac*ncons;
 stochastic_eta = False;
-lr_order = -2;
+lr_order = -3;
 theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
 max_iters = 10000;
 check_rate = 100;
 
 num_checks = (max_iters // check_rate) + 1;
-Ks = [10, 5, 2, 1];
+Ks = [1, 5, 10];
 num_Ks = len(Ks);
-Ms = [1000, 100, 10];
+Ms = [10, 100, 1000];
 num_Ms = len(Ms);
-N = 30;
+N = 20;
 
 KLs = np.zeros((num_Ks, num_Ms, N, num_checks));
 R2s = np.zeros((num_Ks, num_Ms, N, num_checks));
@@ -42,6 +42,6 @@ for i in range(num_Ks):
 						                     random_seed, max_iters, check_rate);
 			KLs[i, j, (n*K_eta):((n+1)*K_eta)] = trainKLs.T;
 			R2s[i, j, (n*K_eta):((n+1)*K_eta)] = trainR2s.T;
-		np.savez('M_K_lyrs=%d_upl=%d_tradeoff.npz' % (L_theta, upl_theta), KLs=KLs, R2s=R2s);
+		np.savez('M_K_%s_lyrs=%d_upl=%d_tradeoff.npz' % (flow_id, L_theta, upl_theta), KLs=KLs, R2s=R2s, check_rate=check_rate);
 
 

@@ -182,7 +182,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
-                z_i = np.random.normal(np.zeros((K_eta, 100*M_eta, D_Z, num_zi)), 1.0);
+                z_i = np.random.normal(np.zeros((K_eta, float(1e5), D_Z, num_zi)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta};
                 feed_dict_test = {Z0:z_i, eta:_eta_test};
                 train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, params);
