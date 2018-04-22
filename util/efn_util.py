@@ -212,6 +212,18 @@ def connect_flow(Z, layers, theta, exp_fam):
 
     return Z_simplex, sum_log_det_jacobians;
 
+def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
+    _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+    KLs = [];
+    for k in range(K_eta):
+        _y_k = np.expand_dims(_log_p_zs[k,:], 1);
+        _X_k = _X[k, :, :, 0]; # TODO update this for time series
+        if (exp_fam == 'normal'):
+            params_k = {'mu':eta_draw_params['mu'][k], 'Sigma':eta_draw_params['Sigma'][k]};
+        elif (exp_fam == 'dirichlet'):
+            params_k = {'alpha':eta_draw_params['alpha'][k]};
+        KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
+    return R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
@@ -460,7 +472,7 @@ def drawEtas(exp_fam, D_Z, K_eta, n_k):
             eta[k,:] = eta_k[:,0];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
-        params = {'mu_targs':mu_targs, 'Sigma_targs':Sigma_targs};
+        params = {'mu':mu_targs, 'Sigma':Sigma_targs};
     if (exp_fam == 'dirichlet'):
         D_X = D_Z + 1;
         eta = np.zeros((K_eta, D_X));
@@ -470,8 +482,52 @@ def drawEtas(exp_fam, D_Z, K_eta, n_k):
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
-        params = {'alpha_targs':alpha_targs};
+        params = {'alpha':alpha_targs};
     return eta, params;
+
+def setup_param_logging(all_params):
+    nparams = len(all_params);
+    for i in range(nparams):
+        param = all_params[i];
+        param_shape = tuple(param.get_shape().as_list());
+        for ii in range(param_shape[0]):
+            if (len(param_shape)==1 or (len(param_shape) < 2 and param_shape[1]==1)):
+                tf.summary.scalar('%s_%d' % (param.name[:-2], ii+1), param[ii]);
+            else:
+                for jj in range(param_shape[1]):
+                    tf.summary.scalar('%s_%d%d' % (param.name[:-2], ii+1, jj+1), param[ii, jj]);
+    return None;
+
+def count_params(all_params):
+    nparams = len(all_params);
+    nparam_vals = 0;
+    for i in range(nparams):
+        param = all_params[i];
+        param_shape = tuple(param.get_shape().as_list());
+        nparam_vals += np.prod(param_shape);
+    return nparam_vals;
+
+def log_grads(cost_grads, cost_grad_vals, ind):
+    cgv_ind = 0;
+    nparams = len(cost_grads);
+    for i in range(nparams):
+        grad = cost_grads[i];
+        grad_shape = grad.shape;
+        ngrad_vals = np.prod(grad_shape);
+        grad_reshape = np.reshape(grad, (ngrad_vals,));
+        for ii in range(ngrad_vals):
+            cost_grad_vals[ind, cgv_ind] = grad_reshape[ii];
+            cgv_ind += 1;
+    return None;
+
+def memory_extension(cost_grad_vals, array_cur_len):
+    print('Doubling memory allocation for parameter logging.');
+    #if (dynamics):
+    #    As = np.concatenate((As, np.zeros((array_cur_len, As.shape[1], As.shape[2], As.shape[3]))), axis=0);
+    #    sigma_epsilons = np.concatenate((sigma_epsilons, np.zeros((array_cur_len,sigma_epsilons.shape[1]))), axis=0);
+    cost_grad_vals = np.concatenate((cost_grad_vals, np.zeros((array_cur_len, cost_grad_vals.shape[1]))), axis=0);
+    return cost_grad_vals;
+                
 
 def autocovariance(X, tau_max, T, batch_size):
     # need to finish this
