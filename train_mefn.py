@@ -9,9 +9,9 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import MMD2u, PlanarFlowLayer, computeMoments, getEtas, \
+from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, normal_eta, log_grads, \
+                      setup_IO, normal_eta, log_grads, inv_wishart_eta, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params
@@ -24,15 +24,19 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     pthresh = 0.1;
  
     D = params['D'];
+
     if (exp_fam == 'dirichlet'):
         D_Z = D-1;
-    else:
-        D_Z = D;
-    if (exp_fam == 'normal'):
-        ncons = D_Z+D_Z**2;
-    elif (exp_fam == 'dirichlet'):
         ncons = D_Z+1;
-
+    elif (exp_fam == 'normal'):
+        D_Z = D;
+        #ncons = int(D_Z+D_Z*(D_Z+1)/2);
+        ncons = int(D + D**2);
+    elif (exp_fam == 'inv_wishart'):
+        sqrtD = int(np.sqrt(D));
+        D_Z = int(sqrtD*(sqrtD+1)/2);
+        ncons = D + 1;
+    
     # good practice
     tf.reset_default_graph();
 
@@ -61,10 +65,14 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     if (exp_fam == 'normal'):
         mu_targ =  params['mu'];
         Sigma_targ = params['Sigma'];
-        _eta = np.transpose(normal_eta(mu_targ[0], Sigma_targ[0]));
+        _eta = normal_eta(mu_targ[0], Sigma_targ[0]);
     elif (exp_fam == 'dirichlet'):
         alpha_targ = params['alpha'];
         _eta = alpha_targ;
+    elif (exp_fam == 'inv_wishart'):
+        Psi_targ = params['Psi'];
+        m_targ = params['m'];
+        _eta = inv_wishart_eta(Psi_targ[0], m_targ[0]);
     _eta_test = _eta;
 
     # construct the parameter network
@@ -134,8 +142,9 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         feed_dict = {Z0:z_i, eta:_eta};
 
-        cost_i, X_cov_i, _cost_grads, _X, _y, _Tx, summary = \
-            sess.run([cost, X_cov, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
+        cost_i, _cost_grads, _X, _y, _Tx, summary = \
+            sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
+
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
             As[0,:,:,:] = A_i;
@@ -165,8 +174,8 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             feed_dict = {Z0:z_i, eta:_eta};
 
-            ts, cost_i, _X, _cost_grads, _R2s, summary = \
-                    sess.run([train_step, cost, X, cost_grad, R2s, summary_op], feed_dict);
+            ts, cost_i, _X, _cost_grads, _R2s, _Tx, summary = \
+                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
                 As[i,:,:] = A_i;
@@ -182,7 +191,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
-                z_i = np.random.normal(np.zeros((K_eta, float(1e5), D_Z, num_zi)), 1.0);
+                z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta};
                 feed_dict_test = {Z0:z_i, eta:_eta_test};
                 train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, params);
@@ -214,12 +223,15 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             sys.stdout.flush();
             i += 1;
 
+        z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
+        feed_dict = {Z0:z_i, eta:_eta};
+        _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
+
         # save all the hyperparams
         if not os.path.exists(savedir):
                 print('Making directory %s' % savedir );
                 os.makedirs(savedir);
-        #saveParams(params, savedir);
-        # save the model
+
         saver.save(sess, savedir + 'model');
     if (len(_X.shape) > 2):
         assert(len(_X.shape) == 4);

@@ -60,7 +60,7 @@ class PlanarFlowLayer(Layer):
         additive_term = tf.matmul(u, nonlin_term);
         z = z + additive_term;
 
-        return z, sum_log_det_jacobians, log_det_jacobian, input_to_log_abs;
+        return z, sum_log_det_jacobians;
 
 
 class LinearFlowLayer(Layer):

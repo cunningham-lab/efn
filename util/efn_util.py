@@ -172,7 +172,7 @@ def connect_flow(Z, layers, theta, exp_fam):
     Z_shape = tf.shape(Z);
     K = Z_shape[0];
     M = Z_shape[1];
-    D = Z_shape[2];
+    D_Z = Z_shape[2];
     T = Z_shape[3];
 
     sum_log_det_jacobians = tf.zeros((K,M), dtype=tf.float64);
@@ -183,34 +183,36 @@ def connect_flow(Z, layers, theta, exp_fam):
         layer = layers[i];
         theta_layer = theta[i];
         layer.connect_parameter_network(theta_layer);
-        Z, sum_log_det_jacobians, log_det_jac, input_to_log_abs = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-        input_to_log_abs_list.append(input_to_log_abs);
-        log_det_jac_list.append(log_det_jac);
+        Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
     Z_pf = Z;
     # final layer translates to the support
-    if (exp_fam == 'dirichlet'):
+    if (exp_fam == 'dirichlet'): # map to the D_Z-simplex
         # TODO need to redo this
-        ex = tf.exp(Z);
+        ex = tf.exp(Z_pf);
         den = tf.reduce_sum(ex, 2) + 1.0;
-        Z_simplex = tf.concat((ex / tf.expand_dims(den, 2), 1.0 / tf.expand_dims(den, 2)), axis=2);
-        log_dets = tf.log(1.0 - (tf.reduce_sum(ex, 2) / den)) - tf.cast(D, tf.float64)*tf.log(den) + tf.reduce_sum(Z, 2);
-        #Z = tf.exp(Z) / tf.expand_dims((tf.reduce_sum(tf.exp(Z) ,axis=2) + 1), 2); 
-        # compute the jacobian using matrix determinant lemma
-        #u = Z;
-        #Adiag = u;
-        #Ainvdiag = 1.0 / u;
-        #v = -u;
-        #g_det_jacobian = tf.multiply((1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=2)), tf.reduce_prod(Adiag, axis=2));
-        #left_term = (1.0+tf.reduce_sum(tf.multiply(tf.multiply(v,Ainvdiag), u), axis=2));
-        #detA = tf.reduce_prod(Adiag, axis=2);
-        #g_log_det_jacobian = tf.log(g_det_jacobian);
-        #g_log_det_jacobian = tf.reduce_sum(g_log_det_jacobian, 2); # sum across the temporal dimension
-        #g_det_jacobian = tf.multiply(tf.reduce_prod(Z, 2), (1-tf.reduce_sum(Z, 2)));
-        #g_log_det_jacobian = tf.log(tf.abs(g_det_jacobian[:,:,0]));
+        Z = tf.concat((ex / tf.expand_dims(den, 2), 1.0 / tf.expand_dims(den, 2)), axis=2);
+        log_dets = tf.log(1.0 - (tf.reduce_sum(ex, 2) / den)) - tf.cast(D_Z, tf.float64)*tf.log(den) + tf.reduce_sum(Z_pf, 2);
         sum_log_det_jacobians += log_dets[:,:,0];
-        #Z = tf.concat((Z, tf.expand_dims(1-tf.reduce_sum(Z, axis=2), 2)), axis=2);
+    elif (exp_fam == 'inv_wishart'): # map to PSD matrices (technically inv wishart is PD though..)
+        Z_KMD_Z = Z[:,:,:,0]; # generalize this for more time points
+        L = tf.contrib.distributions.fill_triangular(Z_KMD_Z);
+        sqrtD = tf.shape(L)[2];
+        D = tf.square(sqrtD);
+        L_pos_diag = tf.contrib.distributions.matrix_diag_transform(L, tf.exp);
+        LLT = tf.matmul(L_pos_diag, tf.transpose(L_pos_diag, [0,1,3,2]));
+        LLT_vec = tf.reshape(LLT, [K,M,D]);
+        Z = tf.expand_dims(LLT_vec, 3); # update this for T > 1
+        
+        L_diag_els = tf.matrix_diag_part(L);
+        L_pos_diag_els = tf.matrix_diag_part(L_pos_diag);
 
-    return Z_simplex, sum_log_det_jacobians;
+        #pos_diag_support_log_det = tf.log(tf.exp(tf.reduce_sum(L_diag_els, 2)));
+        pos_diag_support_log_det = tf.reduce_sum(L_diag_els, 2);
+
+        diag_pows = tf.expand_dims(tf.expand_dims(sqrtD - tf.range(1,sqrtD+1)+1, 0), 0);
+        matrix_dot_log_det = tf.log(tf.reduce_prod(2*tf.pow(L_pos_diag_els, tf.cast(diag_pows, tf.float64)), 2));
+        sum_log_det_jacobians += (pos_diag_support_log_det + matrix_dot_log_det);
+    return Z, sum_log_det_jacobians;
 
 def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
     _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
@@ -222,113 +224,45 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_dra
             params_k = {'mu':eta_draw_params['mu'][k], 'Sigma':eta_draw_params['Sigma'][k]};
         elif (exp_fam == 'dirichlet'):
             params_k = {'alpha':eta_draw_params['alpha'][k]};
+        elif (exp_fam == 'inv_wishart'):
+            params_k = {'Psi':eta_draw_params['Psi'][0], 'm':eta_draw_params['m'][0]};
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
     return R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
-    #log_Q0 = y0_k[:,0];
-    Q = np.exp(log_Q);
-    #Q0 = np.exp(log_Q0);
+    batch_size = X_k.shape[0];
     if (exp_fam == 'normal'):
         mu = params['mu'];
         Sigma = params['Sigma'];
         dist = multivariate_normal(mean=mu, cov=Sigma);
         log_P = dist.logpdf(X_k);
         KL = np.mean(log_Q - log_P);
-        if (plot):
-            batch_size = X_k.shape[0];
-            X_true = np.random.multivariate_normal(mu, Sigma, (batch_size,));
-            log_P_true = dist.logpdf(X_true);
-            xmin = min(np.min(X_k[:,0]), np.min(X_true[:,0]));
-            xmax = max(np.max(X_k[:,0]), np.max(X_true[:,0]));
-            ymin = min(np.min(X_k[:,1]), np.min(X_true[:,1]));
-            ymax = max(np.max(X_k[:,1]), np.max(X_true[:,1]));
-            fig = plt.figure(figsize=(8, 4));
-            fig.add_subplot(1,2,1);
-            plt.scatter(X_k[:,0], X_k[:,1], c=log_Q);
-            plt.xlim([xmin, xmax]);
-            plt.ylim([ymin, ymax]);
-            plt.colorbar();
-            plt.title('mu: [%.1f, %.1f] Sigma: [%.2f, %.2f, %.2f]' % (mu[0], mu[1], Sigma[0,0], Sigma[0,1], Sigma[1,1]));
-            fig.add_subplot(1,2,2);
-            plt.scatter(X_true[:,0], X_true[:,1], c=log_P_true);
-            plt.xlim([xmin, xmax]);
-            plt.ylim([ymin, ymax]);
-            plt.colorbar();
-            plt.show();
     elif (exp_fam == 'dirichlet'):
         alpha = params['alpha'];
         dist = dirichlet(np.float64(alpha));
-        # For higher-D dirichlet's the numpy sum can be non-one by a bit or two
-        # relative to the tensorflow sum.  Must have different hardware optims.
-        # We just do this extra normalization step in 64 bit for the logpdf eval.
-        batch_size = X_k.shape[0];
         X_k = np.float64(X_k);
         X_k = X_k / np.expand_dims(np.sum(X_k, 1), 1);
         log_P = dist.logpdf(X_k.T);
         KL = np.mean(log_Q - log_P);
-        #print('******** KL **********');
-        """
-        n = 100;
-        KLs = np.zeros((n,));
-        n_i = batch_size // 10;
-        inds = np.arange(batch_size);
-        for i in range(n):
-            inds_i = np.random.choice(inds, n_i);
-            log_Q_i = log_Q[inds_i];
-            X_i = X_k[inds_i, :];
-            log_P_i = dist.logpdf(X_i.T);
-            KLs[i] = np.mean(log_Q_i - log_P_i);
-        KL = np.mean(KLs);
-        print(KL);
-        #print(KL);
+    elif (exp_fam == 'inv_wishart'):
+        Psi = params['Psi'];
+        m = params['m'];
+        D = Psi.shape[0];
+        dist = invwishart(m, Psi);
+        X_k = np.reshape(X_k, [batch_size, D, D]);
+        log_P = dist.logpdf(np.transpose(X_k, [1,2,0]));
+        KL = np.mean(log_Q - log_P);
+        print(log_Q.shape, log_P.shape);
         if (plot):
-            log_diff = log_Q - log_P;
-            minval = min([np.min(log_Q), np.min(log_P), np.min(log_diff)]);
-            maxval = max([np.max(log_Q), np.max(log_P), np.max(log_diff)]);
-            #X_true = np.random.dirichlet(alpha, (batch_size,));
-            #log_P_true = dist.logpdf(X_true.T);
-            fig = plt.figure(figsize=(8, 8));
-            fig.add_subplot(2,2,1);
-            redfac = 100;
-            simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_Q[:batch_size//redfac], vmin=minval, vmax=maxval);
-            plt.colorbar();
-            plt.title('colored by log Q(z | theta, eta)');
-
-            fig.add_subplot(2,2,2);
-            pts = simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_P[:batch_size//redfac], vmin=minval, vmax=maxval);
-            plt.colorbar();
-            plt.title('colored by log P_true(z | eta)');
-
-            fig.add_subplot(2,2,3);
-            pts = simplex.scatter(X_k[:batch_size//redfac,:], connect=False, c=log_diff[:batch_size//redfac], vmin=minval, vmax=maxval);
-            plt.colorbar();
-            plt.title('colored by log Q - log P_true');
-
-            fig.add_subplot(2,2,4);
-            pts = plt.hist(KLs);
-            plt.title('hist of resampled KLs');
+            plt.figure();
+            plt.hist(log_Q,100);
+            plt.title('logQ');
             plt.show();
-            buf = .2;
-            xmin = min(np.min(z_i[:,0]), np.min(z_i[:,0])) - buf;
-            xmax = max(np.max(z_i[:,0]), np.max(z_i[:,0])) + buf;
-            ymin = min(np.min(z_i[:,1]), np.min(z_i[:,1])) - buf;
-            ymax = max(np.max(z_i[:,1]), np.max(z_i[:,1])) + buf;
-            fig.add_subplot(2,2,1);
-            print(z_i.shape, log_Q.shape);
-            plt.scatter(z_i[:,0], z_i[:,1], c=log_Q);
-            plt.colorbar();
-            plt.xlim([xmin, xmax]);
-            plt.ylim([ymin, ymax]);
-
-            fig.add_subplot(2,2,2);
-            plt.scatter(z_i[:,0], z_i[:,1], c=log_P);
-            plt.colorbar();
-            plt.xlim([xmin, xmax]);
-            plt.ylim([ymin, ymax]);
+            plt.figure();
+            plt.hist(log_P,100);
+            plt.title('logP');
             plt.show();
-            """
     return KL;
 
 def checkH(y_k, exp_fam, params):
@@ -357,13 +291,20 @@ def computeMoments(X, exp_fam, D, T):
             Tx_mean = X_flat;
             XXT = tf.matmul(tf.expand_dims(X_flat, 3), tf.expand_dims(X_flat, 2));
 
-            #Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(X_cov, [1,2,0]), _cov_con_mask)); # [n x (D*(D-1)/2 )]
-            Tx_cov = tf.reshape(XXT, [K,M, D*D]);
+            Tx_cov = tf.reshape(XXT, [K,M,D**2]);
             Tx = tf.concat((Tx_mean, Tx_cov), axis=2);
         elif (exp_fam == 'dirichlet'):
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D]); # samps x D
             Tx_log = tf.log(X_flat);
             Tx = Tx_log;
+        elif (exp_fam == 'inv_wishart'):
+            Dsqrt = int(np.sqrt(D));
+            X = X[:,:,:,0]; # update for T > 1
+            X_KMDsqrtDsqrt = tf.reshape(X, (K,M,Dsqrt,Dsqrt));
+            X_inv = tf.matrix_inverse(X_KMDsqrtDsqrt);
+            Tx_inv = tf.reshape(X_inv, (K,M,D));
+            Tx_log_det = tf.expand_dims(tf.linalg.logdet(X_KMDsqrtDsqrt[:,:,:,:]), 2);
+            Tx = tf.concat((Tx_inv, Tx_log_det), axis=2);
         else: 
             raise NotImplementedError;
     else:
@@ -380,6 +321,8 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         elif (exp_fam == 'dirichlet'):
             Bx = tf.log(tf.divide(1.0, tf.reduce_prod(X, [2])));
             Bx = Bx[:,:,0]; # remove singleton time dimension
+        elif (exp_fam == 'inv_wishart'):
+            Bx = tf.zeros((K,M), dtype=tf.float64);
         else:
             raise NotImplementedError;
     else:
@@ -411,48 +354,21 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
 
     return cost, R2s;
 
-def getEtas(constraint_id, K_eta):
-    D_Z, K_eta, params, constraint_type = load_constraint_info(constraint_id);
-    datadir = 'constraints/'
-    fname = datadir + '%s.npz' % constraint_id;
-    confile = np.load(fname);
-    if (constraint_type == 'normal'):
-        mu_targs = confile['mu_targs'];
-        Sigma_targs = confile['Sigma_targs'];
-        etas = [];
-        for k in range(K_eta):
-            eta = normal_eta(mu_targs[k,:], Sigma_targs[k,:,:]);
-            etas.append(eta);
-
-        mu_OL_targs = confile['mu_OL_targs'];
-        Sigma_OL_targs = confile['Sigma_OL_targs'];
-        off_lattice_etas = [];
-        for k in range(K_eta):
-            ol_eta1 = np.float64(np.dot(np.linalg.inv(Sigma_OL_targs[k,:,:]), np.expand_dims(mu_OL_targs[k,:], 2)));
-            ol_eta2 = np.float64(-np.linalg.inv(Sigma_OL_targs[k,:,:]) / 2);
-            ol_eta = np.concatenate((ol_eta1, np.reshape(ol_eta2, [D_Z*D_Z, 1])), 0);
-            off_lattice_etas.append(ol_eta);
-
-
-    elif (constraint_type == 'dirichlet'):
-        alpha_targs = np.float64(confile['alpha_targs']);
-        etas = [];
-        for k in range(K_eta):
-            eta = np.expand_dims(alpha_targs[k,:], 1);
-            etas.append(eta);
-
-        alpha_OL_targs = np.float64(confile['alpha_OL_targs']);
-        off_lattice_etas = [];
-        for k in range(K_eta):
-            ol_eta = np.expand_dims(alpha_OL_targs[k,:], 1);
-            off_lattice_etas.append(ol_eta);
-    return etas, off_lattice_etas;
-
 def normal_eta(mu, Sigma):
     D_Z = mu.shape[0];
-    eta1 = np.float64(np.dot(np.linalg.inv(Sigma), np.expand_dims(mu, 2)));
+    cov_con_inds = np.triu_indices(D_Z, 0);
+    eta1 = np.float64(np.dot(np.linalg.inv(Sigma), np.expand_dims(mu, 1))).T;
     eta2 = np.float64(-np.linalg.inv(Sigma) / 2);
-    eta = np.concatenate((eta1, np.reshape(eta2, [D_Z*D_Z, 1])), 0);
+    #eta2 = np.expand_dims(eta2[cov_con_inds], 0);
+    eta2 = np.reshape(eta2, [1, D_Z*D_Z]);
+    eta = np.concatenate((eta1, eta2), axis=1);
+    return eta
+
+def inv_wishart_eta(Psi, m):
+    Dsqrt = Psi.shape[0];
+    eta1 = -Psi/2.0;
+    eta2 = np.array([[-(m+Dsqrt+1)/2.0]]);
+    eta = np.concatenate((np.reshape(eta1, (Dsqrt**2,1)).T, eta2), axis=1);
     return eta;
 
 
