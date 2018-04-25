@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import time
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
@@ -39,7 +40,7 @@ def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
     h = eta;
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
-            h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh); # each layer will have ncons nodes (can change this)
+            h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh);
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];
@@ -200,6 +201,9 @@ def connect_flow(Z, layers, theta, exp_fam):
         D = tf.square(sqrtD);
         L_pos_diag = tf.contrib.distributions.matrix_diag_transform(L, tf.exp);
         LLT = tf.matmul(L_pos_diag, tf.transpose(L_pos_diag, [0,1,3,2]));
+        #give it a lil boost
+        #diag_boost = 10*p_eps*tf.eye(sqrtD, batch_shape=[K,M], dtype=tf.float64);
+        #LLT = LLT + diag_boost;
         LLT_vec = tf.reshape(LLT, [K,M,D]);
         Z = tf.expand_dims(LLT_vec, 3); # update this for T > 1
         
@@ -214,8 +218,9 @@ def connect_flow(Z, layers, theta, exp_fam):
         sum_log_det_jacobians += (pos_diag_support_log_det + matrix_dot_log_det);
     return Z, sum_log_det_jacobians;
 
-def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
-    _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, eta_draw_params):
+    #_X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+    _X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
     KLs = [];
     for k in range(K_eta):
         _y_k = np.expand_dims(_log_p_zs[k,:], 1);
@@ -225,9 +230,9 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_dra
         elif (exp_fam == 'dirichlet'):
             params_k = {'alpha':eta_draw_params['alpha'][k]};
         elif (exp_fam == 'inv_wishart'):
-            params_k = {'Psi':eta_draw_params['Psi'][0], 'm':eta_draw_params['m'][0]};
+            params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k,0]};
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
-    return R2s, KLs;
+    return KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
@@ -249,11 +254,9 @@ def approxKL(y_k, X_k, exp_fam, params, plot=False):
         Psi = params['Psi'];
         m = params['m'];
         D = Psi.shape[0];
-        dist = invwishart(m, Psi);
         X_k = np.reshape(X_k, [batch_size, D, D]);
-        log_P = dist.logpdf(np.transpose(X_k, [1,2,0]));
+        log_P = invwishart.logpdf(np.transpose(X_k, [1,2,0]), m, Psi);
         KL = np.mean(log_Q - log_P);
-        print(log_Q.shape, log_P.shape);
         if (plot):
             plt.figure();
             plt.hist(log_Q,100);
@@ -330,7 +333,7 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
     return Bx;
 
 def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
-    y = log_p_zs
+    y = log_p_zs;
     cost = 0.0;
     R2s = [];
     for k in range(K_eta):
@@ -347,11 +350,14 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        if (cost_type == 'reg'):
-            cost += RSS_k[0,0];
-        elif (cost_type == 'KL'):
-            cost += tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k) + Bx_k));
-
+        #if (cost_type == 'reg'):
+        #    cost += RSS_k[0,0];
+        #elif (cost_type == 'KL'):
+        #cost += tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k) + Bx_k));
+    y = tf.expand_dims(log_p_zs, 2);
+    Bx = tf.expand_dims(Bx, 2);
+    eta = tf.expand_dims(eta, 2);
+    cost = tf.reduce_mean(y - tf.matmul(Tx, eta) + Bx);
     return cost, R2s;
 
 def normal_eta(mu, Sigma):
@@ -372,7 +378,7 @@ def inv_wishart_eta(Psi, m):
     return eta;
 
 
-def drawEtas(exp_fam, D_Z, K_eta, n_k):
+def drawEtas(exp_fam, D_Z, K_eta):
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
@@ -389,16 +395,36 @@ def drawEtas(exp_fam, D_Z, K_eta, n_k):
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
         params = {'mu':mu_targs, 'Sigma':Sigma_targs};
-    if (exp_fam == 'dirichlet'):
+    elif (exp_fam == 'dirichlet'):
         D_X = D_Z + 1;
         eta = np.zeros((K_eta, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
         for k in range(K_eta):
-            alpha_k = np.random.uniform(.2, 4, (D_X,));
+            alpha_k = np.random.uniform(.1, 5, (D_X,));
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
         params = {'alpha':alpha_targs};
+    elif (exp_fam == 'inv_wishart'):
+        Dsqrt = int(np.sqrt(0.25 + 2*D_Z) - 0.5);
+        D = Dsqrt**2;
+        Psi_targs = np.zeros((K_eta, Dsqrt, Dsqrt));
+        m_targs = np.zeros((K_eta, 1));
+        ncons = D+1;
+        df_fac = 2;
+        df = df_fac*D_Z;
+        Psi_dist = invwishart(df=df, scale=df_fac*np.eye(Dsqrt));
+        eta = np.zeros((K_eta, ncons));
+        for k in range(K_eta):
+            Psi_k = Psi_dist.rvs(1);
+            m_k = np.random.randint(1,11)*Dsqrt;
+            Psi_targs[k,:,:] = Psi_k;
+            m_targs[k,0] = m_k;
+            eta_k = inv_wishart_eta(Psi_k, m_k);
+            eta[k,:] = eta_k;
+        params = {'Psi':Psi_targs, 'm':m_targs};
+    else:
+        raise NotImplementedError;
     return eta, params;
 
 def setup_param_logging(all_params):
