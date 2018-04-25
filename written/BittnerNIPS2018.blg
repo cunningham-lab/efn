@@ -1,0 +1,52 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: BittnerNIPS2018.aux
+The style file: unsrt.bst
+Database file #1: BittnerNIPS2018.bib
+Warning--I didn't find a database entry for "guttman2014statistical"
+Warning--I didn't find a database entry for ""
+Warning--I didn't find a database entry for "wainwrightjordan2008graphical"
+Warning--empty journal in Kingma:2013aa
+Warning--empty journal in Mohamed:2016aa
+You've used 5 entries,
+            1791 wiz_defined-function locations,
+            478 strings with 4468 characters,
+and the built_in function-call counts, 1196 in all, are:
+= -- 94
+> -- 74
+< -- 1
++ -- 26
+- -- 21
+* -- 73
+:= -- 202
+add.period$ -- 16
+call.type$ -- 5
+change.case$ -- 4
+chr.to.int$ -- 0
+cite$ -- 7
+duplicate$ -- 58
+empty$ -- 104
+format.name$ -- 21
+if$ -- 263
+int.to.chr$ -- 0
+int.to.str$ -- 5
+missing$ -- 6
+newline$ -- 28
+num.names$ -- 7
+pop$ -- 25
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 30
+stack$ -- 0
+substring$ -- 40
+swap$ -- 14
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 2
+while$ -- 9
+width$ -- 6
+write$ -- 53
+(There were 5 warnings)

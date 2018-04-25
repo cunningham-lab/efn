@@ -1,0 +1,212 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2018
+
+% ready for submission
+\usepackage{nips_2018}
+
+% to compile a preprint version, e.g., for submission to arXiv, add
+% add the [preprint] option:
+% \usepackage[preprint]{nips_2018}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{nips_2018}
+
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2018}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\title{Learning Exponential Families}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{
+  Sean R. Bittner \thanks{Use footnote for providing further
+    information about author (webpage, alternative
+    address)---\emph{not} for acknowledging funding agencies.} \\
+  Department of Neuroscience\\
+  Columbia University\\
+  \texttt{srb2201@columbia.edu} \\
+  %% examples of more authors
+ \And
+Coauthor \\
+Department of Statistics\\
+  Columbia University\\
+ \texttt{jpc2181@columbia.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+% \nipsfinalcopy is no longer used
+
+\maketitle
+
+\begin{abstract}
+  
+  [SLOPPY NOTES STAGE JUST TO GET THOUGHTS DOWN]
+  
+Recently much attention has been paid to probabilistic models defined by a deep neural network transformation of a simpler random variable; these implicit generative models have been used to great success across variational inference, generative modeling of complex data types, and more.  In essentially all of these settings, the model is specified by the network architecture, and a particular member of that model is chosen to minimize some loss (be it adversarial or information divergence)
+  
+  We treat the problem of learning an exponential family -- the model itself, rather than the typical setting of learning a particular member of that model.
+  
+Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet).
+  
+\end{abstract}
+
+\section{Introduction}
+
+  \emph{People use lots of implicit generative models}:
+  
+  Across machine learning, including ABC \cite{guttman2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as:
+   $$ \textrm{something like eq 1 and 2 in Mohamed:2016aa, defining}  q_\theta (z) $$
+ Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.  Also reference to this being super standard and widespread \cite{Devroye:1986aa}.
+ The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
+ Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
+ 
+ \emph{All these learn a single member of a family}
+ 
+ Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
+ 
+ \emph{Here we learn the family}
+ 
+ We leverage the natural parameterization of exponential families to derive a novel objective that is amenable to stochastic optimization.
+ 
+ \emph{A note on amortization}
+ 
+ Several have pointed out that these IGMs are in fact strictly less expressive than a mean field, at least in the conventional VI setting.  See for example http://dustintran.com/blog/variational-auto-encoders-do-not-train-complex-generative-models  (here I like the line ``The neural network used in the encoder (variational distribution) does not lead to any richer approximating distribution. It is a way to amortize inference such that the number of parameters does not grow with the size of the data (an incredible feat, but not one for expressivity!) (Stuhlmuller et al., 2013)``).
+ You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
+ Etc etc what we are doing here is \emph{amortized} amortized inference, in the sense that we are amortizing not the data points, but the distribution itself.
+ 
+\emph{Our contributions include:}
+
+...
+
+\emph{Our results demonstrate}
+
+...
+
+  
+ \section{Learning exponential families}
+ 
+ \emph{Why this is important}
+ 
+Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
+ 
+ \emph{Why this is coherent}
+ 
+ $\Theta$ defines quite a big $\mathcal{Q}$, and indeed the subject of compressibility, generalization, etc is of keen interest to many \cite{zhou2018compressability}.  So actually the space of distributions is quite large, and in many cases certainly larger than it needs be.  Why?  Well, we know precisely the parameter space of the exponential family; it is defined by the \emph{natural} parameters $\eta \in \mathbb{R}^p$ (or whatever we choose there).
+ 
+ \emph{Figure 1}
+ 
+ Figure of model space.  Yeah that's good.  Then graphical model.
+ Note that perhaps $\mathcal{Q}$ is too big, and a simpler model space (the $\|\eta\|$ dimensional subspace of $\Theta$) would be better for the usual robustness/generalization reasons.  
+ 
+ \emph{Aside}
+ 
+ A neat idea is to ask if learning the $\theta(\eta)$ network leads to better VI in terms of inference networks, since it is apparently appropriately regularized and can just take suff stats.  That's testable if we have time.
+ 
+ 
+  In many situations, statistical inference attempts to learn, at least approximately, a member of an exponential family. We often consider this exponential family intractable in the sense that we don't know how to normalize or sample from it.  Approximate inference, such as variational
+
+\section{To Do}
+
+\subsection{SRB}
+\begin{itemize}
+\item set up submission at   \url{https://cmt.research.microsoft.com/NIPS2018/}
+\item review and conform to style requirements (see website with template); 8 pages not including refs and acks and appendices.
+\end{itemize}
+
+\subsection{JPC}
+\begin{itemize}
+\item Outline
+\item Write
+\end{itemize}
+
+
+
+
+
+
+
+\begin{figure}
+  \centering
+  \fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
+  \caption{Sample figure caption.}
+\end{figure}
+
+
+
+\begin{table}
+  \caption{Sample table title}
+  \label{sample-table}
+  \centering
+  \begin{tabular}{lll}
+    \toprule
+    \multicolumn{2}{c}{Part}                   \\
+    \cmidrule(r){1-2}
+    Name     & Description     & Size ($\mu$m) \\
+    \midrule
+    Dendrite & Input terminal  & $\sim$100     \\
+    Axon     & Output terminal & $\sim$10      \\
+    Soma     & Cell body       & up to $10^6$  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\begin{verbatim}
+   \usepackage[pdftex]{graphicx} ...
+   \includegraphics[width=0.8\linewidth]{myfile.pdf}
+\end{verbatim}
+
+
+
+
+\clearpage
+
+\subsubsection*{Acknowledgments}
+
+Use unnumbered third level headings for the acknowledgments. All
+acknowledgments go at the end of the paper. Do not include
+acknowledgments in the anonymized submission, only in the final paper.
+
+\section*{References}
+
+
+\bibliographystyle{unsrt}
+\bibliography{BittnerNIPS2018}
+
+
+\end{document}
