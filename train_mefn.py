@@ -52,8 +52,8 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     # optimization hyperparameters
     lr = 10**lr_order
     # save tensorboard summary in intervals
-    tb_save_every = 1;
-    tb_save_params = True;
+    tb_save_every = 50;
+    tb_save_params = False;
 
     # seed RNGs
     np.random.seed(0);
