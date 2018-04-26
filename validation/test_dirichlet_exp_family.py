@@ -1,26 +1,26 @@
-from train_network import train_network
+from train_efn import train_efn
 import numpy as np
 from matplotlib import pyplot as plt
-from efn_util import load_constraint_info
-from scipy.stats import multivariate_normal
 import os, sys
 
 os.chdir('../');
 
-constraint_id = 'dirichlet';
+exp_fam = 'dirichlet';
+D = int(sys.argv[1]);
 flow_id = 'planar8';
-D_Z = int(sys.argv[1]);
-ncons = D_Z+1;
 cost_type = 'KL';
-L = int(sys.argv[2]);
+ncons = D;
+L_theta = int(sys.argv[2]);
 upl_fac = int(sys.argv[3]);
-units_per_layer = upl_fac*ncons;
-n = 1000;
-K_eta = 25;
-stochastic_eta = True;
-single_dist = False;
+upl_theta = upl_fac*ncons;
+K_eta = 1;
+M_eta = 1000;
+stochastic_eta = False;
 lr_order = -3;
-random_seed = 0;
-X, R2s, it = train_network(constraint_id, D_Z, flow_id, cost_type,  L, \
-	                       units_per_layer, n, K_eta, \
-                           stochastic_eta, single_dist, lr_order, random_seed);
+random_seed = int(sys.argv[4]);
+theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
+max_iters = 10000;
+check_rate = 1000;
+
+X, KLs, it = train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, \
+                       stochastic_eta, theta_nn_hps, lr_order, random_seed, max_iters, check_rate);

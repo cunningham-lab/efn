@@ -9,10 +9,10 @@ os.chdir('../');
 
 exp_fam = 'dirichlet';
 D = 3;
-flow_id = 'planar2';
+flow_id = 'planar8';
 cost_type = 'KL';
-M_eta = 1000;
-lr_order = -2;
+M_eta = 10;
+lr_order = -3;
 random_seed = 2;
 
 alphas = [];

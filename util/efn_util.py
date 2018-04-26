@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
 import datetime
 import os
-from dirichlet import simplex
-
-p_eps = 10e-6;
+#from dirichlet import simplex
+#p_eps = 10e-6;
 def setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
     now = datetime.datetime.now();
@@ -386,10 +385,10 @@ def drawEtas(exp_fam, D_Z, K_eta):
             mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
             Sigma_k = Sigma_dist.rvs(1);
             eta_k = normal_eta(mu_k, Sigma_k);
-            eta[k,:] = eta_k[:,0];
+            eta[k,:] = eta_k[0,:];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
-        params = {'mu':mu_targs, 'Sigma':Sigma_targs};
+        params = {'mu':mu_targs, 'Sigma':Sigma_targs, 'D':D_Z};
     elif (exp_fam == 'dirichlet'):
         D_X = D_Z + 1;
         eta = np.zeros((K_eta, D_X));
@@ -399,7 +398,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
-        params = {'alpha':alpha_targs};
+        params = {'alpha':alpha_targs, 'D':D_X};
     elif (exp_fam == 'inv_wishart'):
         Dsqrt = int(np.sqrt(0.25 + 2*D_Z) - 0.5);
         D = Dsqrt**2;
@@ -417,7 +416,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
             m_targs[k,0] = m_k;
             eta_k = inv_wishart_eta(Psi_k, m_k);
             eta[k,:] = eta_k;
-        params = {'Psi':Psi_targs, 'm':m_targs};
+        params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
     else:
         raise NotImplementedError;
     return eta, params;
@@ -779,13 +778,13 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
         
 
     fig.add_subplot(2,2,1);
-    plt.plot([np.min(its), np.max(its)], [0,0], 'tab:gray');
+    plt.plot([np.min(its), np.max(its)], [1,1], 'tab:gray');
     plt.scatter(its_vec, R2s_vec, size,c='k');
     plt.legend(['goal', 'model']);
     plt.xlabel('iterations', fontsize=fontsize);
     plt.xlabel('iterations', fontsize=fontsize);
     plt.ylabel('R^2$', fontsize=fontsize)
-    plt.ylim([-.2, 1]);
+    plt.ylim([-.2, 1.1]);
 
     fig.add_subplot(2,2,3);
     plt.plot([np.min(its), np.max(its)], [0,0], 'tab:gray');
