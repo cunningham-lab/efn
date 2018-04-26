@@ -218,9 +218,9 @@ def connect_flow(Z, layers, theta, exp_fam):
         sum_log_det_jacobians += (pos_diag_support_log_det + matrix_dot_log_det);
     return Z, sum_log_det_jacobians;
 
-def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, eta_draw_params):
-    #_X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
-    _X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
+def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
+    _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+    #_X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
     KLs = [];
     for k in range(K_eta):
         _y_k = np.expand_dims(_log_p_zs[k,:], 1);
@@ -232,7 +232,7 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, eta_draw_par
         elif (exp_fam == 'inv_wishart'):
             params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k,0]};
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
-    return KLs;
+    return R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
@@ -334,7 +334,6 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
 
 def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
     y = log_p_zs;
-    cost = 0.0;
     R2s = [];
     for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
@@ -350,14 +349,10 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        #if (cost_type == 'reg'):
-        #    cost += RSS_k[0,0];
-        #elif (cost_type == 'KL'):
-        #cost += tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k) + Bx_k));
     y = tf.expand_dims(log_p_zs, 2);
     Bx = tf.expand_dims(Bx, 2);
     eta = tf.expand_dims(eta, 2);
-    cost = tf.reduce_mean(y - tf.matmul(Tx, eta) + Bx);
+    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(Tx, eta) + Bx), [1,2]));
     return cost, R2s;
 
 def normal_eta(mu, Sigma):

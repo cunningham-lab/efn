@@ -144,6 +144,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
+        _Bx = sess.run(Bx, feed_dict);
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
@@ -174,8 +175,12 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             feed_dict = {Z0:z_i, eta:_eta};
 
+            #start_time = time.time();
             ts, cost_i, _X, _cost_grads, _R2s, _Tx, summary = \
-                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);
+                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);    
+            #end_time = time.time();
+            #print('iter %d took %f seconds' % (i, end_time-start_time));
+
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
                 As[i,:,:] = A_i;
