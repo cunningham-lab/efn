@@ -63,8 +63,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     if (not stochastic_eta):
         # get etas based on constraint_id
         _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-        _eta_test = _eta;
-        eta_test_draw_params = eta_draw_params;
+        _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
 
     # construct the parameter network
     theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
@@ -79,7 +78,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     nparams = len(all_params);
 
     X = Z; # [n,D,T] 
-    X_cov = tf.div(tf.matmul(X, tf.transpose(X, [0, 1, 3, 2])), T); # this is [n x D x D]
     # set up the constraint computation
     Tx = computeMoments(X, exp_fam, D, T);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
@@ -165,6 +163,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             if (stochastic_eta): 
                 _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
                 _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+
             feed_dict = {Z0:z_i, eta:_eta};
 
 
@@ -185,45 +184,50 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
-            if (np.mod(i, check_rate)==0):
+            if (np.mod(i+1, check_rate)==0):
                 start_time = time.time();
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
                 # compute R^2 and KL for training and batch
-                z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
+                z_i = np.random.normal(np.zeros((K_eta, int(1e4), D_Z, num_zi)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta};
-                #feed_dict_test = {Z0:z_i, eta:_eta_test};
-                #train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
-                train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, eta_draw_params);
-                #test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
+                feed_dict_test = {Z0:z_i, eta:_eta_test};
+
+                train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
+                test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
                 end_time = time.time();
                 print('check diagnostics processes took: %f seconds' % (end_time-start_time));
 
-                #train_R2s[check_it,:] = np.array(train_R2s_i);
+                train_R2s[check_it,:] = np.array(train_R2s_i);
                 train_KLs[check_it,:] = np.array(train_KLs_i);
-                #test_R2s[check_it,:] = np.array(test_R2s_i);
-                #test_KLs[check_it,:] = np.array(test_KLs_i);
+                test_R2s[check_it,:] = np.array(test_R2s_i);
+                test_KLs[check_it,:] = np.array(test_KLs_i);
 
-                #mean_train_R2 = np.mean(train_R2s_i);
+                mean_train_R2 = np.mean(train_R2s_i);
                 mean_train_KL = np.mean(train_KLs_i);
+                mean_test_R2 = np.mean(test_R2s_i);
+                mean_test_KL = np.mean(test_KLs_i);
                                 
                 print(42*'*');
-                print('it = %d ' % i);
+                print('it = %d ' % (i+1));
                 print('cost', cost_i);
-                print('KL: %f' % mean_train_KL);
+                print('train R2: %f' % mean_train_R2);
+                print('train KL: %f' % mean_train_KL);
+                print('test R2: %f' % mean_test_R2);
+                print('test KL: %f' % mean_test_KL);
                 #print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
 
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, \
-                                                      #train_R2s=train_R2s, \
-                                                      train_KLs=train_KLs);
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs);
                 else:
                     np.savez(savedir + 'results.npz', it=i, \
                                                       X=_X, \
-                                                      train_R2s=train_R2s,\
-                                                      train_KLs=train_KLs);
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs);
                 
                 check_it += 1;
             sys.stdout.flush();

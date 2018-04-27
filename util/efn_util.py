@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
 import datetime
 import os
-from dirichlet import simplex
-
-p_eps = 10e-6;
+#from dirichlet import simplex
+#p_eps = 10e-6;
 def setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
     now = datetime.datetime.now();
@@ -218,9 +217,9 @@ def connect_flow(Z, layers, theta, exp_fam):
         sum_log_det_jacobians += (pos_diag_support_log_det + matrix_dot_log_det);
     return Z, sum_log_det_jacobians;
 
-def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, eta_draw_params):
-    #_X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
-    _X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
+def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
+    _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+    #_X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
     KLs = [];
     for k in range(K_eta):
         _y_k = np.expand_dims(_log_p_zs[k,:], 1);
@@ -232,7 +231,7 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, eta_draw_par
         elif (exp_fam == 'inv_wishart'):
             params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k,0]};
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
-    return KLs;
+    return R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
@@ -334,7 +333,6 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
 
 def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
     y = log_p_zs;
-    cost = 0.0;
     R2s = [];
     for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
@@ -350,14 +348,10 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        #if (cost_type == 'reg'):
-        #    cost += RSS_k[0,0];
-        #elif (cost_type == 'KL'):
-        #cost += tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k) + Bx_k));
     y = tf.expand_dims(log_p_zs, 2);
     Bx = tf.expand_dims(Bx, 2);
     eta = tf.expand_dims(eta, 2);
-    cost = tf.reduce_mean(y - tf.matmul(Tx, eta) + Bx);
+    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(Tx, eta) + Bx), [1,2]));
     return cost, R2s;
 
 def normal_eta(mu, Sigma):
@@ -391,10 +385,10 @@ def drawEtas(exp_fam, D_Z, K_eta):
             mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
             Sigma_k = Sigma_dist.rvs(1);
             eta_k = normal_eta(mu_k, Sigma_k);
-            eta[k,:] = eta_k[:,0];
+            eta[k,:] = eta_k[0,:];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
-        params = {'mu':mu_targs, 'Sigma':Sigma_targs};
+        params = {'mu':mu_targs, 'Sigma':Sigma_targs, 'D':D_Z};
     elif (exp_fam == 'dirichlet'):
         D_X = D_Z + 1;
         eta = np.zeros((K_eta, D_X));
@@ -404,7 +398,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
-        params = {'alpha':alpha_targs};
+        params = {'alpha':alpha_targs, 'D':D_X};
     elif (exp_fam == 'inv_wishart'):
         Dsqrt = int(np.sqrt(0.25 + 2*D_Z) - 0.5);
         D = Dsqrt**2;
@@ -422,7 +416,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
             m_targs[k,0] = m_k;
             eta_k = inv_wishart_eta(Psi_k, m_k);
             eta[k,:] = eta_k;
-        params = {'Psi':Psi_targs, 'm':m_targs};
+        params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
     else:
         raise NotImplementedError;
     return eta, params;
@@ -784,13 +778,13 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
         
 
     fig.add_subplot(2,2,1);
-    plt.plot([np.min(its), np.max(its)], [0,0], 'tab:gray');
+    plt.plot([np.min(its), np.max(its)], [1,1], 'tab:gray');
     plt.scatter(its_vec, R2s_vec, size,c='k');
     plt.legend(['goal', 'model']);
     plt.xlabel('iterations', fontsize=fontsize);
     plt.xlabel('iterations', fontsize=fontsize);
     plt.ylabel('R^2$', fontsize=fontsize)
-    plt.ylim([-.2, 1]);
+    plt.ylim([-.2, 1.1]);
 
     fig.add_subplot(2,2,3);
     plt.plot([np.min(its), np.max(its)], [0,0], 'tab:gray');

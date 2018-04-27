@@ -1,26 +1,27 @@
-from train_network import train_network
+from train_efn import train_efn
 import numpy as np
 from matplotlib import pyplot as plt
-from efn_util import load_constraint_info
 from scipy.stats import multivariate_normal
 import os, sys
 
 os.chdir('../');
 
-constraint_id = 'normal';
-flow_id = 'linear1';
+exp_fam = 'normal';
 D = int(sys.argv[1]);
-ncons = D+D**2;
+flow_id = 'linear1';
 cost_type = 'KL';
+K_eta = 10;
+M_eta = 1000;
 L = int(sys.argv[2]);
 upl_fac = int(sys.argv[3]);
-units_per_layer = upl_fac*ncons;
-n = 1000;
-K_eta = 25;
-stochastic_eta = True;
-single_dist = False;
+ncons = D+D**2;
+upl = upl_fac*ncons;
+theta_nn_hps = {'L':L, 'upl':upl};
+stochastic_eta = False;
 lr_order = -3;
 random_seed = 0;
-X, R2s, it = train_network(constraint_id, D, flow_id, cost_type,  L, \
-	                       units_per_layer, n, K_eta, \
-                           stochastic_eta, single_dist, lr_order, random_seed);
+max_iters = 10000;
+check_rate = 1;
+
+X, train_KLs, it = train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
+	                       theta_nn_hps, lr_order, random_seed, max_iters, check_rate);

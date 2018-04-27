@@ -17,7 +17,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       memory_extension, setup_param_logging, count_params
 
 def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
-               lr_order=-3, random_seed=0, check_rate=1000, max_iters=10000):
+               lr_order=-3, random_seed=0, max_iters=10000, check_rate=1000):
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = check_rate;
@@ -88,7 +88,6 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     nparams = len(all_params);
 
     X = Z; # [n,D,T] 
-    X_cov = tf.div(tf.matmul(X, tf.transpose(X, [0, 1, 3, 2])), T); # this is [n x D x D]
     # set up the constraint computation
     Tx = computeMoments(X, exp_fam, D, T);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
@@ -129,7 +128,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
         cost_grad_vals = np.zeros((array_init_len, nparam_vals));
     array_cur_len = array_init_len;
 
-    num_diagnostic_checks = (max_iters // check_rate) + 1;
+    num_diagnostic_checks = (max_iters // check_rate);
     train_R2s = np.zeros((num_diagnostic_checks, K_eta));
     test_R2s = np.zeros((num_diagnostic_checks, K_eta));
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
@@ -144,6 +143,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
+        _Bx = sess.run(Bx, feed_dict);
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
@@ -174,8 +174,12 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             feed_dict = {Z0:z_i, eta:_eta};
 
+            start_time = time.time();
             ts, cost_i, _X, _cost_grads, _R2s, _Tx, summary = \
-                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);
+                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);    
+            end_time = time.time();
+            print('iter %d took %f seconds' % (i, end_time-start_time));
+
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
                 As[i,:,:] = A_i;
@@ -187,7 +191,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
-            if (np.mod(i, check_rate)==0):
+            if (np.mod(i+1, check_rate)==0 and i > 1):
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
@@ -207,7 +211,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
                 mean_train_KL = np.mean(train_KLs_i);
 
                 print(42*'*');
-                print('it = %d ' % i);
+                print('it = %d ' % (i+1));
                 print('cost = %f ' % cost_i);
                 print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
                 if (dynamics):
