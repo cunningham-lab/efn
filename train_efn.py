@@ -64,6 +64,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         # get etas based on constraint_id
         _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+        print(_eta);
 
     # construct the parameter network
     theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
@@ -171,7 +172,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             ts, cost_i, _X, _cost_grads, _log_p_zs, _Tx, summary = \
                 sess.run([train_step, cost, X, cost_grad, log_p_zs, Tx, summary_op], feed_dict);
             end_time = time.time();
-            print('iter %d took %f seconds' % (i, end_time-start_time));
+            #print('iter %d took %f seconds' % (i, end_time-start_time));
                 
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
@@ -194,7 +195,9 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                 feed_dict_train = {Z0:z_i, eta:_eta};
                 feed_dict_test = {Z0:z_i, eta:_eta_test};
 
+                print('Training');
                 train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
+                print('Testing');
                 test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
                 end_time = time.time();
                 print('check diagnostics processes took: %f seconds' % (end_time-start_time));
@@ -220,11 +223,11 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
 
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, \
+                                                      it=i, X=_X, check_rate=check_rate, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);
                 else:
-                    np.savez(savedir + 'results.npz', it=i, \
+                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                       X=_X, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);

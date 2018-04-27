@@ -1,6 +1,6 @@
 import tensorflow as tf
-p_eps = 1e-6;
 
+p_eps = 1e-6;
 # Define the planar flow
 class Layer:
     def forward_and_jacobian(self, y):

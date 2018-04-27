@@ -7,7 +7,7 @@ os.chdir('../');
 
 exp_fam = 'dirichlet';
 D = int(sys.argv[1]);
-flow_id = 'planar8';
+flow_id = 'planar2';
 cost_type = 'KL';
 ncons = D;
 L_theta = int(sys.argv[2]);

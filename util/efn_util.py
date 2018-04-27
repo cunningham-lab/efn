@@ -9,8 +9,11 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
 import datetime
 import os
+import seaborn as sns
 #from dirichlet import simplex
-#p_eps = 10e-6;
+colors = ["pale red", "medium green", "denim blue", "windows blue", "amber", "greyish", "faded green", "dusty purple"];
+
+p_eps = 10e-6;
 def setup_IO(exp_fam, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
     now = datetime.datetime.now();
@@ -219,7 +222,6 @@ def connect_flow(Z, layers, theta, exp_fam):
 
 def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
     _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
-    #_X, _log_p_zs = sess.run([X, log_p_zs], feed_dict);
     KLs = [];
     for k in range(K_eta):
         _y_k = np.expand_dims(_log_p_zs[k,:], 1);
@@ -394,7 +396,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
         eta = np.zeros((K_eta, D_X));
         alpha_targs = np.zeros((K_eta, D_X));
         for k in range(K_eta):
-            alpha_k = np.random.uniform(.1, 5, (D_X,));
+            alpha_k = np.random.uniform(.5, 5, (D_X,));
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
@@ -814,6 +816,20 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
             plt.suptitle(titlestr, fontsize=fontsize+2);
     return fig;
     
+def errorBars(x, y, err, legendstrs, color_palette=sns.xkcd_palette(colors)):
+    fontsize = 16;
+    num_trends = y.shape[0];
+    xlen = x.shape[0];
+    sizes = 40*np.ones((xlen,));
+    for i in range(num_trends):
+        color = np.tile(np.array([color_palette[i]]), [xlen, 1]);
+        plt.scatter(x, y[i,:], sizes, c=color);
+    plt.legend(legendstrs, fontsize=fontsize);
+
+    for i in range(num_trends):
+        for j in range(xlen):
+            plt.plot([x[j], x[j]], [y[i,j]-err[i,j], y[i,j]+err[i,j]], '-', c=color_palette[i], lw=2);
+    return None;
 
 def factors(n):
     return [f for f in range(1,n+1) if n%f==0]
