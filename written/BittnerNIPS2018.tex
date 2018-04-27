@@ -109,6 +109,8 @@ Many intractable distributions encountered in machine learning belong to exponen
  You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
  Etc etc what we are doing here is \emph{amortized} amortized inference, in the sense that we are amortizing not the data points, but the distribution itself.
  
+REparameterization trick (Kingma and Welling (2013), Rezende et al. (2014) and Titsias and Lazaro-Gredilla 2014)..  See also Archer 2015 / Gao 2016 for clean explanation.  
+ 
 \emph{Our contributions include:}
 
 ...
@@ -137,6 +139,10 @@ Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008gr
  
  A neat idea is to ask if learning the $\theta(\eta)$ network leads to better VI in terms of inference networks, since it is apparently appropriately regularized and can just take suff stats.  That's testable if we have time.
  
+ \emph{Why Flow Networks}
+ 
+ We choose flow networks \cite{ } and \cite{} because duh.  That makes these comparisons legitimate and apples to apples.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \emph{ (Saul and Jordan, 1996; Barber and Wiegerinck, 1999); this is called structured variational inference. Another way to expand the family is to consider mixtures of variational densities, i.e., additional latent variables within the variational family (Bishop et al., 1998). } or newer stuff \cite{ } [Tran Copula VI, Hoffman and Blei 2015].
+ 
  
   In many situations, statistical inference attempts to learn, at least approximately, a member of an exponential family. We often consider this exponential family intractable in the sense that we don't know how to normalize or sample from it.  Approximate inference, such as variational
 
@@ -157,13 +163,10 @@ Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008gr
 
 
 
-
-
-
 \begin{figure}
   \centering
   \fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-  \caption{Sample figure caption.}
+  \caption{Figure 1: possibly Fig 7.2 bias-variance tradeoff and then benefit of a restricted model from Hastie Book, or similar from W4400 (ask PO for batman permission).}
 \end{figure}
 
 
@@ -204,9 +207,53 @@ acknowledgments in the anonymized submission, only in the final paper.
 
 \section*{References}
 
-
 \bibliographystyle{unsrt}
 \bibliography{BittnerNIPS2018}
 
+Stuff on wake sleep and the Helmholtz machine
+
+Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
+
+Flow networks
+
+Devroye's book.
+
+Hoffman et al 2013 SVI 
+
+
+From Blei review on VI.
+ThedevelopmentofvariationaltechniquesforBayesian inference followed two parallel, yet separate, tracks. Peterson and Anderson (1987) is arguably the first variational procedure for a particular model: a neural network. This paper, along with insights from statistical mechanics (Parisi, 1988), led to a flurry of variational inference procedures for a wide class of models (Saul et al., 1996; Jaakkola and Jordan, 1996, 1997; Ghahramani and Jordan, 1997; Jordan et al., 1999). In parallel, Hinton and Van Camp (1993) proposed a variational algorithm for a similar neural network model. Neal and Hinton (1999) (first published in 1993) made important connections to the expectation maximization (EM) algorithm (Dempster et al., 1977), which then led to a variety of variational inference algorithms for other types of models (Waterhouse et al., 1996; MacKay, 1997).
+
+Salimans, T. and Knowles, D. (2014). On using control variates with stochastic approximation for variational Bayes. arXiv preprint arXiv:1401.1022.
+
+Salimans, T., Kingma, D., and Welling, M. (2015). Markov chain Monte Carlo and variational inference: Bridging the gap. In International Conference on Machine Learning, pages 1218? 1226.
+
+Ranganath, R., Gerrish, S., and Blei, D. (2014). Black box variational inference. In ArtificialIntelligence and Statistics.
+
+Hoffman, M. D. and Blei, D. M. (2015). Structured stochastic variational inference. In Artificial Intelligence and Statistics.
+
+
+Possibly some of 
+Burda, Y., Grosse, R., & Salakhutdinov, R. (2016). Importance Weighted Autoencoders. In International Conference on Learning Representations.
+Damianou, A. C., & Lawrence, N. D. (2013). Deep Gaussian Processes. In Artificial Intelligence and Statistics.
+Dayan, P., Hinton, G. E., Neal, R. M., & Zemel, R. S. (1995). The Helmholtz Machine. Neural Computation, 7(5), 889?904. http://doi.org/10.1162/neco.1995.7.5.889
+Dinh, L., Sohl-Dickstein, J., & Bengio, S. (2016). Density estimation using Real NVP. arXiv.org.
+Harville, D. A (1977). Maximum likelihood approaches to variance component estimation and to related problems. Journal of the American Statistical Association, 72(358):320?338.
+Hinton, G. and Van Camp, D (1993). Keeping the neural networks simple by minimizing the description length of the weights. In Computational Learning Theory, pp. 5?13. ACM.
+Johnson, M. J., Duvenaud, D., Wiltschko, A. B., Datta, S. R., & Adams, R. P. (2016). Composing graphical models with neural networks for structured representations and fast inference. arXiv.org.
+Kingma, D. P., & Welling, M. (2014). Auto-Encoding Variational Bayes. In International Conference on Learning Representations.
+Kingma, D. P., Salimans, T., & Welling, M. (2016). Improving Variational Inference with Inverse Autoregressive Flow. arXiv.org.
+Louizos, C., & Welling, M. (2016). Structured and Efficient Variational Deep Learning with Matrix Gaussian Posteriors. In International Conference on Machine Learning.
+Maaløe, L., Sønderby, C. K., Sønderby, S. K., & Winther, O. (2016). Auxiliary Deep Generative Models. In International Conference on Machine Learning.
+MacKay, D. J., & Gibbs, M. N. (1999). Density networks. Statistics and neural networks: advances at the interface. Oxford University Press, Oxford, 129-144.
+Mnih, A., & Rezende, D. J. (2016). Variational inference for Monte Carlo objectives. In International Conference on Machine Learning.
+Ranganath, R., Tran, D., & Blei, D. M. (2016). Hierarchical Variational Models. In International Conference on Machine Learning.
+Rezende, D. J., Mohamed, S., & Wierstra, D. (2014). Stochastic Backpropagation and Approximate Inference in Deep Generative Models. In International Conference on Machine Learning.
+Salimans, T., Kingma, D. P., & Welling, M. (2015). Markov Chain Monte Carlo and Variational Inference: Bridging the Gap. In International Conference on Machine Learning.
+Salakhutdinov, R., Tenenbaum, J. B., and Torralba, A (2013). Learning with hierarchical-deep models. Pattern Analysis and Machine Intelligence, IEEE Transactions on, 35 (8):1958?1971.
+Stuhlmüller, A., Taylor, J., & Goodman, N. (2013). Learning Stochastic Inverses. In Neural Information Processing Systems.
+Tran, D., Blei, D. M., & Airoldi, E. M. (2015). Copula variational inference. In Neural Information Processing Systems.
+Tran, D., Ranganath, R., & Blei, D. M. (2016). The Variational Gaussian Process. International Conference on Learning Representations.
+Waterhouse, S., MacKay, D., and Robinson, T (1996). Bayesian methods for mixtures of experts. In Neural Information Processing Systems.
 
 \end{document}
