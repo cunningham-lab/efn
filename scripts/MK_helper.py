@@ -1,5 +1,5 @@
 from train_efn import train_efn
-import numpy as np
+import numpy as np 
 from matplotlib import pyplot as plt
 import os, sys
 
@@ -11,10 +11,7 @@ K_eta = int(sys.argv[3]);
 M_eta = int(sys.argv[4]);
 flow_id = str(sys.argv[5]);
 cost_type = 'KL';
-if (exp_fam == 'normal'):
-  ncons = int(D + D*(D+1)/2);
-elif (exp_fam == 'dirichlet'):
-  ncons = D;
+ncons = D;
 L_theta = int(sys.argv[6]);
 upl_fac = int(sys.argv[7]);
 upl_theta = upl_fac*ncons;
