@@ -19,7 +19,7 @@ stochastic_eta = False;
 lr_order = -3;
 theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
 max_iters = 20000;
-check_rate = 1;
+check_rate = 200;
 random_seed = 0;
 
 X, trainKLs, it = train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, \
