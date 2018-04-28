@@ -54,10 +54,11 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     tb_save_params = False;
 
     # seed RNGs
-    np.random.seed(1);
+    np.random.seed(0);
     tf.set_random_seed(random_seed);
 
     savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
+    print(random_seed, savedir);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (not stochastic_eta):
@@ -125,7 +126,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
     test_KLs = np.zeros((num_diagnostic_checks, K_eta));
     check_it = 0;
-    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
+    with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 

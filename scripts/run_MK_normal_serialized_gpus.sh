@@ -2,7 +2,7 @@
 
 N=500
 counter=0 
-for K in 1 10 100
+for K in 100
 do
   for M in 1000
   do
