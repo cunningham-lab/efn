@@ -114,7 +114,8 @@ def construct_flow(flow_id, D_Z, T):
     else:
         num_zi = T;
 
-    Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi));
+    with (tf.device('/cpu:0')):
+       Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi));
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     if (dynamics):
