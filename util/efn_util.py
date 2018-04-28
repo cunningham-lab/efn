@@ -7,31 +7,17 @@ from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer
-import datetime
 import os
 
-colors = ["pale red", "medium green", "denim blue", "windows blue", "amber", "greyish", "faded green", "dusty purple"];
-
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, lr_order):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
-    now = datetime.datetime.now();
-    datestr = now.strftime("%Y-%m-%d_%H")
-    resdir = 'results/' + datestr;
-    if (not os.path.exists(resdir)):
-        print('creating save directory:\n %s' % resdir);
-        # This is an issue when processes are started in parallel.
-        try:
-            os.makedirs(resdir);
-        except FileExistsError:
-            print('%s already exists. Continuing.');
-
+    resdir = 'results/MK/';
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
-
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_K=%d_D=%d_%s_L=%d_upl=%d_lr=%d/' % (exp_fam, K_eta, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl'], lr_order);
+        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_upl=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], theta_nn_hps['upl'], random_seed);
     else:
-        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_lr=%d/' % (exp_fam, D, flow_id, lr_order);
+        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_rs=%d/' % (exp_fam, D, flow_id, random_seed);
     return savedir
 
 def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):

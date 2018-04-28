@@ -59,7 +59,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, D, flow_id, {}, False, lr_order);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, {}, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (exp_fam == 'normal'):

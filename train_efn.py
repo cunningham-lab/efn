@@ -57,7 +57,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(1);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, lr_order);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (not stochastic_eta):
@@ -223,12 +223,12 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
 
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, check_rate=check_rate, \
+                                                      it=i, X=_X, check_rate=check_rate, eta=_eta, params=eta_draw_params, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                      X=_X, \
+                                                      X=_X, eta=_eta, params=eta_draw_params, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);
                 
