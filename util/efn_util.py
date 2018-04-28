@@ -13,7 +13,7 @@ import os
 colors = ["pale red", "medium green", "denim blue", "windows blue", "amber", "greyish", "faded green", "dusty purple"];
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
+def setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, lr_order):
 # set file I/O stuff
     now = datetime.datetime.now();
     datestr = now.strftime("%Y-%m-%d_%H")
@@ -29,9 +29,9 @@ def setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_se
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
 
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_K=%d_D=%d_%s_L=%d_upl=%d_RS=%d/' % (exp_fam, K_eta, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl'], random_seed);
+        savedir = resdir + '/tb/' + 'EFN_%s_K=%d_D=%d_%s_L=%d_upl=%d_lr=%d/' % (exp_fam, K_eta, D, flow_id, theta_nn_hps['L'], theta_nn_hps['upl'], lr_order);
     else:
-        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_RS=%d/' % (exp_fam, D, flow_id, random_seed);
+        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_lr=%d/' % (exp_fam, D, flow_id, lr_order);
     return savedir
 
 def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
@@ -114,8 +114,7 @@ def construct_flow(flow_id, D_Z, T):
     else:
         num_zi = T;
 
-    with (tf.device('/cpu:0')):
-       Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi));
+    Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi));
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     if (dynamics):

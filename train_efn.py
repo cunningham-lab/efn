@@ -57,9 +57,8 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(1);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
-    with (tf.device('/cpu:0')):
-        eta = tf.placeholder(tf.float64, shape=(None, ncons));
+    savedir = setup_IO(exp_fam, K_eta, D, flow_id, theta_nn_hps, stochastic_eta, lr_order);
+    eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
