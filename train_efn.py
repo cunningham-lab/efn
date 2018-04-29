@@ -54,7 +54,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     tb_save_params = False;
 
     # seed RNGs
-    np.random.seed(0);
+    np.random.seed(random_seed);
     tf.set_random_seed(random_seed);
 
     savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
@@ -66,6 +66,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         print(_eta);
+        print(eta_draw_params)
 
     # construct the parameter network
     theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
