@@ -134,6 +134,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
             _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+            _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         feed_dict = {Z0:z_i, eta:_eta};
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
@@ -165,7 +166,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
                 _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-                _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
 
             feed_dict = {Z0:z_i, eta:_eta};
 
