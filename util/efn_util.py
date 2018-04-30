@@ -14,7 +14,7 @@ def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, ba
 # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
-    batch_norm_str = 'batch_norm_' if batch_norm else '';
+    batch_norm_str = 'batchnorm_' if batch_norm else '';
     dropout_str = 'dropout_' if dropout else '';
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
         savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_%s%srs=%d/' \
@@ -39,7 +39,7 @@ def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps, batch_norm=Fa
     L_theta = theta_nn_hps['L']
     upl_theta = theta_nn_hps['upl'];
     L_flow = len(flow_layers);
-    h = eta;
+    h = tf.expand_dims(tf.expand_dims(eta, 0), 0);
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
             #h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
@@ -49,6 +49,7 @@ def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps, batch_norm=Fa
             h = tf.nn.tanh(h);
             if (dropout):
                 h = tf.layers.dropout(h);
+    h = h[0,0];
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];

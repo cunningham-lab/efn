@@ -35,6 +35,8 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         sqrtD = int(np.sqrt(D));
         D_Z = int(sqrtD*(sqrtD+1)/2);
         ncons = D + 1;
+    print('batch_norm', batch_norm);
+    print('dropout', dropout);
 
     # good practice
     tf.reset_default_graph();
