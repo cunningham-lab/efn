@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import seaborn as sns
 #from dirichlet import simplex
+colors = ["pale red", "medium green", "denim blue", "windows blue", "amber", "greyish", "faded green", "dusty purple"];
 
 def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, titlestr):
     fontsize = 14;
@@ -56,6 +57,21 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
             plt.suptitle(titlestr, fontsize=fontsize+2);
     return fig;
     
+def errorBars(x, y, err, legendstrs, color_palette=sns.xkcd_palette(colors)):
+    fontsize = 16;
+    num_trends = y.shape[0];
+    xlen = x.shape[0];
+    sizes = 40*np.ones((xlen,));
+    for i in range(num_trends):
+        color = np.tile(np.array([color_palette[i]]), [xlen, 1]);
+        plt.scatter(x, y[i,:], sizes, c=color);
+    plt.legend(legendstrs, fontsize=fontsize);
+
+    for i in range(num_trends):
+        for j in range(xlen):
+            plt.plot([x[j], x[j]], [y[i,j]-err[i,j], y[i,j]+err[i,j]], '-', c=color_palette[i], lw=2);
+    return None;
+
 def errorBars(x, y, err, legendstrs, color_palette=sns.xkcd_palette(colors)):
     fontsize = 16;
     num_trends = y.shape[0];

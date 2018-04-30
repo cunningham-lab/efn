@@ -21,7 +21,7 @@ stochastic_eta = False;
 lr_order = -3;
 random_seed = 0;
 max_iters = 10000;
-check_rate = 1;
+check_rate = 100;
 
 X, train_KLs, it = train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
 	                       theta_nn_hps, lr_order, random_seed, max_iters, check_rate);

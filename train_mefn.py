@@ -178,7 +178,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
             ts, cost_i, _X, _cost_grads, _R2s, _Tx, summary = \
                     sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);    
             end_time = time.time();
-            print('iter %d took %f seconds' % (i, end_time-start_time));
+            #print('iter %d took %f seconds' % (i, end_time-start_time));
 
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);

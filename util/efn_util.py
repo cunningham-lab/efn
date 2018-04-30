@@ -10,24 +10,45 @@ from flows import LinearFlowLayer, PlanarFlowLayer
 import os
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, batch_norm, dropout, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
+    batch_norm_str = 'batch_norm_' if batch_norm else '';
+    dropout_str = 'dropout_' if dropout else '';
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_upl=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], theta_nn_hps['upl'], random_seed);
+        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_%s%srs=%d/' \
+                  % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], batch_norm_str, dropout_str, random_seed);
     else:
         savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_rs=%d/' % (exp_fam, D, flow_id, random_seed);
     return savedir
 
-def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
+def theta_network_hyperparams(L_theta, ncons, num_theta_params):
+    upl_inc = int(np.floor((num_theta_params - ncons) / (L_theta + 1)));
+    upl_theta = [];
+    upl_i = ncons;
+    for i in range(L_theta):
+        upl_i += upl_inc;
+        upl_theta.append(upl_i);
+    theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
+    return theta_nn_hps;
+
+
+
+def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps, batch_norm=False, dropout=False):
     L_theta = theta_nn_hps['L']
     upl_theta = theta_nn_hps['upl'];
     L_flow = len(flow_layers);
     h = eta;
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
-            h = tf.layers.dense(h, upl_theta, activation=tf.nn.tanh);
+            #h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
+            h = tf.contrib.layers.fully_connected(h, upl_theta[i], activation_fn=None);
+            if (batch_norm):
+                h = tf.cast(tf.contrib.layers.batch_norm(tf.cast(h, tf.float32)), tf.float64);
+            h = tf.nn.tanh(h);
+            if (dropout):
+                h = tf.layers.dropout(h);
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];
@@ -37,7 +58,7 @@ def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
         # read each parameter out of the last layer.
         for j in range(nparams):
             num_elems = np.prod(param_dims[j]);
-            A_shape = (upl_theta, num_elems);
+            A_shape = (upl_theta[-1], num_elems);
             b_shape = (1, num_elems);
             A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
                                        dtype=tf.float64, \
@@ -92,6 +113,15 @@ def construct_flow(flow_id, D_Z, T):
         layers.append(PlanarFlowLayer('PlanarFlow%d' % (i+1), dim=D_Z));
     nlayers = len(layers); 
 
+
+    num_theta_params = 0;
+    for i in range(nlayers):
+        layer = layers[i];
+        name, param_names, dims = layer.get_layer_info();
+        nparams = len(dims);
+        for j in range(nparams):
+            num_theta_params += np.prod(dims[j]);
+
     dynamics = P > 0;
 
     # Placeholder for initial condition of latent dynamical process
@@ -127,7 +157,7 @@ def construct_flow(flow_id, D_Z, T):
         num_dyn_param_vals = 0;
         Z_AR = Z0;
 
-    return layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_dyn_param_vals;
+    return layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals;
 
 def latent_dynamics(Z0, A, sigma_eps, T):
     P = A.shape[0];
@@ -216,7 +246,7 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_dra
         elif (exp_fam == 'dirichlet'):
             params_k = {'alpha':eta_draw_params['alpha'][k]};
         elif (exp_fam == 'inv_wishart'):
-            params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k,0]};
+            params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k]};
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
     return R2s, KLs;
 
@@ -398,7 +428,7 @@ def drawEtas(exp_fam, D_Z, K_eta):
         eta = np.zeros((K_eta, ncons));
         for k in range(K_eta):
             Psi_k = Psi_dist.rvs(1);
-            m_k = np.random.randint(1,11)*Dsqrt;
+            m_k = np.random.randint(2,11)*Dsqrt;
             Psi_targs[k,:,:] = Psi_k;
             m_targs[k,0] = m_k;
             eta_k = inv_wishart_eta(Psi_k, m_k);

@@ -14,10 +14,11 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       setup_IO, construct_theta_network, log_grads, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
-                      memory_extension, setup_param_logging, count_params
+                      memory_extension, setup_param_logging, count_params, \
+                      theta_network_hyperparams
 
 def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
-              theta_nn_hps, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
+              L_theta, batch_norm=False, dropout=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = 100;
@@ -38,7 +39,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     batch_size = tf.multiply(K, M);
@@ -57,19 +58,20 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(random_seed);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
-    print(random_seed, savedir);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
         _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-        print(_eta);
-        print(eta_draw_params)
+
+    theta_nn_hps = theta_network_hyperparams(L_theta, ncons, num_theta_params);
+
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, batch_norm, dropout, random_seed);
+    print(random_seed, savedir);
 
     # construct the parameter network
-    theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
+    theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps, batch_norm, dropout);
     #theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
@@ -134,6 +136,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
             _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+            _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         feed_dict = {Z0:z_i, eta:_eta};
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
@@ -165,7 +168,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
                 _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-                _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
 
             feed_dict = {Z0:z_i, eta:_eta};
 
