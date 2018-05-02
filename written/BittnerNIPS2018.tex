@@ -128,6 +128,8 @@ This should not be confused with "Learning to learn by gradient descent by gradi
   
  \section{Learning exponential families}
  
+ 
+
  \emph{Why this is important}
  
 Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
@@ -149,6 +151,9 @@ Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008gr
  
  We choose flow networks \cite{ } and \cite{} because duh.  That makes these comparisons legitimate and apples to apples.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \emph{ (Saul and Jordan, 1996; Barber and Wiegerinck, 1999); this is called structured variational inference. Another way to expand the family is to consider mixtures of variational densities, i.e., additional latent variables within the variational family (Bishop et al., 1998). } or newer stuff \cite{ } [Tran Copula VI, Hoffman and Blei 2015].
  
+ Couch this in terms of normalizing flows though point out this is not strictly necessary.     Note in particular 
+ Tabak, E. G. and Turner, C. V. A family of nonparametric density estimation algorithms. Communications on Pure and Applied Mathematics, 66(2):145?164, 2013.Tabak, E. G and Vanden-Eijnden, E. Density estimation by dual ascent of the log-likelihood. Communications in Mathematical Sciences, 8(1):217?233, 2010.
+  A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
  
   In many situations, statistical inference attempts to learn, at least approximately, a member of an exponential family. We often consider this exponential family intractable in the sense that we don't know how to normalize or sample from it.  Approximate inference, such as variational
 
