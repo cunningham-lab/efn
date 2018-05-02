@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  2 MAY 2018 15:30
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  2 MAY 2018 15:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -758,20 +758,16 @@ fined on input line 135.
 Package natbib Warning: Citation `zhou2018compressability' on page 2 undefined 
 on input line 139.
 
-
-Underfull \vbox (badness 5175) has occurred while \output is active []
-
- [2]
+[2]
 LaTeX Font Info:    Try loading font information for OMS+ptm on input line 169.
 
-
-(/usr/local/texlive/2016/texmf-dist/tex/latex/psnfss/omsptm.fd
+ (/usr/local/texlive/2016/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 169.
- [3] [4]
-(./BittnerNIPS2018.bbl) [5
+ [3]
+[4] (./BittnerNIPS2018.bbl) [5
 
 ]
 
@@ -788,13 +784,13 @@ Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 276.
  ) 
 Here is how much of TeX's memory you used:
- 7782 strings out of 493014
- 118044 string characters out of 6133351
+ 7773 strings out of 493014
+ 117960 string characters out of 6133351
  240727 words of memory out of 5000000
  11069 multiletter control sequences out of 15000+600000
- 37875 words of font info for 133 fonts, out of 8000000 for 9000
+ 37200 words of font info for 127 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 31i,8n,38p,886b,457s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 31i,8n,38p,898b,459s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/t
 exlive/2016/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/local/tex
 live/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texl
@@ -808,7 +804,7 @@ e/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/
 f-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fon
 ts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/u
 rw/times/utmri8a.pfb>
-Output written on BittnerNIPS2018.pdf (6 pages, 146507 bytes).
+Output written on BittnerNIPS2018.pdf (6 pages, 146648 bytes).
 PDF statistics:
  120 PDF objects out of 1000 (max. 8388607)
  100 compressed objects within 1 object stream
