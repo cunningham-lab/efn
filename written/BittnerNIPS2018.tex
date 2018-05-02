@@ -121,6 +121,8 @@ This should not be confused with "Learning to learn by gradient descent by gradi
 
 ...
 
+Important to distinguish carefully from VI.  In a sense VI does parameterize a family: given data, you get local variational parameters and that parmaterizes a density (like a regular VAE).  Inference networks are exclusively used to data to amortize with a global set of parameters a variational distribution, not a model.  Of course it is in a sense a model, but that's a bunch of normals.  The sampling mechanism is easy (Guassian).  
+
 \emph{Our results demonstrate}
 
 ...
@@ -152,15 +154,17 @@ Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008gr
  We choose flow networks \cite{ } and \cite{} because duh.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days. Gibbs and MacKay Density Networks 1997! 
  And invertible networks  In that vein probably definitely cite invertible deep nets in general: Baird et al IJCAI 2005, Ripple and Adams 2013 .  Note that what norm flows (the Rezende/Mohamed stuff specifically) did is make it tractable and scalable and in the modern VAE style.  That makes these comparisons legitimate and apples to apples.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \emph{ (Saul and Jordan, 1996; Barber and Wiegerinck, 1999); this is called structured variational inference. Another way to expand the family is to consider mixtures of variational densities, i.e., additional latent variables within the variational family (Bishop et al., 1998). } or newer stuff \cite{ } [Tran Copula VI, Hoffman and Blei 2015].
  
+ As noted in norm flows paper: "The true posterior distribution will be more com- plex than this assumption allows for, and defining multi- modal and constrained posterior approximations in a scal- able manner remains a significant open problem in varia- tional inference."
+ 
  Couch this in terms of normalizing flows though point out this is not strictly necessary.     Note in particular 
  Tabak, E. G. and Turner, C. V. A family of nonparametric density estimation algorithms. Communications on Pure and Applied Mathematics, 66(2):145?164, 2013.
 Tabak, E. G and Vanden-Eijnden, E. Density estimation by dual ascent of the log-likelihood. Communications in Mathematical Sciences, 8(1):217?233, 2010.
   A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
  
- 
+\emph{Related work / How close is this to norm flows or VAE}
 
+In a restricted technical sense, rather close: VAE and other black box VI that uses reparameterization results in a conditional density $q_\phi( z | x)$.  If we consider $\eta$ as $x$, then sure yes the previous stuff specifies a model $\mathcal{Q}_{VAE} = \left\{q_\phi(z|x) : x \in X\right\}$.  But that's a little pedantic, and any way that is very often a normal family with variational parameters specified by (a deep function of) x.  Much closer is Figure 2 in Rezende and Mohamed, where like here they use a network to index the \emph{parameters} of the normalizing flow.  In that case it's a function of $x$ the observation, and as such that network is an inference network; here it's a function of $\eta$ and as such is a parameter network.  That's just nomenclature, so naturally the next question is do they differ at some other level.  Yes, distinctly.  The other term implied in a VI (or norm flow VAE style as they use) is the expected log joint $E_{q_{\phi(x)}}  \left( \log p_\theta(x,z)\right)$.  Now sure that's a loss function on $x,z$, so then when we look at that same term in EFN we see   $E_{q_{\phi(\eta)}}  \left( \eta^\top t(z) \right)$, which sure also looks like a loss function on $\eta,z$.  And yes, they are both unnormalized (in the sense that VI is an ELBO / joint $p(x,z)$ and EFN lacks the normalizer because it's constant, so we're not getting a KL estimate).  A picky difference is that the exp family doesn't really correspond to a proper unnormalized log joint (though I suppose it could), as there is not a prior on $\eta$ in the objective (but is that just ignoring $p(\eta)$ in our sampling scheme)?   But yes in general we could see this as a specific case where $x=\eta$ and thus we are learning a family just as in the inference case.  And for example we are giving in the bayesian logistic regression example full datasets for inference instead of single data points.  First, then we need to produce really compelling results focusing on when learning an exp fam is key.  Second we need some very tight language to draw this distinction without seeming a small tweak on normalizing flows.  One way to do this is the restricted model class argument, a la Fig 7.2 in Hastie and Tibshirani.  Another is to actually produce a conditional exp fam, as in something indexed on both $x$ and $\eta$.  Third, possible novelties in norm flows, like triple spinners or other better choices than planar flows (yuck).
   
-  In many situations, statistical inference attempts to learn, at least approximately, a member of an exponential family. We often consider this exponential family intractable in the sense that we don't know how to normalize or sample from it.  Approximate inference, such as variational
 
 \section{To Do}
 
