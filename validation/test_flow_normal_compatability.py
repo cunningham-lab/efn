@@ -3,18 +3,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
 import os
-from efn_util import plotMefnTraining, drawEtas
+import sys
+from efn_util import drawEtas
+from plot_utils import plotMefnTraining
 
 os.chdir('../');
 
 exp_fam = 'normal';
-D = 2;
+D = int(sys.argv[1]);
 flow_id = 'linear1';
 cost_type = 'KL';
 M_eta = 1000;
-lr_order = -2;
+lr_order = -3;
 random_seed = 0;
-check_rate = 100;
+check_rate = 1;
 max_iters = 3000;
 ndraws = 1;
 
@@ -26,7 +28,7 @@ for i in range(ndraws):
 	log_P, X, R2s, KLs, it = train_mefn(exp_fam, params, flow_id, cost_type, M_eta, lr_order, random_seed, max_iters, check_rate);
 	print('xshape', X.shape);
 	print('learned in %d iterations' % it)
-	plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, it, 'normal %d' % (i+1));
+	#plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, it, 'normal %d' % (i+1));
 plt.show();
 
 

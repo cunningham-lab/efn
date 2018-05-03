@@ -94,14 +94,6 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     # exponential family optimization
     cost, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
-    Tx_grad = tf.gradients(Tx, all_params);
-    Bx_grad = tf.gradients(Bx, all_params);
-    y_grad = tf.gradients(log_p_zs, all_params);
-    dcostdlogpz = tf.gradients(cost, log_p_zs);
-    dcostdTx = tf.gradients(cost, Tx);
-    dTxdX = tf.gradients(Tx[0,522,0], X);
-    dcostdX = tf.gradients(cost, X);
-
 
     grads_and_vars = [];
     for i in range(len(all_params)):
@@ -151,89 +143,6 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
 
         cost_i, _cost_grads, _X, _y, _base_log_p_z, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, base_log_p_z, Tx, summary_op], feed_dict);
-        print('init cost', cost_i);
-        for ii in range(len(_cost_grads)):
-            _cost_grad_i = _cost_grads[ii];
-            for jj in range(len(_cost_grad_i)):
-                num_nans = np.sum(np.isnan(_cost_grad_i[jj]));
-                num_infs = np.sum(np.isinf(_cost_grad_i[jj]));
-                if (num_nans > 0):
-                    print('before grad', ii, jj, '%d/%d nans' % (num_nans, np.prod(_cost_grad_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('before grad', ii, jj, '%d/%d infs' % (num_infs, np.prod(_cost_grad_i[jj].shape))); 
-        print('logpx nans', np.sum(np.isnan(_y)));
-        print('logpx infs', np.sum(np.isinf(_y)));
-
-        _dcostdlogpz, _dcostdTx, _dcostdX, _dTxdX, _Tx_grads, _Bx_grads, _y_grads = sess.run([dcostdlogpz, dcostdTx, dcostdX, dTxdX, Tx_grad, Bx_grad, y_grad], feed_dict);
-        print('_dcostdlogpz nans', np.sum(np.isnan(_dcostdlogpz)));
-        print('_dcostdlogpz infs', np.sum(np.isinf(_dcostdlogpz)));
-        print('_dcostdTx nans', np.sum(np.isnan(_dcostdTx)));
-        print('_dcostdTx infs', np.sum(np.isinf(_dcostdTx)));
-        print(len(_dcostdX));
-        print('_dcostdX nans', np.sum(np.isnan(_dcostdX)));
-        print('_dcostdX infs', np.sum(np.isinf(_dcostdX)));
-        numinfsBySample = np.sum(np.isinf(_dcostdX[0][0,:,:,0]), 1);
-        badinds = np.argwhere(numinfsBySample);
-        for i in range(badinds.shape[0]):
-            print(i, badinds[i]);
-            #print('before', _base_log_p_z[0, badinds[i]-1], np.sum(_X[0,badinds[i]-1,:,0]), _dcostdX[0][0,badinds[i]-1,:,0]);
-            #print('correct', _base_log_p_z[0, badinds[i]], np.sum(_X[0,badinds[i],:,0]), _dcostdX[0][0,badinds[i],:,0]);
-            #print('after', _base_log_p_z[0, badinds[i]+1], np.sum(_X[0,badinds[i]+1,:,0]), _dcostdX[0][0,badinds[i]+1,:,0]);
-            print('before', _base_log_p_z[0, badinds[i]-1], np.sum(_X[0,badinds[i]-1,:,0]), _dTxdX[0][0,badinds[i]-1,:]);
-            print('correct', _base_log_p_z[0, badinds[i]], np.sum(_X[0,badinds[i],:,0]), _dTxdX[0][0,badinds[i],:]);
-            print('after', _base_log_p_z[0, badinds[i]+1], np.sum(_X[0,badinds[i]+1,:,0]), _dTxdX[0][0,badinds[i]+1,:]);
-        for ii in range(len(_Tx_grads)):
-            _Tx_grads_i = _Tx_grads[ii];
-            for jj in range(len(_cost_grad_i)):
-                print('Tx grad', ii,jj,_Tx_grads_i[jj])
-                num_nans = np.sum(np.isnan(_Tx_grads_i[jj]));
-                num_infs = np.sum(np.isinf(_Tx_grads_i[jj]));
-                if (num_nans > 0):
-                    print('Tx grad', ii, jj, '%d/%d nans' % (num_nans, np.prod(_Tx_grads_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('Tx grad', ii, jj, '%d/%d infs' % (num_infs, np.prod(_Tx_grads_i[jj].shape))); 
-        for ii in range(len(_Bx_grads)):
-            _Bx_grads_i = _Bx_grads[ii];
-            for jj in range(len(_cost_grad_i)):
-                print('Bx grad', ii,jj,_Bx_grads_i[jj])
-                num_nans = np.sum(np.isnan(_Bx_grads_i[jj]));
-                num_infs = np.sum(np.isinf(_Bx_grads_i[jj]));
-                if (num_nans > 0):
-                    print('Bx grad', ii, jj, '%d/%d nans' % (num_nans, np.prod(_Bx_grads_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('Bx grad', ii, jj, '%d/%d infs' % (num_infs, np.prod(_Bx_grads_i[jj].shape))); 
-        for ii in range(len(_y_grads)):
-            _y_grads_i = _y_grads[ii];
-            for jj in range(len(_cost_grad_i)):
-                print('ygrad', ii,jj,_y_grads_i[jj])
-                num_nans = np.sum(np.isnan(_y_grads_i[jj]));
-                num_infs = np.sum(np.isinf(_y_grads_i[jj]));
-                if (num_nans > 0):
-                    print('y grad', ii, jj, '%d/%d nans' % (num_nans, np.prod(_y_grads_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('y grad', ii, jj, '%d/%d infs' % (num_infs, np.prod(_y_grads_i[jj].shape))); 
-        
-        exit();
-        for ii in range(len(_dcostdtheta)):
-            _dcostdtheta_i = _dcostdtheta[ii];
-            for jj in range(len(_dcostdtheta_i)):
-                num_nans = np.sum(np.isnan(_dcostdtheta_i[jj]));
-                num_infs = np.sum(np.isinf(_dcostdtheta_i[jj]));
-                if (num_nans > 0):
-                    print('before dcostdtheta', ii, jj, '%d/%d nans' % (num_nans, np.prod(_dcostdtheta_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('before dcostdtheta', ii, jj, '%d/%d infs' % (num_infs, np.prod(_dcostdtheta_i[jj].shape))); 
-        for ii in range(len(_dthetadparams)):
-            _dthetadparams_i = _dthetadparams[ii];
-            for jj in range(len(_dcostdtheta_i)):
-                num_nans = np.sum(np.isnan(_dthetadparams_i[jj]));
-                num_infs = np.sum(np.isinf(_dthetadparams_i[jj]));
-                if (num_nans > 0):
-                    print('before dthetadparams', ii, jj, '%d/%d nans' % (num_nans, np.prod(_dthetadparams_i[jj].shape))); 
-                if (num_infs > 0):
-                    print('before dthetadparams', ii, jj, '%d/%d infs' % (num_infs, np.prod(_dthetadparams_i[jj].shape))); 
-        
-        exit();   
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);

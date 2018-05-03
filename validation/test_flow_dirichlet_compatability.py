@@ -2,13 +2,13 @@ from train_mefn import train_mefn
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
-import os
+import os, sys
 
 os.chdir('../');
 
 exp_fam = 'dirichlet';
-D = 25;
-flow_id = 'linear1_planar40';
+D = int(sys.argv[1]);
+flow_id = 'planar30';
 cost_type = 'KL';
 M_eta = 1000;
 lr_order = -3;

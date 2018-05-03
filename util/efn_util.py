@@ -10,15 +10,12 @@ from flows import LinearFlowLayer, PlanarFlowLayer
 import os
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, batch_norm, dropout, random_seed):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
-    batch_norm_str = 'batchnorm_' if batch_norm else '';
-    dropout_str = 'dropout_' if dropout else '';
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_%s%srs=%d/' \
-                  % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], batch_norm_str, dropout_str, random_seed);
+        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], random_seed);
     else:
         savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_rs=%d/' % (exp_fam, D, flow_id, random_seed);
     return savedir
@@ -35,21 +32,14 @@ def theta_network_hyperparams(L_theta, ncons, num_theta_params):
 
 
 
-def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps, batch_norm=False, dropout=False):
+def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
     L_theta = theta_nn_hps['L']
     upl_theta = theta_nn_hps['upl'];
     L_flow = len(flow_layers);
-    h = tf.expand_dims(tf.expand_dims(eta, 0), 0);
+    h = eta;
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
-            #h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
-            h = tf.contrib.layers.fully_connected(h, upl_theta[i], activation_fn=None);
-            if (batch_norm):
-                h = tf.cast(tf.contrib.layers.batch_norm(tf.cast(h, tf.float32)), tf.float64);
-            h = tf.nn.tanh(h);
-            if (dropout):
-                h = tf.layers.dropout(h);
-    h = h[0,0];
+            h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];
@@ -339,7 +329,8 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         if (exp_fam == 'normal'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         elif (exp_fam == 'dirichlet'):
-            Bx = tf.log(tf.divide(1.0, tf.reduce_prod(X, [2])));
+            #Bx = tf.log(tf.divide(1.0, tf.reduce_prod(X, [2])));
+            Bx = -tf.reduce_sum(tf.log(X), [2]);
             Bx = Bx[:,:,0]; # remove singleton time dimension
         elif (exp_fam == 'inv_wishart'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
@@ -352,6 +343,7 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
 def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
     y = log_p_zs;
     R2s = [];
+    costs = [];
     for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
         y_k = tf.expand_dims(y[k,:], 1);
@@ -366,10 +358,13 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
+        costs.append(tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k)+Bx_k)));
+
     y = tf.expand_dims(log_p_zs, 2);
     Bx = tf.expand_dims(Bx, 2);
     eta = tf.expand_dims(eta, 2);
     cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(Tx, eta) + Bx), [1,2]));
+    #return cost, costs, R2s;
     return cost, R2s;
 
 def normal_eta(mu, Sigma):
