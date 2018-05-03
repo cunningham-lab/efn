@@ -73,7 +73,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
 
     # construct the parameter network
     theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
-    #theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
     Z, sum_log_det_jacobian = connect_flow(Z_AR, flow_layers, theta, exp_fam);
@@ -89,16 +88,8 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
 
     # exponential family optimization
-    cost, all_costs, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
+    cost, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
-    all_cost_grads = [];
-    for i in range(K_eta):
-        print('computing eta-grad %d' % (i+1));
-        all_cost_grads = tf.gradients(all_costs[i], all_params);
-    some_func = 0.0;
-    for i in range(len(all_params)):
-        some_func += tf.reduce_sum(all_params[i]);
-    some_func_grads = tf.gradients(some_func, all_params);
 
     grads_and_vars = [];
     for i in range(len(all_params)):
@@ -139,7 +130,6 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     test_KLs = np.zeros((num_diagnostic_checks, K_eta));
     check_it = 0;
     with tf.Session() as sess:
-        #sess = tf_debug.LocalCLIDebugWrapperSession(sess);
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 
@@ -149,18 +139,16 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
             _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         feed_dict = {Z0:z_i, eta:_eta};
 
-        #cost_i, _cost_grads, _X, _y, _Tx, summary = \
-        #    sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
-        cost_i, _X, _y, _Tx, summary = \
-            sess.run([cost, X, log_p_zs, Tx, summary_op], feed_dict);
+        cost_i, _cost_grads, _X, _y, _Tx, summary = \
+            sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
             As[0,:,:,:] = A_i;
             sigma_epsilons[0,:] = _sigma_epsilon_i[:,0];
 
-        #if (stop_early):
-        #    log_grads(_cost_grads, cost_grad_vals, 0);
+        if (stop_early):
+            log_grads(_cost_grads, cost_grad_vals, 0);
 
         optimizer = tf.train.AdamOptimizer(learning_rate=lr);
 
@@ -183,175 +171,37 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
                 _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
 
             feed_dict = {Z0:z_i, eta:_eta};
-            _cost, _all_costs, _cost_grads, _all_cost_grads, _X, _base_log_p_z, _sum_log_det_jacobian = sess.run([cost, all_costs, cost_grad, all_cost_grads, X, base_log_p_z, sum_log_det_jacobian], feed_dict);
-            _theta, _all_params = sess.run([theta, all_params], feed_dict);
-            _some_func, _some_func_grads = sess.run([some_func, some_func_grads]);
-            print(42*'*');
-            print('it = %d ' % (i+1));
 
-
-
-            print('some func', _some_func);
-            #print('before some func grads len', len(_some_func_grads));
-            #for ii in range(len(_some_func_grads)):
-            #    _some_func_grads_i = _some_func_grads[ii];
-            #    for jj in range(len(_some_func_grads_i)):
-            #        num_nans = np.sum(np.isnan(_some_func_grads_i[jj]));
-            #        if (num_nans > 0):
-            #            print('before some func grads', ii, jj, '%d/%d nans' % (num_nans, np.prod(_some_func_grads_i[jj].shape)));
-            #            break;
-
-
-
-            print('before cost', _cost);
-            print('before all K costs', _all_costs);
-            plt.figure();
-            plt.hist(_all_costs);
-            plt.show();
-            print('before X nans', np.sum(np.isnan(_X)));
-            print('before X infs', np.sum(np.isinf(_X)));
-            print('before params len', len(_all_params));
-            flag = False;
-            for ii in range(len(_all_params)):
-                _all_params_i = _all_params[ii];
-                for jj in range(len(_all_params_i)):
-                    num_nans = np.sum(np.isnan(_all_params_i[jj]));
-                    num_infs = np.sum(np.isinf(_all_params_i[jj]));
-                    if (num_nans > 0):
-                        print('param', ii, jj, num_nans, '%d/%d nans' % (num_nans, np.prod(_all_params_i[jj].shape)));
-                        flag = True;
-                        break;
-                    if (num_infs > 0):
-                        print('param', ii, jj, num_infs, '%d/%d infs' % (num_infs, np.prod(_all_params_i[jj].shape)));
-                if (flag):
-                    break;
-            print('before grads len', len(_cost_grads));
-            flag = False;
-            for ii in range(len(_cost_grads)):
-                _cost_grad_i = _cost_grads[ii];
-                for jj in range(len(_cost_grad_i)):
-                    num_nans = np.sum(np.isnan(_cost_grad_i[jj]));
-                    num_infs = np.sum(np.isinf(_cost_grad_i[jj]));
-                    if (num_nans > 0):
-                        print('before grad', ii, jj, '%d/%d nans' % (num_nans, np.prod(_cost_grad_i[jj].shape)));   
-                        flag = True;
-                        break;
-                    if (num_infs > 0):
-                        print('before grad', ii, jj, '%d/%d infs' % (num_infs, np.prod(_cost_grad_i[jj].shape)));
-                if (flag):
-                    plt.figure();
-                    plt.hist(np.reshape(_base_log_p_z, (K_eta*M_eta,), 100));
-                    plt.title('dist of z_is');
-                    plt.show();
-
-                    plt.figure();
-                    plt.hist(np.reshape(_sum_log_det_jacobian, (K_eta*M_eta,), 100));
-                    plt.title('dist of sum log det jac');
-                    plt.show();
-                    break;
-
-            for k in range(K_eta):
-                _cost_grad_k = _all_cost_grads[k];
-                flag = False;
-                for ii in range(len(_cost_grad_k)):
-                    _cost_grad_i = _cost_grad_k[ii];
-                    num_nans = np.sum(np.isnan(_cost_grad_i));
-                    num_infs = np.sum(np.isinf(_cost_grad_i));
-                    if (num_nans > 0):
-                        print('before eta-grad %d', ii, '%d/%d nans' % (k, num_nans, np.prod(_cost_grad_i.shape)));   
-                        flag = True;
-                        break;
-                    if (num_infs > 0):
-                        print('before eta-grad %d', ii, '%d/%d infs' % (k, num_infs, np.prod(_cost_grad_i.shape)));
-                    if (flag):
-                        break;
-            #start_time = time.time();
-            #ts, cost_i, _X, _cost_grads, _log_p_zs, _Tx, summary = \
-            #    sess.run([train_step, cost, X, cost_grad, log_p_zs, Tx, summary_op], feed_dict);
-            ts, cost_i, _X, _log_p_zs, _Tx, summary = \
-                sess.run([train_step, cost, X, log_p_zs, Tx, summary_op], feed_dict);
-            #end_time = time.time();
-            #end_time = time.time();
-            #print('iter %d took %f seconds' % (i, end_time-start_time));
-            _theta, _all_params = sess.run([theta, all_params], feed_dict);
-            print('X shape', _X.shape);
-            print('X', np.sum(np.isnan(_X)), 'nans');
-            print('X', np.sum(np.isinf(_X)), 'infs');
-
-            flag = False;
-            print('after params len', len(_all_params));
-            for ii in range(len(_all_params)):
-                _all_params_i = _all_params[ii];
-                for jj in range(len(_all_params_i)):
-                    num_nans = np.sum(np.isnan(_all_params_i[jj]));
-                    num_infs = np.sum(np.isinf(_all_params_i[jj]));
-                    if (num_nans > 0):
-                        flag = True;
-                        print('param', ii, jj, num_nans, '%d/%d nans' % (num_nans, np.prod(_all_params_i[jj].shape)));
-                        break;
-                    if (num_infs > 0):
-                        print('param', ii, jj, num_infs, '%d/%d infs' % (num_infs, np.prod(_all_params_i[jj].shape)));
-                if (flag):
-                    break;
-
-            print('after grads len', len(_cost_grads));
-            flag = False;
-            for ii in range(len(_cost_grads)):
-                _cost_grad_i = _cost_grads[ii];
-                for jj in range(len(_cost_grad_i)):
-                    num_nans = np.sum(np.isnan(_cost_grad_i[jj]));
-                    num_infs = np.sum(np.isinf(_cost_grad_i[jj]));
-                    if (num_nans > 0):
-                        print('grad', ii, jj, num_nans, '%d/%d nans' % (num_nans, np.prod(_cost_grad_i[jj].shape)));
-                        flag = True;
-                        break;
-                    if (num_infs > 0):
-                        print('grad', ii, jj, num_infs, '%d/%d infs' % (num_infs, np.prod(_cost_grad_i[jj].shape)))
-                if (flag):
-                    break;
-
-            #for i in range(len(_cost_grads)):
-                #print(_cost_grads[i].shape);
-            print('after _theta len', len(_theta));
-            flag = False;
-            for ii in range(len(_theta)):
-                theta_i = _theta[ii];
-                for jj in range(len(theta_i)):
-                    num_nans = np.sum(np.isnan(theta_i[jj]));
-                    if (num_nans > 0):
-                        print('theta', ii, jj,num_nans, '%d/%d nans' % (num_nans, np.prod(theta_i[jj].shape)));
-                        flag = True;
-                        break;
-                if (flag):
-                    break;
-            if (flag):
-                exit();
-
+            start_time = time.time();
+            ts, cost_i, _X, _cost_grads, _log_p_zs, _Tx, summary = \
+                sess.run([train_step, cost, X, cost_grad, log_p_zs, Tx, summary_op], feed_dict);
+            end_time = time.time();
+            print('iter %d took %f seconds' % (i+1, end_time-start_time));
                 
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
                 As[i,:,:] = A_i;
                 sigma_epsilons[i,:] = _sigma_epsilon_i[:,0];
 
-            #f (stop_early):
-            #    log_grads(_cost_grads, cost_grad_vals, i);
+            if (stop_early):
+                log_grads(_cost_grads, cost_grad_vals, i);
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
             if (np.mod(i+1, check_rate)==0):
+                print(42*'*');
+                print('it = %d ' % (i+1));
                 start_time = time.time();
-                #if (stop_early):
-                #    has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
+                if (stop_early):
+                    has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
                 # compute R^2 and KL for training and batch
                 z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta};
                 feed_dict_test = {Z0:z_i, eta:_eta_test};
 
-                print('Training');
                 train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
-                print('Testing');
                 test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
                 end_time = time.time();
                 print('check diagnostics processes took: %f seconds' % (end_time-start_time));
