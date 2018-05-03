@@ -202,7 +202,20 @@ Fig 4.  One great virtue of EFNs is is learning a restricted model, which should
 
 \emph{Chapter 3: Fig 5 and 6}
 
-Fig 5. Bayesian logistic regression.  Learn the full BLR posterior (BLRP) family for some dimensionality.  Then get some data (see links in slack, look for nickish and all that).  Then find the posterior.  etc, etc, etc.  Then use MF VI or EP or whatever in an attempt to do same.  Show outperformance.  Really scrutinize the comparison point here.  What really is VI in this setting?  
+Fig 5. Bayesian logistic regression.  Learn the full BLR posterior (BLRP) family for some dimensionality.  Then get some data (see links in slack, look for nickish and all that).  Then find the posterior.  etc, etc, etc.  Then use MF VI or EP or whatever in an attempt to do same.  Show outperformance.  Really scrutinize the comparison point here.  What really is VI in this setting?  First, what is bayesian logistic regression.  
+
+$$ \beta \sim \mathcal{N}(0,I) ~~~~~ y | \beta, x  \sim_{iid} Bern\left( \frac{1}{1 + \exp\left\{ \beta^\top x \right\} } \right) $$
+
+In our nomenclature, $\beta$ is $z$, $y,x$ are some variables that will figure into the natural parameters $\eta$.  In BLR, we are interested in the posterior on $\beta$ given the dataset $\{X,Y\}$:
+
+$$ p(\beta | \{Y,X\}) = \frac{ p(\beta, \{Y,X\})}{p(\{Y,X\})} = \frac{ p(\{Y,X\}|\beta) p(\beta)}{p(\{Y,X\})} = \frac{ p(\{Y,X\}|\beta) \exp\left\{\eta_0^\top t_0(\beta)\right\}}{p(\{Y,X\})}$$
+
+Ugh.  BLR is an intractable exp fam only for a particular set of $X$, making it rather a crappy choice.  Groan.
+
+Fig 5.  Latent Dirichlet Allocation?  Some other similar problem? 
+
+
+
 
 Fig 6. The Killer real data.  Perhaps Gibbs or Markov Random Field.  Learn it, then pick some $\eta$, then show samples from it.  Can this look interesting?  Some thoughts...
  
@@ -219,7 +232,9 @@ Ideas:
 \begin{itemize}
 \item Fancy Exp Fam like Marshall-Olkin.  Yeah but who really cares about this esoteric distribution?  It doesn't look cool visually either.
 \item Ising models: classic, bw images
-\item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	
+\item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	Also both Potts and Ising are NP-hard Cooper 1990 The Computational Complexity of
+Probabilistic Inference Using Bayesian
+Belief Networks 
 \item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
 \item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
 \end{itemize}  
