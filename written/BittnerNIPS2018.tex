@@ -167,6 +167,25 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
 
 Another related work is that this is somehow the dual of MEFN, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
   
+ \emph{What is the killer "real data" result?}
+ 
+ Criteria:
+ \begin{itemize}
+\item Needs to be an exp fam.
+\item Needs to be a forward exp fam.  As in, not fit to data, because we don't have $\mu$ parameters, we have $\eta$ parameters.
+\item ``real data" is a misnomer, since we are not doing VI or similar.  Really we want an exp fam that is real and somehow useful in its own right, and that people want to sample from.
+\item Reminder: we will \emph{always} be comparing to "well normally you can do this with learning a \emph{single} distribution in the $\min KL(q||p)$ sense.  That's fine.  The point is we can learn the whole family, then choose and sample, vs just one by one.
+\item something hard to sample will be key, since the "toy" results will have used things we already "know" how to sample, like NIW or Dirichlet.
+ \end{itemize} 
+
+Ideas: 
+\begin{itemize}
+\item Fancy Exp Fam like Marshall-Olkin.  Yeah but who really cares about this esoteric distribution?  It doesn't look cool visually either.
+\item Ising models: classic, bw images
+\item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	
+\item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
+\item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
+\end{itemize}  
 
 \section{To Do}
 
