@@ -167,7 +167,44 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
 
 Another related work is that this is somehow the dual of MEFN, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
   
- \emph{What is the killer "real data" result?}
+  
+  \section{Results}
+
+\emph{Chapter 1, Fig 1}
+ 
+Toy figure that demonstrates what we are doing and a simple example.  Note this should probably not be in Results but in the EFN section or similar.  Ideas:
+\begin{itemize}
+\item value of a restricted model, see hastie tibshirani fig 7.2, or porbanz's batman version from 4400 slides.  ... well that's a bit off topic.  At least worth a mention in motivation.
+\item graphical model.  yeah probably needed.
+\item network model.  yeah probably needed.
+\item cartoon example three sets of natural parameters in, three dirichlet distributions out.  Or similar.
+\end{itemize}
+
+
+ \emph{Chapter 2: Fig 2 and 3 and 4}
+ Ground truth toy examples, etc. 
+ 
+ Fig 2.  This says, it works in a sensible case (maybe Dirichlet 25 or NIW 10x10):
+ \begin{itemize}
+ \item training and test curves (probably both of these are needless since by def train equals test here.
+\item both in $r^2$ and in $KL$ to ground truth.
+\item $MMD$ p values? Can this help give specifics? 
+\end{itemize}
+
+Fig 3.  This says, it works across a range of Dirichlet and NIW (and perhaps not Gaussian).  Sensitivities
+\begin{itemize}
+\item dimensionality of dir and NIW
+\item choices of $K,M$ (is this really needed)
+\item key comparison to baseline of VI (doing this specifically for K=1 but a fixed K, possibly with no parameter network because it's unnecessary).  The key is to show that it works almost as well as VI in the specific case, but of course VI can't generalize.  And when I say VI I don't really mean VI, I mean just learning a specific member of the exp fam.    
+\end{itemize}
+
+Fig 4.  One great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff.  We can show this.  Suppose we have only a limited amount of data from a specific exp fam, but we don't know what member.  Yeah this is cool.  So we can either explore all of $\phi$ space in the usual way (the full flow network model $\mathcal{Q}$), or we can have previously learned the exp fam, which operates on the restricted coordinates of the natural parameters.  Then, we take gradients over natural parameter space to find the best $\phi$, which is really $\phi^* = \phi(\eta^*)$, and hopefully that distribution is closer in KL to the true posterior than had we just learned straight from $\mathcal{Q}$.  Well this isn't quite fair, as we don't even need to take gradients in $\eta$ space, since in the simplest case we just plug in $\eta$ and we've got the exact member.  But yes that's a good example too.  Possibly better.  As a function of available data, can you fit the posterior?  Well, you can learn directly from $\mathcal{Q}$, always an option.  That shows something probably unhelpful: that you can learn a point mass or something like that.  Hmmm not quite.  Ok use a Norm Flow with a bayesian logistic regression generative model and limited data.  Learn the posterior on $\beta$ for a given dataset.  That maps a dataset $X$ to a posterior.  That will run into scaling problems as $X$ grows, because apparently the network has to follow suit.  Instead cheat and give it some sufficient statistics.  And ok that's not so much of a cheat because you would know from the model.  So that's fair I suppose.  Another choice is to just model the data, so write the generative model and ask the norm flow to learn the posterior.  That's the same thing and I'm talking in circles.  There is a good idea here.
+
+\emph{Chapter 3: Fig 5 and 6}
+
+Fig 5. Bayesian logistic regression.  Learn the full BLR posterior (BLRP) family for some dimensionality.  Then get some data (see links in slack, look for nickish and all that).  Then find the posterior.  etc, etc, etc.  Then use MF VI or EP or whatever in an attempt to do same.  Show outperformance.  Really scrutinize the comparison point here.  What really is VI in this setting?  
+
+Fig 6. The Killer real data.  Perhaps Gibbs or Markov Random Field.  Learn it, then pick some $\eta$, then show samples from it.  Can this look interesting?  Some thoughts...
  
  Criteria:
  \begin{itemize}
@@ -186,6 +223,8 @@ Ideas:
 \item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
 \item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
 \end{itemize}  
+
+
 
 \section{To Do}
 
