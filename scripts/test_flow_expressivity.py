@@ -84,7 +84,7 @@ for i in range(num_Ds):
 		R2s[i,j] = R2s_ij[-1,0];
 		KLs[i,j] = KLs_ij[-1,0];
 	print('saving', fname);
-	np.savez(fname, R2s=R2s, KLs=KLs);
+	np.savez(fname, R2s=R2s, KLs=KLs, Ds=Ds);
 print('done');
 
 
