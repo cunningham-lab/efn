@@ -140,6 +140,8 @@ Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008gr
  
  $\Theta$ defines quite a big $\mathcal{Q}$, and indeed the subject of compressibility, generalization, etc is of keen interest to many \cite{zhou2018compressability}.  So actually the space of distributions is quite large, and in many cases certainly larger than it needs be.  Why?  Well, we know precisely the parameter space of the exponential family; it is defined by the \emph{natural} parameters $\eta \in \mathbb{R}^p$ (or whatever we choose there).
  
+ Note somewhere that the natural parameter space needs to be considered in general.  That is, not all $\eta$ lead to a valid distribution (standard fact, see for example Wainwright and Jordan 08).  In practice that's not often a problem, as the space is known for most distributions one uses, and when one composes them in a posterior scheme (for example), this is inherited (eg the normal covariance...).  So we skip that here.  But yes in general that needs to be considered.
+ 
  \emph{Figure 1}
  
  Figure of model space.  Yeah that's good.  Then graphical model.
@@ -212,7 +214,17 @@ $$ p(\beta | \{Y,X\}) = \frac{ p(\beta, \{Y,X\})}{p(\{Y,X\})} = \frac{ p(\{Y,X\}
 
 Ugh.  BLR is an intractable exp fam only for a particular set of $X$, making it rather a crappy choice.  Groan.
 
-Fig 5.  Latent Dirichlet Allocation?  Some other similar problem? 
+Fig 5.  Latent Dirichlet Allocation?  Some other similar problem? Nope that doesn't work either
+
+Fig 5.  Heaps of examples with conditional iid exp fams.  Math details of that pending.  Some cool examples:
+\begin{itemize}
+\item Censored data.  normal prior, censored normal observations, what is posterior distribution on mean?  Lots of work in that.
+\item Truncated data.  truncated mvn prior, with some observations thereafter, what is posterior? (Does this work?...)
+\item Poisson/Bern "process" data.  Phony process like in neuro, normal prior on log intensity (ooh maybe that's not an exp fam prior), then a "spike train" of bern or poisson count observations
+\item multivariate t with inverse wishart prior or something like that.  That's neat but doesn't have great "oh yeah people do care about that problem" recognition.  Seems contrived.
+\item check MKB book for other cool MV distributions.
+\item Elliptically contoured prior with some conditionally iid exp fam observations.  People in ML like elliptical distributions.
+\end{itemize}
 
 
 
