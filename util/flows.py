@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import scipy.linalg
 
 def efn_tensor_shape(z):
     # could use eager execution to iterate over shape instead.  Avoiding for now.
@@ -137,6 +138,75 @@ class CholProdLayer(Layer):
 
         return z, sum_log_det_jacobians;
 
+class TanhLayer(Layer):
+    def __init__(self, name='SimplexBijectionLayer'):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.param_names = [];
+        self.param_network = False;
+
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        z_out = tf.tanh(z);
+        log_det_jacobian = tf.reduce_sum(tf.log(1.0 - (z_out**2)), 2);
+        sum_log_det_jacobians += log_det_jacobian[:,:,0];
+        return z, sum_log_det_jacobians;
+
+class StructuredSpinnerLayer(Layer):
+    def __init__(self, name, dim):
+        self.name = name;
+        self.dim = dim;
+        self.param_names = ['d1', 'd2', 'd3', 'b'];
+        self.d1 = None;
+        self.d2 = None;
+        self.d3 = None;
+        self.b = None;
+        
+    def get_layer_info(self,):
+        d1_dim = (self.dim, 1);
+        d2_dim = (self.dim, 1);
+        d3_dim = (self.dim, 1);
+        b_dim = (self.dim,1);
+        dims = [d1_dim, d2_dim, d3_dim, b_dim];
+        return self.name, self.param_names, dims;
+
+    def get_params(self,):
+        return self.d1, self.d2, self.d3, self.b;
+
+    def connect_parameter_network(self, theta_layer):
+        self.d1, self.d2, self.d3, self.b = theta_layer;
+        # params will have batch dimension if result of parameter network
+        self.param_network = (len(self.d1.shape) == 3);
+        return None;
+            
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        K, M, D, T = efn_tensor_shape(z);
+        D_np = z.get_shape().as_list()[2];
+        Hmat = scipy.linalg.hadamard(D_np, dtype=np.float64) / np.sqrt(D_np);
+        H = tf.constant(Hmat , tf.float64);
+        d1, d2 ,d3, b = self.get_params();
+        D1 = tf.diag(d1[:,0]);
+        D2 = tf.diag(d2[:,0]);
+        D3 = tf.diag(d3[:,0]);
+        A = tf.matmul(H, tf.matmul(D3, tf.matmul(H, tf.matmul(D2, tf.matmul(H, D1)))));
+        #A = tf.matmul(H, tf.matmul(D2, tf.matmul(H, D1)));
+
+        if (not self.param_network):
+            b = tf.expand_dims(tf.expand_dims(b, 0), 0);
+            z = tf.tensordot(A, z, [[1], [2]]);
+            z = tf.transpose(z, [1, 2, 0, 3]) + b;
+            log_det_A = tf.log(tf.abs(tf.reduce_prod(d1))) + tf.log(tf.abs(tf.reduce_prod(d2))) + tf.log(tf.abs(tf.reduce_prod(d3)));
+            log_det_jacobian = tf.multiply(log_det_A, tf.ones((K*M,), dtype=tf.float64));
+        else:
+            z_KD_MTvec = tf.reshape(tf.transpose(z, [0,2,1,3]), [K,D,M*T]);
+            Az_KD_MTvec = tf.matmul(A, z_KD_MTvec);
+            Az = tf.transpose(tf.reshape(Az_KD_MTvec, [K,D,M,T]), [0,2,1,3]);
+            z = Az + tf.expand_dims(b, 1);
+            log_det_jacobian = tf.log(tf.abs(tf.matrix_determinant(A)));
+            log_det_jacobian = tf.tile(tf.expand_dims(log_det_jacobian, 1), [1, M]);
+        sum_log_det_jacobians += log_det_jacobian;
+        return z, sum_log_det_jacobians;
+
+
 
 class LinearFlowLayer(Layer):
     def __init__(self, name, dim):
@@ -158,22 +228,14 @@ class LinearFlowLayer(Layer):
         return None;
             
     def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        K, M, D, T = efn_tensor_shape(z);
         if (not self.param_network):
-            K = tf.shape(z)[0];
-            M = tf.shape(z)[1];
-            batch_size = tf.multiply(K,M);
             A = self.A;
             b = tf.expand_dims(tf.expand_dims(self.b, 0), 0);
             z = tf.tensordot(A, z, [[1], [2]]);
             z = tf.transpose(z, [1, 2, 0, 3]) + b;
-            log_det_jacobian = tf.multiply(tf.log(tf.abs(tf.matrix_determinant(A))), tf.ones((batch_size,), dtype=tf.float64));
-            print('log det shape', log_det_jacobian.shape);
+            log_det_jacobian = tf.multiply(tf.log(tf.abs(tf.matrix_determinant(A))), tf.ones((K*M,), dtype=tf.float64));
         else:
-            z_shape = tf.shape(z);
-            K = z_shape[0];
-            M = z_shape[1];
-            D = z_shape[2];
-            T = z_shape[3];
             z_KD_MTvec = tf.reshape(tf.transpose(z, [0,2,1,3]), [K,D,M*T]);
             Az_KD_MTvec = tf.matmul(self.A, z_KD_MTvec);
             Az = tf.transpose(tf.reshape(Az_KD_MTvec, [K,D,M,T]), [0,2,1,3]);

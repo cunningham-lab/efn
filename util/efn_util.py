@@ -6,7 +6,8 @@ from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
-from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, CholProdLayer
+from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
+                  CholProdLayer, StructuredSpinnerLayer, TanhLayer
 import os
 
 p_eps = 10e-6;
@@ -89,19 +90,28 @@ def declare_theta(flow_layers):
         theta.append(layer_i_params);
     return theta;
 
-def construct_flow(exp_fam, flow_id, D_Z, T):
-    datadir = 'flows/';
-    fname = datadir + '%s.npz' % flow_id;
-    flowfile = np.load(fname);
-    num_linear_lyrs = int(flowfile['num_linear_layers']);
-    num_planar_lyrs = int(flowfile['num_planar_layers']);
-    P = int(flowfile['P']); # order of VAR dynamics
+def construct_flow(exp_fam, flow_dict, D_Z, T):
+    P = 0
     assert(P >= 0);
+    flow_ids = flow_dict['flow_ids'];
+    flow_repeats = flow_dict['flow_repeats'];
+    nlayers = len(flow_ids);
+    layer_ind = 1;
     layers = [];
-    for i in range(num_linear_lyrs):
-        layers.append(LinearFlowLayer('LinearFlow%d' % (i+1), dim=D_Z));
-    for i in range(num_planar_lyrs):
-        layers.append(PlanarFlowLayer('PlanarFlow%d' % (i+1), dim=D_Z));
+    for i in range(nlayers):
+        flow_id = flow_ids[i];
+        num_repeats = flow_repeats[i];
+        for j in range(num_repeats):
+            if (flow_id == 'LinearFlowLayer'):
+                layers.append(LinearFlowLayer('LinearFlow_Layer%d' % layer_ind, dim=D_Z));
+            elif (flow_id == 'StructuredSpinnerLayer'):
+                layers.append(StructuredSpinnerLayer('StructuredSpinner_Layer%d' % layer_ind, dim=D_Z));
+            elif (flow_id == 'PlanarFlowLayer'):
+                layers.append(PlanarFlowLayer('PlanarFlow_Layer%d' % layer_ind, dim=D_Z));
+            elif (flow_id == 'TanhLayer'):
+                layers.append(TanhLayer('Tanh_Layer%d' % layer_ind));
+            layer_ind += 1;
+    # take care of the T-exp family-specific support transformations
     if (exp_fam == 'dirichlet'):
         layers.append(SimplexBijectionLayer());
     elif (exp_fam == 'inv_wishart'):
@@ -152,7 +162,7 @@ def construct_flow(exp_fam, flow_id, D_Z, T):
         base_log_p_z = tf.log(p0[:,:,0,0]);
         num_dyn_param_vals = 0;
         Z_AR = Z0;
-
+    print('exitted');
     return layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals;
 
 def latent_dynamics(Z0, A, sigma_eps, T):

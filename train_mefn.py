@@ -16,7 +16,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params
 
-def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
+def train_mefn(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                lr_order=-3, random_seed=0, max_iters=10000, check_rate=1000):
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     stop_early = False;
@@ -40,7 +40,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_dict, D_Z, T);
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     batch_size = tf.multiply(K, M);
@@ -59,7 +59,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, {}, False, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, 'temp', {}, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (exp_fam == 'normal'):
