@@ -1,8 +1,30 @@
 import tensorflow as tf
+import numpy as np
 
-p_eps = 1e-6;
+def efn_tensor_shape(z):
+    # could use eager execution to iterate over shape instead.  Avoiding for now.
+    K = tf.shape(z)[0];
+    M = tf.shape(z)[1];
+    D = tf.shape(z)[2];
+    T = tf.shape(z)[3];
+    return K, M, D, T;
+
 # Define the planar flow
 class Layer:
+    def __init__(self, name='SimplexBijectionLayer'):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.param_names = [];
+        self.param_network = False;
+
+    def get_layer_info(self,):
+        return self.name, [], [];
+
+    def get_params(self,):
+        return [];
+
+    def connect_parameter_network(self, theta_layer):
+        return None;
     def forward_and_jacobian(self, y):
         raise NotImplementedError(str(type(self)));
         
@@ -13,6 +35,11 @@ class PlanarFlowLayer(Layer):
         self.name = name;
         self.dim = dim;
         self.param_names = ['u', 'w', 'b'];
+        self.param_network = False;
+        self.u = None;
+        self.uhat = None;
+        self.w = None;
+        self.b = None;
 
     def get_layer_info(self,):
         u_dim = (self.dim,1);
@@ -20,11 +47,15 @@ class PlanarFlowLayer(Layer):
         b_dim = (1,1);
         dims = [u_dim, w_dim, b_dim];
         return self.name, self.param_names, dims;
+
+    def get_params(self,):
+        if (not self.param_network):
+            return tf.expand_dims(self.uhat, 0), tf.expand_dims(self.w, 0), tf.expand_dims(self.b, 0);
+        else:
+            return self.uhat, self.w, self.b;
         
     def connect_parameter_network(self, theta_layer):
-        self.u = theta_layer[0];
-        self.w = theta_layer[1];
-        self.b = theta_layer[2];
+        self.u, self.w, self.b = theta_layer;
         self.param_network = (len(self.u.shape) == 3);
         if (self.param_network):
             wdotu = tf.matmul(tf.transpose(self.w, [0, 2, 1]), self.u);
@@ -38,34 +69,71 @@ class PlanarFlowLayer(Layer):
         return None;
             
     def forward_and_jacobian(self, z, sum_log_det_jacobians, reuse=False):
-        if (not self.param_network):
-            u = tf.expand_dims(self.uhat, 0);
-            w = tf.expand_dims(self.w, 0);
-            b = tf.expand_dims(self.b, 0);
-        else:
-            u = self.uhat;
-            w = self.w;
-            b = self.b;
+        u, w, b = self.get_params();
+        K, M, D, T = efn_tensor_shape(z);
 
-        z_shape = tf.shape(z);
-        K = z_shape[0];
-        M = z_shape[1];
-        D = z_shape[2];
-        T = z_shape[3];
         z_KD_MTvec = tf.reshape(tf.transpose(z, [0,2,1,3]), [K,D,M*T]);
         # helper function phi_k(z_{k-1})
         # derivative of tanh(x) is (1-tanh^2(x))
         phi = tf.matmul(w, (1.0 - tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z_KD_MTvec) + b)**2));
         # compute the running sum of log-determinant of jacobians
-        input_to_log_abs = tf.matmul(tf.transpose(u, [0,2,1]), phi);
-        log_det_jacobian = tf.log(tf.abs(1.0 + input_to_log_abs));
+        log_det_jacobian = tf.log(tf.abs(1.0 + tf.matmul(tf.transpose(u, [0,2,1]), phi)));
         log_det_jacobian = tf.reshape(log_det_jacobian, [K,M]); # update for more time samples
-        sum_log_det_jacobians += log_det_jacobian;
+
         # compute z for this layer
         nonlin_term = tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z_KD_MTvec) + b);
-        additive_term_KD_MTvec = tf.matmul(u, nonlin_term);
-        additive_term = tf.transpose(tf.reshape(additive_term_KD_MTvec, [K,D,M,T]), [0,2,1,3]);
-        z = z + additive_term;
+        z = z + tf.transpose(tf.reshape(tf.matmul(u, nonlin_term), [K,D,M,T]), [0,2,1,3]);
+
+        sum_log_det_jacobians += log_det_jacobian;
+        return z, sum_log_det_jacobians;
+
+class SimplexBijectionLayer(Layer):
+    def __init__(self, name='SimplexBijectionLayer'):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.param_names = [];
+        self.param_network = False;
+
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        D = tf.shape(z)[2];
+        ex = tf.exp(z);
+        den = tf.reduce_sum(ex, 2) + 1.0;
+        log_dets = tf.log(1.0 - (tf.reduce_sum(ex, 2) / den)) - tf.cast(D, tf.float64)*tf.log(den) + tf.reduce_sum(z, 2);
+        z = tf.concat((ex / tf.expand_dims(den, 2), 1.0 / tf.expand_dims(den, 2)), axis=2);
+        sum_log_det_jacobians += log_dets[:,:,0];
+        return z, sum_log_det_jacobians;
+
+
+class CholProdLayer(Layer):
+    def __init__(self, name='SimplexBijectionLayer'):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.param_names = [];
+        self.param_network = False;
+
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        K, M, D_Z, T = efn_tensor_shape(z);
+        z_KMD_Z = z[:,:,:,0]; # generalize this for more time points
+        L = tf.contrib.distributions.fill_triangular(z_KMD_Z);
+        sqrtD = tf.shape(L)[2];
+        sqrtD_flt = tf.cast(sqrtD, tf.float64);
+        D = tf.square(sqrtD);
+        L_pos_diag = tf.contrib.distributions.matrix_diag_transform(L, tf.exp);
+        LLT = tf.matmul(L_pos_diag, tf.transpose(L_pos_diag, [0,1,3,2]));
+        #give it a lil boost
+        #diag_boost = 10*p_eps*tf.eye(sqrtD, batch_shape=[K,M], dtype=tf.float64);
+        #LLT = LLT + diag_boost;
+        LLT_vec = tf.reshape(LLT, [K,M,D]);
+        z = tf.expand_dims(LLT_vec, 3); # update this for T > 1
+        
+        L_diag_els = tf.matrix_diag_part(L);
+        L_pos_diag_els = tf.matrix_diag_part(L_pos_diag);
+        var = tf.cast(tf.range(1,sqrtD+1), tf.float64);
+        pos_diag_support_log_det = tf.reduce_sum(L_diag_els, 2);
+        #
+        diag_facs = tf.expand_dims(tf.expand_dims(sqrtD_flt - var + 1.0, 0), 0);
+        chol_prod_log_det = sqrtD_flt * np.log(2.0) + tf.reduce_sum(tf.multiply(diag_facs, tf.log(L_pos_diag_els)), 2);
+        sum_log_det_jacobians += (pos_diag_support_log_det + chol_prod_log_det);
 
         return z, sum_log_det_jacobians;
 

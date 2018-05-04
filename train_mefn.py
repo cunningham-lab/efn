@@ -40,7 +40,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_id, D_Z, T);
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     batch_size = tf.multiply(K, M);
@@ -210,7 +210,7 @@ def train_mefn(exp_fam, params, flow_id, cost_type, M_eta=100, \
                 mean_train_KL = np.mean(train_KLs_i);
 
                 print(42*'*');
-                print('it = %d ' % (i));
+                print('it = %d ' % (i+1));
                 print('cost = %f ' % cost_i);
                 print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
                 if (dynamics):

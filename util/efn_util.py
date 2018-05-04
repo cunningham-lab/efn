@@ -6,7 +6,7 @@ from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
-from flows import LinearFlowLayer, PlanarFlowLayer
+from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, CholProdLayer
 import os
 
 p_eps = 10e-6;
@@ -89,7 +89,7 @@ def declare_theta(flow_layers):
         theta.append(layer_i_params);
     return theta;
 
-def construct_flow(flow_id, D_Z, T):
+def construct_flow(exp_fam, flow_id, D_Z, T):
     datadir = 'flows/';
     fname = datadir + '%s.npz' % flow_id;
     flowfile = np.load(fname);
@@ -102,6 +102,11 @@ def construct_flow(flow_id, D_Z, T):
         layers.append(LinearFlowLayer('LinearFlow%d' % (i+1), dim=D_Z));
     for i in range(num_planar_lyrs):
         layers.append(PlanarFlowLayer('PlanarFlow%d' % (i+1), dim=D_Z));
+    if (exp_fam == 'dirichlet'):
+        layers.append(SimplexBijectionLayer());
+    elif (exp_fam == 'inv_wishart'):
+        layers.append(CholProdLayer());
+
     nlayers = len(layers); 
 
 
@@ -186,44 +191,11 @@ def connect_flow(Z, layers, theta, exp_fam):
 
     sum_log_det_jacobians = tf.zeros((K,M), dtype=tf.float64);
     nlayers = len(layers);
-    input_to_log_abs_list = [];
-    log_det_jac_list = [];
     for i in range(nlayers):
         layer = layers[i];
         theta_layer = theta[i];
         layer.connect_parameter_network(theta_layer);
         Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-    Z_pf = Z;
-    # final layer translates to the support
-    if (exp_fam == 'dirichlet'): # map to the D_Z-simplex
-        # TODO need to redo this
-        ex = tf.exp(Z_pf);
-        den = tf.reduce_sum(ex, 2) + 1.0;
-        Z = tf.concat((ex / tf.expand_dims(den, 2), 1.0 / tf.expand_dims(den, 2)), axis=2);
-        log_dets = tf.log(1.0 - (tf.reduce_sum(ex, 2) / den)) - tf.cast(D_Z, tf.float64)*tf.log(den) + tf.reduce_sum(Z_pf, 2);
-        sum_log_det_jacobians += log_dets[:,:,0];
-    elif (exp_fam == 'inv_wishart'): # map to PSD matrices (technically inv wishart is PD though..)
-        Z_KMD_Z = Z[:,:,:,0]; # generalize this for more time points
-        L = tf.contrib.distributions.fill_triangular(Z_KMD_Z);
-        sqrtD = tf.shape(L)[2];
-        D = tf.square(sqrtD);
-        L_pos_diag = tf.contrib.distributions.matrix_diag_transform(L, tf.exp);
-        LLT = tf.matmul(L_pos_diag, tf.transpose(L_pos_diag, [0,1,3,2]));
-        #give it a lil boost
-        #diag_boost = 10*p_eps*tf.eye(sqrtD, batch_shape=[K,M], dtype=tf.float64);
-        #LLT = LLT + diag_boost;
-        LLT_vec = tf.reshape(LLT, [K,M,D]);
-        Z = tf.expand_dims(LLT_vec, 3); # update this for T > 1
-        
-        L_diag_els = tf.matrix_diag_part(L);
-        L_pos_diag_els = tf.matrix_diag_part(L_pos_diag);
-
-        #pos_diag_support_log_det = tf.log(tf.exp(tf.reduce_sum(L_diag_els, 2)));
-        pos_diag_support_log_det = tf.reduce_sum(L_diag_els, 2);
-
-        diag_pows = tf.expand_dims(tf.expand_dims(sqrtD - tf.range(1,sqrtD+1)+1, 0), 0);
-        matrix_dot_log_det = tf.log(tf.reduce_prod(2*tf.pow(L_pos_diag_els, tf.cast(diag_pows, tf.float64)), 2));
-        sum_log_det_jacobians += (pos_diag_support_log_det + matrix_dot_log_det);
     return Z, sum_log_det_jacobians;
 
 def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
@@ -329,7 +301,6 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         if (exp_fam == 'normal'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         elif (exp_fam == 'dirichlet'):
-            #Bx = tf.log(tf.divide(1.0, tf.reduce_prod(X, [2])));
             Bx = -tf.reduce_sum(tf.log(X), [2]);
             Bx = Bx[:,:,0]; # remove singleton time dimension
         elif (exp_fam == 'inv_wishart'):

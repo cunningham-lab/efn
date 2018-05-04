@@ -44,7 +44,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_id, D_Z, T);
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     batch_size = tf.multiply(K, M);
