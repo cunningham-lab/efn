@@ -131,6 +131,17 @@ Important to distinguish carefully from VI.  In a sense VI does parameterize a f
  \section{Learning exponential families}
  
  
+We are interested in perhaps the most classic inference problem:
+
+$$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
+
+ shown with the attached plate model (not local latents).  Supposing as is often the case that the likelihood is a member of the $s$ exp fam, we have:
+ 
+ $$p(z | x ) \propto \exp\left\{ \left[ \sum_{i=1}^n s(x_i) \right]^\top\left[ t(z) \right] + g_0(\alpha,z) \right\}$$
+ 
+ where the natural parameters of the sampling distribution are indexed by the latent parameter on which we want to inference ($z$).  Here I've written the prior as arbitrary, and possibly not exp fam, which is fine, since this is still an exp fam in the  sense of, for a fixed $\alpha$, the function $g_0$ can just be viewed as a sufficient statistic.  Even if $\alpha$ is not fixed though, we can sample over that too to learn the whole fam (but maybe not if we want to infer it?).  Regardless, life is simpler to make sense of if we take an exp fam prior $g_0(\alpha,z) = \alpha^\top t_0(z)$, and then the desired posterior is an intractable exp fam, but still just an exp fam.
+ 
+ Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
 
  \emph{Why this is important}
  
@@ -165,7 +176,7 @@ Tabak, E. G and Vanden-Eijnden, E. Density estimation by dual ascent of the log-
  
 \emph{Related work / How close is this to norm flows or VAE}
 
-In a restricted technical sense, rather close: VAE and other black box VI that uses reparameterization results in a conditional density $q_\phi( z | x)$.  If we consider $\eta$ as $x$, then sure yes the previous stuff specifies a model $\mathcal{Q}_{VAE} = \left\{q_\phi(z|x) : x \in X\right\}$.  But that's a little silly, and any way that is very often a normal family with variational parameters specified by (a deep function of) x.  Much closer is Figure 2 in Rezende and Mohamed, where like here they use a network to index the \emph{parameters} of the normalizing flow.  In that case it's a function of $x$ the observation, and as such that network is an inference network; here it's a function of $\eta$ and as such is a parameter network.  That's just nomenclature, so naturally the next question is do they differ at some other level.  Yes, distinctly.  The other term implied in a VI (or norm flow VAE style as they use) is the expected log joint $E_{q_{\phi(x)}}  \left( \log p_\theta(x,z)\right)$.  Now sure that's a loss function on $x,z$, so then when we look at that same term in EFN we see   $E_{q_{\phi(\eta)}}  \left( \eta^\top t(z) \right)$, which sure also looks like a loss function on $\eta,z$.  And yes, they are both unnormalized (in the sense that VI is an ELBO / joint $p(x,z)$ and EFN lacks the normalizer because it's constant, so we're not getting a KL estimate).  A picky difference is that the exp family doesn't really correspond to a proper unnormalized log joint (though I suppose it could), as there is not a prior on $\eta$ in the objective (but is that just ignoring $p(\eta)$ in our sampling scheme?). But yes if we want to be reductionist and pedantic [use nicer words] in general we could see this as a specific case where $x=\eta$ and thus we are learning a family just as in the inference case.  And for example we are giving in the bayesian logistic regression example full datasets for inference instead of single data points.  To make this as close as possible, we write $p(\eta | z)  = \frac{1}{A(t(z))} \exp\left\{ \eta^\top t(z)\right\}$.  That's the "likelihood" of an EFN in some wonky sense.  So this reveals the mechanical differences: first, $t(z)$ is not a deep generative model with parameters $\theta$, but rather it is a fixed set of sufficient statistics that define the exp fam.  Next, there is no clear prior $p(z)$, which is critical to understanding how VI behaves (see Hoffman and Johnson ELBO surgery paper).  So yes there is a hand wavy sense in which EFN is a specific case of norm flow, but of course it is.  And anyway norm flow is a specific case of a DNN architecture or Helmholtz machine or deep density network (Ripple and Adams).  This is just rambling but good to have all perspective here.  Ok so what to do?  First, then we need to produce really compelling results focusing on when learning an exp fam is key.  Second we need some very tight language to draw this distinction without seeming a small tweak on normalizing flows.  One way to do this is the restricted model class argument, a la Fig 7.2 in Hastie and Tibshirani.  Another is to actually produce a conditional exp fam, as in something indexed on both $x$ and $\eta$.  Third, possible novelties in norm flows, like triple spinners or other better choices than planar flows (yuck).
+In a restricted technical sense, rather close: VAE and other black box VI that uses reparameterization results in a conditional density $q_\phi( z | x)$.  If we consider $\eta$ as $x$, then sure yes the previous stuff specifies a model $\mathcal{Q}_{VAE} = \left\{q_\phi(z|x) : x \in X\right\}$.  But that's a little silly, and any way that is very often a normal family with variational parameters specified by (a deep function of) x.  Much closer is Figure 2 in Rezende and Mohamed, where like here they use a network to index the \emph{parameters} of the normalizing flow.  In that case it's a function of $x$ the observation, and as such that network is an inference network; here it's a function of $\eta$ and as such is a parameter network.  That's just nomenclature, so naturally the next question is do they differ at some other level.  Yes, distinctly.  The other term implied in a VI (or norm flow VAE style as they use) is the expected log joint $E_{q_{\phi(x)}}  \left( \log p_\theta(x,z)\right)$.  Now sure that's a loss function on $x,z$, so then when we look at that same term in EFN we see   $E_{q_{\phi(\eta)}}  \left( \eta^\top t(z) \right)$, which sure also looks like a loss function on $\eta,z$.  And yes, they are both unnormalized (in the sense that VI is an ELBO / joint $p(x,z)$ and EFN lacks the normalizer because it's constant, so we're not getting a KL estimate).  A picky difference is that the exp family doesn't really correspond to a proper unnormalized log joint (though I suppose it could), as there is not a prior on $\eta$ in the objective (but is that just ignoring $p(\eta)$ in our sampling scheme?). But yes if we want to be reductionist and pedantic [use nicer words] in general we could see this as a specific case where $x=\eta$ and thus we are learning a family just as in the inference case.  Or rather, we are putting the data in as sufficient stat (computation of natural parameters), but that's nonobvious.  And for example we are giving in the bayesian logistic regression example full datasets for inference instead of single data points.  To make this as close as possible, we write $p(\eta | z)  = \frac{1}{A(t(z))} \exp\left\{ \eta^\top t(z)\right\}$.  That's the "likelihood" of an EFN in some wonky sense.  So this reveals the mechanical differences: first, $t(z)$ is not a deep generative model with parameters $\theta$, but rather it is a fixed set of sufficient statistics that define the exp fam.  Next, there is no clear prior $p(z)$, which is critical to understanding how VI behaves (see Hoffman and Johnson ELBO surgery paper, also Duvenaud's https://arxiv.org/pdf/1801.03558.pdf).  So yes there is a hand wavy sense in which EFN is a specific case of norm flow, but of course it is.  And anyway norm flow is a specific case of a DNN architecture or Helmholtz machine or deep density network (Ripple and Adams).  This is just rambling but good to have all perspective here.  Ok so what to do?  First, then we need to produce really compelling results focusing on when learning an exp fam is key.  Second we need some very tight language to draw this distinction without seeming a small tweak on normalizing flows.  One way to do this is the restricted model class argument, a la Fig 7.2 in Hastie and Tibshirani.  Another is to actually produce a conditional exp fam, as in something indexed on both $x$ and $\eta$.  Third, possible novelties in norm flows, like triple spinners or other better choices than planar flows (yuck).
 
 Another related work is that this is somehow the dual of MEFN, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
   
@@ -200,21 +211,16 @@ Fig 3.  This says, it works across a range of Dirichlet and NIW (and perhaps not
 \item key comparison to baseline of VI (doing this specifically for K=1 but a fixed K, possibly with no parameter network because it's unnecessary).  The key is to show that it works almost as well as VI in the specific case, but of course VI can't generalize.  And when I say VI I don't really mean VI, I mean just learning a specific member of the exp fam.    
 \end{itemize}
 
-Fig 4.  One great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff.  We can show this.  Suppose we have only a limited amount of data from a specific exp fam, but we don't know what member.  Yeah this is cool.  So we can either explore all of $\phi$ space in the usual way (the full flow network model $\mathcal{Q}$), or we can have previously learned the exp fam, which operates on the restricted coordinates of the natural parameters.  Then, we take gradients over natural parameter space to find the best $\phi$, which is really $\phi^* = \phi(\eta^*)$, and hopefully that distribution is closer in KL to the true posterior than had we just learned straight from $\mathcal{Q}$.  Well this isn't quite fair, as we don't even need to take gradients in $\eta$ space, since in the simplest case we just plug in $\eta$ and we've got the exact member.  But yes that's a good example too.  Possibly better.  As a function of available data, can you fit the posterior?  Well, you can learn directly from $\mathcal{Q}$, always an option.  That shows something probably unhelpful: that you can learn a point mass or something like that.  Hmmm not quite.  Ok use a Norm Flow with a bayesian logistic regression generative model and limited data.  Learn the posterior on $\beta$ for a given dataset.  That maps a dataset $X$ to a posterior.  That will run into scaling problems as $X$ grows, because apparently the network has to follow suit.  Instead cheat and give it some sufficient statistics.  And ok that's not so much of a cheat because you would know from the model.  So that's fair I suppose.  Another choice is to just model the data, so write the generative model and ask the norm flow to learn the posterior.  That's the same thing and I'm talking in circles.  There is a good idea here.
+Fig 4. [This idea was Fig 5 in disguise; see below.  Currently no need for this figure].
 
 \emph{Chapter 3: Fig 5 and 6}
 
-Fig 5. Bayesian logistic regression.  Learn the full BLR posterior (BLRP) family for some dimensionality.  Then get some data (see links in slack, look for nickish and all that).  Then find the posterior.  etc, etc, etc.  Then use MF VI or EP or whatever in an attempt to do same.  Show outperformance.  Really scrutinize the comparison point here.  What really is VI in this setting?  First, what is bayesian logistic regression.  
+Fig 5.  The intractable posterior inference example.  {\bf Key real data result}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
+Now, as Alternative 1 do full norm flow variational inference (explore all of $\phi$ space with the full flow network model $\mathcal{Q}$), which is to say $\arg\min_\phi KL(q_\phi || p)$: the key difference here is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.   As Alternative 2, be literal to Figure 2 of the Norm Flow VI paper, give the sufficient statistics of that K=1 dataset, and learn an EFN from scratch.  This alternative is important because it is the most specific (but kind of annoying, hence alternative 1) interpretation of norm flow VI paper.  
 
-$$ \beta \sim \mathcal{N}(0,I) ~~~~~ y | \beta, x  \sim_{iid} Bern\left( \frac{1}{1 + \exp\left\{ \beta^\top x \right\} } \right) $$
+Now, PANEL A of this figure shows performance as a size of the dataset.  This will likely show that when the dataset gets small, this "traditional VI" will get arbitrarily bad (can't learn a network); eventually, there will be so much data that the VI will match or outperform the EFN... outperform because VI can focus specifically on this distribution rather than over the whole family, so the EFN has less effective data for this $\eta$ (but not because it has a broader range of models, since we believe the EFN contains the closest member).  Alternative 2 should do shittier across the board than alt 1, I think?   Performance metric should be ELBO on some held out data or something like that (it's a posterior, so log likelihood doesn't really make sense).  Test data anyway.   Check VI papers for usual metrics.  PANEL B of this figure shows performance as dimension of the problem grows.  Pick some middle dataset size, then repeat same performance metric as in Panel A for a range of dimensionalities of the exponential family.   VI will generalize to test data worse and worse as dimensionality grows, but EFN will learn the family less well on its computational budget.  This could go either way but will be interesting regardless.  I suppose we should also have those panels for training data.   A key point to make here is that one great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff (see for example Hastie and Tibshirani book, Fig 7.2).  Maybe that's Panel A.  Or Figure 4 is bias-variance and some sample posteriors in 2-d (showing how nicely it works), and then Fig 5 is the above performance, with both train and test.   Notice one pain here is that Panel B requires training a new EFN at every dimensionality.  Sorry.
 
-In our nomenclature, $\beta$ is $z$, $y,x$ are some variables that will figure into the natural parameters $\eta$.  In BLR, we are interested in the posterior on $\beta$ given the dataset $\{X,Y\}$:
-
-$$ p(\beta | \{Y,X\}) = \frac{ p(\beta, \{Y,X\})}{p(\{Y,X\})} = \frac{ p(\{Y,X\}|\beta) p(\beta)}{p(\{Y,X\})} = \frac{ p(\{Y,X\}|\beta) \exp\left\{\eta_0^\top t_0(\beta)\right\}}{p(\{Y,X\})}$$
-
-Ugh.  BLR is an intractable exp fam only for a particular set of $X$, making it rather a crappy choice.  Groan.
-
-Fig 5.  Latent Dirichlet Allocation?  Some other similar problem? Nope that doesn't work either
+This will be for one real example $X$.  As such, to get error bars, just take a big dataset and randomly subsample.  Then the posterior performance is really for that very dataset, so the sem is coherent and the right thing to calculate/show.  Important to clarify that doing so \emph{does not} test how well this does across the entire exp fam, but just this one posterior.  To test that, we do it in simulation: generate \emph{many datasets $X$}, then do the above for every one of them.  Same computation for EFN (since its just plugging in a dataset), but VI alternatives 1 and 2 now need to be rerun for every dataset.  And it's still simulated data, not really offering something fundamentally more than Fig 3 (well ok it's an intractable model, but I'm not sure that offers so much).
 
 Fig 5.  Heaps of examples with conditional iid exp fams.  Math details of that pending.  Some cool examples:
 \begin{itemize}
@@ -222,8 +228,15 @@ Fig 5.  Heaps of examples with conditional iid exp fams.  Math details of that p
 \item Truncated data.  truncated mvn prior, with some observations thereafter, what is posterior? (Does this work?...)
 \item Poisson/Bern "process" data.  Phony process like in neuro, normal prior on log intensity (ooh maybe that's not an exp fam prior), then a "spike train" of bern or poisson count observations
 \item multivariate t with inverse wishart prior or something like that.  That's neat but doesn't have great "oh yeah people do care about that problem" recognition.  Seems contrived.
-\item check MKB book for other cool MV distributions.
+\item check MKB book for other cool MV distributions. (Marshall-Olkin)... seems contrived.
 \item Elliptically contoured prior with some conditionally iid exp fam observations.  People in ML like elliptical distributions.
+\item von Mises-Fisher distribution, eg http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf or https://arxiv.org/pdf/1605.00316.pdf, but again not clustering (see below), since it's a local latent variable problem then.s	
+\item Note: a whole heap of models don't quite fit comfortably here.
+\begin{itemize}
+\item Bayesian Logistic Regression.  This is an intractable exp fam in the desired sense, but the natural parameter (when parameterized) depends on $x_i$.  Thus, it grows with every datapoint, or put differently it's a diff exp fam for every dataset.  No bueno.  This is then true of GLMs, so those are out too.
+\item Latent Dirichlet Allocation.  Local variational parameters mean that the exp fam grows with datasize.  That means that the posterior is already too big for uninteresting sizes of LDA.  This is then true of hierarchical models with local latent variables in general.   
+\end{itemize}
+
 \end{itemize}
 
 
@@ -243,30 +256,13 @@ Fig 6. The Killer real data.  Perhaps Gibbs or Markov Random Field.  Learn it, t
 Ideas: 
 \begin{itemize}
 \item Fancy Exp Fam like Marshall-Olkin.  Yeah but who really cares about this esoteric distribution?  It doesn't look cool visually either.
-\item Ising models: classic, bw images
+\item Ising models: classic, bw images, but gross NP-Hard Cooper 1990.
 \item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	Also both Potts and Ising are NP-hard Cooper 1990 The Computational Complexity of
 Probabilistic Inference Using Bayesian
 Belief Networks 
 \item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
 \item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
 \end{itemize}  
-
-
-
-\section{To Do}
-
-\subsection{SRB}
-\begin{itemize}
-\item set up submission at   \url{https://cmt.research.microsoft.com/NIPS2018/}
-\item review and conform to style requirements (see website with template); 8 pages not including refs and acks and appendices.
-\end{itemize}
-
-\subsection{JPC}
-\begin{itemize}
-\item Outline
-\item Write
-\end{itemize}
-
 
 
 
