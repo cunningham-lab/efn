@@ -16,7 +16,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params
 
-def train_mefn(exp_fam, params, flow_dict, cost_type, M_eta=100, \
+def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                lr_order=-3, random_seed=0, max_iters=10000, check_rate=1000):
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     stop_early = False;
@@ -59,7 +59,7 @@ def train_mefn(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, 'temp', {}, False, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (exp_fam == 'normal'):

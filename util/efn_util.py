@@ -11,14 +11,15 @@ from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
 import os
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
+    flowstring = get_flowstring(flow_dict);
     if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_%s_L=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flow_id, theta_nn_hps['L'], random_seed);
+        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flowstring, theta_nn_hps['L'], random_seed);
     else:
-        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_%s_rs=%d/' % (exp_fam, D, flow_id, random_seed);
+        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
     return savedir
 
 def theta_network_hyperparams(L_theta, ncons, num_theta_params):
@@ -162,7 +163,6 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
         base_log_p_z = tf.log(p0[:,:,0,0]);
         num_dyn_param_vals = 0;
         Z_AR = Z0;
-    print('exitted');
     return layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals;
 
 def latent_dynamics(Z0, A, sigma_eps, T):
@@ -414,6 +414,50 @@ def drawEtas(exp_fam, D_Z, K_eta):
     else:
         raise NotImplementedError;
     return eta, params;
+
+def get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers):
+    flow_ids = [];
+    flow_repeats = [];
+    if (fully_connected_layers):
+        flow_ids.append('LinearFlowLayer');
+        flow_repeats.append(1); # no reason to have more than one here
+
+    if (planar_layers > 0):
+        flow_ids.append('PlanarFlowLayer');
+        flow_repeats.append(planar_layers);
+
+    if (spinner_layers > 0):
+        flow_ids.append('StructuredSpinnerLayer');
+        flow_repeats.append(spinner_layers);
+
+    for i in range(nonlin_spinner_layers):
+        flow_ids.append('StructuredSpinnerLayer');
+        flow_repeats.append(1);
+        if not (i==(nonlin_spinner_layers-1)):
+            flow_ids.append('TanhLayer');
+            flow_repeats.append(1);
+
+    flow_dict = {'flow_ids':flow_ids, 'flow_repeats':flow_repeats};
+    return flow_dict;
+
+def print_flowdict(flow_dict):
+    flow_ids = flow_dict['flow_ids'];
+    flow_repeats = flow_dict['flow_repeats'];
+    nlayers = len(flow_ids);
+    for i in range(nlayers):
+        print('%d %ss' % (flow_repeats[i], flow_ids[i]));
+    return None;
+
+def get_flowstring(flow_dict):
+    flow_ids = flow_dict['flow_ids'];
+    flow_repeats = flow_dict['flow_repeats'];
+    nlayers = len(flow_ids);
+    flowidstring = '';
+    for i in range(nlayers):
+        flowidstring += '%d%s' % (flow_repeats[i], flow_ids[i][0]);
+        if (i < (nlayers-1)):
+            flowidstring += '_';
+    return flowidstring;
 
 def setup_param_logging(all_params):
     nparams = len(all_params);

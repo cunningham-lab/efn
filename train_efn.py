@@ -18,7 +18,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       theta_network_hyperparams
 from tensorflow.python import debug as tf_debug
 
-def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
+def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
               L_theta, batch_norm=False, dropout=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     stop_early = False;
@@ -44,7 +44,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_id, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_dict, D_Z, T);
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     batch_size = tf.multiply(K, M);
@@ -68,7 +68,7 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
 
     theta_nn_hps = theta_network_hyperparams(L_theta, ncons, num_theta_params);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_id, theta_nn_hps, stochastic_eta, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed);
     print(random_seed, savedir);
 
     # construct the parameter network
@@ -248,22 +248,3 @@ def train_efn(exp_fam, D, flow_id, cost_type, K_eta, M_eta, stochastic_eta, \
     #return _X, train_R2s, train_KLs, i;
     return _X, train_KLs, i;
 
-if __name__ == '__main__':    # parse command line parameters
-    n_args = len(sys.argv);
-    exp_fam = str(sys.argv[1]);
-    D = int(sys.argv[2]); 
-    flow_id = str(sys.argv[3]);
-    cost_type = str(sys.argv[4]);
-    K_eta = int(sys.argv[5]);
-    M_eta = int(sys.argv[6]);
-    stochastic_eta_input = sys.argv[7];
-    L_theta = int(sys.argv[8]);
-    upl_theta = int(sys.argv[9]);
-    lr_order = float(sys.argv[10]);
-    random_seed = int(sys.argv[11]);
-    
-    stochastic_eta = not (str(stochastic_eta_input) == 'False');
-    theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
-
-    train_efn(exp_fam, flow_id, cost_type, L_theta, upl_theta, n, K_eta, \
-                  theta_nn_hps, lr_order, random_seed);
