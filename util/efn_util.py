@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
                   CholProdLayer, StructuredSpinnerLayer, TanhLayer
 import os
+import re
 
 p_eps = 10e-6;
 def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed):
@@ -422,10 +423,6 @@ def get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_s
         flow_ids.append('LinearFlowLayer');
         flow_repeats.append(1); # no reason to have more than one here
 
-    if (planar_layers > 0):
-        flow_ids.append('PlanarFlowLayer');
-        flow_repeats.append(planar_layers);
-
     if (spinner_layers > 0):
         flow_ids.append('StructuredSpinnerLayer');
         flow_repeats.append(spinner_layers);
@@ -436,6 +433,10 @@ def get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_s
         if not (i==(nonlin_spinner_layers-1)):
             flow_ids.append('TanhLayer');
             flow_repeats.append(1);
+
+    if (planar_layers > 0):
+        flow_ids.append('PlanarFlowLayer');
+        flow_repeats.append(planar_layers);
 
     flow_dict = {'flow_ids':flow_ids, 'flow_repeats':flow_repeats};
     return flow_dict;
@@ -448,16 +449,63 @@ def print_flowdict(flow_dict):
         print('%d %ss' % (flow_repeats[i], flow_ids[i]));
     return None;
 
+def format_flowstring(flowstring):
+    inds = [m.start() for m in re.finditer('1S_1T', flowstring)];
+    ninds = len(inds);
+    if (ninds == 0):
+        return flowstring;
+
+    diff_inds = np.diff(inds);
+    start_inds = [];
+    streak_counts = [];
+
+    start_ind = inds[0];
+    streak_count = 1;
+    for i in range(ninds-1):
+        if (diff_inds[i] == 6):
+            streak_count += 1;
+            if (i == ninds-2):
+                start_inds.append(start_ind);
+                streak_counts.append(streak_count);
+        else:
+            start_inds.append(start_ind);
+            streak_counts.append(streak_count);
+            if (i < ninds-2):
+                start_ind = inds[i+1];
+                streak_count = 1;
+
+    keep_start_inds = [];
+    keep_end_inds = [];
+    keep_start_inds.append(0);
+    for i in range(len(start_inds)):
+        keep_end_inds.append(start_inds[i]);
+        keep_start_inds.append(start_inds[i] + 6*streak_counts[i]);
+    keep_end_inds.append(len(flowstring));
+
+    flowstring_out = flowstring[keep_start_inds[0]:keep_end_inds[0]];
+    for i in range(len(start_inds)):
+        start_ind = start_inds[i];
+        streak_count = streak_counts[i];
+        flowstring_out += '%dST_' % streak_count;
+        flowstring_out += flowstring[keep_start_inds[i+1]:keep_end_inds[i+1]];
+
+    if (flowstring_out[-1] == '_'):
+        flowstring_out = flowstring_out[:-1];
+    print(flowstring_out);
+    return flowstring_out;
+
+
+
 def get_flowstring(flow_dict):
     flow_ids = flow_dict['flow_ids'];
     flow_repeats = flow_dict['flow_repeats'];
-    nlayers = len(flow_ids);
+    num_flow_ids = len(flow_ids);
     flowidstring = '';
-    for i in range(nlayers):
+    for i in range(num_flow_ids):
         flowidstring += '%d%s' % (flow_repeats[i], flow_ids[i][0]);
-        if (i < (nlayers-1)):
+        if (i < (num_flow_ids-1)):
             flowidstring += '_';
-    return flowidstring;
+    return format_flowstring(flowidstring);
 
 def setup_param_logging(all_params):
     nparams = len(all_params);
