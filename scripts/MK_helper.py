@@ -13,6 +13,7 @@ M_eta = int(sys.argv[4]);
 cost_type = 'KL';
 ncons = D;
 L = 8;
+upl_tau = 0.5;
 batch_norm = False;
 dropout = False;
 stochastic_eta = False;
@@ -30,7 +31,7 @@ flow_dict = get_flowdict(fully_connected_layers, planar_layers, spinner_layers, 
 
 
 X, trainKLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, \
-			                                 stochastic_eta, L, batch_norm, dropout, lr_order, \
+			                                 stochastic_eta, L, upl_tau, batch_norm, dropout, lr_order, \
 						                     random_seed, max_iters, check_rate);
 
 

@@ -23,13 +23,21 @@ def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, 
         savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
     return savedir
 
-def theta_network_hyperparams(L_theta, ncons, num_theta_params):
-    upl_inc = int(np.floor((num_theta_params - ncons) / (L_theta + 1)));
-    upl_theta = [];
-    upl_i = ncons;
-    for i in range(L_theta):
-        upl_i += upl_inc;
-        upl_theta.append(upl_i);
+def theta_network_hyperparams(L_theta, ncons, num_theta_params, upl_tau):
+    #upl_theta = [];
+    #upl_inc = int(np.floor((num_theta_params - ncons) / (L_theta + 1)));
+    #upl_i = ncons;
+    #for i in range(L_theta):
+    #    upl_i += upl_inc;
+    #    #upl_theta.append(upl_i);
+    #    upl_theta.append(ncons);
+    A = num_theta_params-ncons;
+    l = np.arange(L_theta);
+    upl = np.exp(l/upl_tau);
+    upl = upl - upl[0];
+    upl_theta = np.int32(np.round(A*((upl) / upl[-1]) + ncons));
+    print(ncons, '->', num_theta_params);
+    print(upl_theta, 'sum', sum(upl_theta));
     theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
     return theta_nn_hps;
 

@@ -24,6 +24,7 @@ K_eta = 10;
 M_eta = 1000;
 stochastic_eta = False;
 L = 8;
+upl_tau = 0.5;
 batch_norm = False;
 dropout = False;
 lr_order = -3;
@@ -32,4 +33,4 @@ max_iters = 10000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
-	                       L, batch_norm, dropout, lr_order, random_seed, max_iters, check_rate);
+	                       L, upl_tau, batch_norm, dropout, lr_order, random_seed, max_iters, check_rate);

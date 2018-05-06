@@ -12,12 +12,14 @@ fully_connected_layers = int(sys.argv[2]);
 planar_layers = int(sys.argv[3]);
 spinner_layers = int(sys.argv[4]);
 nonlin_spinner_layers = int(sys.argv[5]);
+L = int(sys.argv[6]);
+upl_tau = float(sys.argv[7]);
+
 cost_type = 'KL';
 ncons = D;
 K_eta = 100
 M_eta = 1000;
 stochastic_eta = True;
-L_theta = 8;
 batch_norm = False;
 dropout = False;
 lr_order = -3;
@@ -29,4 +31,4 @@ flow_dict = get_flowdict(fully_connected_layers, planar_layers, spinner_layers, 
 print_flowdict(flow_dict);
 
 X, KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, \
-                       stochastic_eta, L_theta, batch_norm, dropout, lr_order, random_seed, max_iters, check_rate);
+                       stochastic_eta, L, upl_tau, batch_norm, dropout, lr_order, random_seed, max_iters, check_rate);

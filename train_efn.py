@@ -19,7 +19,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
 from tensorflow.python import debug as tf_debug
 
 def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
-              L_theta, batch_norm=False, dropout=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
+              L_theta, upl_tau=0.5, batch_norm=False, dropout=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = 100;
@@ -66,7 +66,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
         _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
         _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
 
-    theta_nn_hps = theta_network_hyperparams(L_theta, ncons, num_theta_params);
+    theta_nn_hps = theta_network_hyperparams(L_theta, ncons, num_theta_params, upl_tau);
 
     savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed);
     print(random_seed, savedir);
@@ -160,8 +160,10 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
         i = 1;
 
+        print('starting opt');
         has_converged = False;
         while (i < max_iters):
+            print('it', i);
             if (stop_early and i == array_cur_len):
                 memory_extension(cost_grad_vals, array_cur_len);
                 array_cur_len = 2*array_cur_len;
