@@ -75,7 +75,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian = connect_flow(Z_AR, flow_layers, theta, exp_fam);
+    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta, exp_fam);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -84,7 +84,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
     X = Z; # [n,D,T] 
     # set up the constraint computation
-    Tx = computeMoments(X, exp_fam, D, T);
+    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
 
     # exponential family optimization
@@ -172,11 +172,13 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
             feed_dict = {Z0:z_i, eta:_eta};
 
-            start_time = time.time();
+            if (np.mod(i, check_rate)==0):
+                start_time = time.time();
             ts, cost_i, _X, _cost_grads, _log_p_zs, _Tx, summary = \
                 sess.run([train_step, cost, X, cost_grad, log_p_zs, Tx, summary_op], feed_dict);
-            end_time = time.time();
-            print('iter %d took %f seconds' % (i+1, end_time-start_time));
+            if (np.mod(i, check_rate)==0):
+                end_time = time.time();
+                print('iter %d took %f seconds' % (i+1, end_time-start_time));
                 
             if (dynamics):
                 A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);

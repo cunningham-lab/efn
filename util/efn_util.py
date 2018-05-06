@@ -202,12 +202,15 @@ def connect_flow(Z, layers, theta, exp_fam):
 
     sum_log_det_jacobians = tf.zeros((K,M), dtype=tf.float64);
     nlayers = len(layers);
+    Z_by_layer = [];
+    Z_by_layer.append(Z);
     for i in range(nlayers):
         layer = layers[i];
         theta_layer = theta[i];
         layer.connect_parameter_network(theta_layer);
         Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-    return Z, sum_log_det_jacobians;
+        Z_by_layer.append(Z);
+    return Z, sum_log_det_jacobians, Z_by_layer;
 
 def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
     _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
@@ -273,7 +276,7 @@ def checkH(y_k, exp_fam, params):
     print('H = %.3f/%.3f' % (H, H_true));
     return None;
 
-def computeMoments(X, exp_fam, D, T):
+def computeMoments(X, exp_fam, D, T, Z_by_layer):
     X_shape = tf.shape(X);
     K = X_shape[0];
     M = X_shape[1];
@@ -296,7 +299,15 @@ def computeMoments(X, exp_fam, D, T):
             X_KMDsqrtDsqrt = tf.reshape(X, (K,M,Dsqrt,Dsqrt));
             X_inv = tf.matrix_inverse(X_KMDsqrtDsqrt);
             Tx_inv = tf.reshape(X_inv, (K,M,D));
-            Tx_log_det = tf.expand_dims(tf.linalg.logdet(X_KMDsqrtDsqrt[:,:,:,:]), 2);
+            # We already have the Chol factor from earlier in the graph
+            zchol = Z_by_layer[-2];
+            zchol_KMD_Z = zchol[:,:,:,0]; # generalize this for more time points
+            L = tf.contrib.distributions.fill_triangular(zchol_KMD_Z);
+            L_pos_diag = tf.contrib.distributions.matrix_diag_transform(L, tf.exp)
+            L_pos_diag_els = tf.matrix_diag_part(L_pos_diag);
+            Tx_log_det = 2*tf.reduce_sum(tf.log(L_pos_diag_els), 2);
+            Tx_log_det = tf.expand_dims(Tx_log_det, 2);
+            #Tx_log_det = tf.expand_dims(tf.linalg.logdet(X_KMDsqrtDsqrt[:,:,:,:]), 2);
             Tx = tf.concat((Tx_inv, Tx_log_det), axis=2);
         else: 
             raise NotImplementedError;
