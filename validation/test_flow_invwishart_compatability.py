@@ -38,8 +38,8 @@ for i in range(num_Psis):
 	m = np.array([ms[i]]);
 	D = Psi.shape[1]**2;
 	params = {'Psi': Psi, 'm':m, 'D':D};
-	log_P, X, R2s, KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, \
-		                                M_eta, lr_order, random_seed, max_iters, check_rate);
+	log_P, X, R2s, KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, M_eta, \
+		                              lr_order, random_seed, max_iters, check_rate);
 	print('xshape', X.shape);
 	print('took %d iterations' % it)
 	#plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, it, 'dirichlet %d' % (i+1));

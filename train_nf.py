@@ -14,10 +14,11 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       setup_IO, normal_eta, log_grads, inv_wishart_eta, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
-                      memory_extension, setup_param_logging, count_params
+                      memory_extension, setup_param_logging, count_params, get_ef_dimensionalities
 
 def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                lr_order=-3, random_seed=0, max_iters=10000, check_rate=1000):
+
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = check_rate;
@@ -25,18 +26,9 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
  
     D = params['D'];
 
-    if (exp_fam == 'dirichlet'):
-        D_Z = D-1;
-        ncons = D_Z+1;
-    elif (exp_fam == 'normal'):
-        D_Z = D;
-        #ncons = int(D_Z+D_Z*(D_Z+1)/2);
-        ncons = int(D + D**2);
-    elif (exp_fam == 'inv_wishart'):
-        sqrtD = int(np.sqrt(D));
-        D_Z = int(sqrtD*(sqrtD+1)/2);
-        ncons = D + 1;
-    
+    D_Z, ncons, _ = get_ef_dimensionalities(exp_fam, D, False);
+
+    print('ncons', ncons);
     # good practice
     tf.reset_default_graph();
 
@@ -59,20 +51,20 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
 
     if (exp_fam == 'normal'):
         mu_targ =  params['mu'];
         Sigma_targ = params['Sigma'];
-        _eta = normal_eta(mu_targ[0], Sigma_targ[0]);
+        _eta, _ = normal_eta(mu_targ[0], Sigma_targ[0], False);
     elif (exp_fam == 'dirichlet'):
         alpha_targ = params['alpha'];
         _eta = alpha_targ;
     elif (exp_fam == 'inv_wishart'):
         Psi_targ = params['Psi'];
         m_targ = params['m'];
-        _eta = inv_wishart_eta(Psi_targ[0], m_targ[0]);
+        _eta, _ = inv_wishart_eta(Psi_targ[0], m_targ[0], False);
     _eta_test = _eta;
 
     # construct the parameter network

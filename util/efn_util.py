@@ -12,42 +12,63 @@ import os
 import re
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
-    eta_str = 'stochaticEta' if stochastic_eta else 'latticeEta';
+    eta_str = 'stochaticEta' if stochastic_eta else 'fixedEta';
+    give_inv_str = 'giveInv_' if give_inverse_hint else '';
     flowstring = get_flowstring(flow_dict);
-    if ('L' in theta_nn_hps and 'upl' in theta_nn_hps):
-        savedir = resdir + '/tb/' + 'EFN_%s_D=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, D, K_eta, M_eta, flowstring, theta_nn_hps['L'], random_seed);
+    if ('L' in param_net_hps and 'upl' in param_net_hps):
+        savedir = resdir + '/tb/' + 'EFN_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, eta_str, give_inv_str, D, K_eta, M_eta, flowstring, param_net_hps['L'], random_seed);
     else:
         savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
     return savedir
 
-def theta_network_hyperparams(L_theta, ncons, num_theta_params, upl_tau):
-    #upl_theta = [];
-    #upl_inc = int(np.floor((num_theta_params - ncons) / (L_theta + 1)));
-    #upl_i = ncons;
-    #for i in range(L_theta):
-    #    upl_i += upl_inc;
-    #    #upl_theta.append(upl_i);
-    #    upl_theta.append(ncons);
-    A = num_theta_params-ncons;
-    l = np.arange(L_theta);
+def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
+    if (exp_fam == 'dirichlet'):
+        D_Z = D-1;
+        ncons = D;
+        num_param_net_inputs = ncons;
+    elif (exp_fam == 'normal'):
+        D_Z = D;
+        ncons = int(D_Z+D_Z*(D_Z+1)/2);
+        if (give_inverse_hint):
+            num_param_net_inputs = int(D + D*(D+1)); # <- figure out what this number is
+        else:
+            num_param_net_inputs = ncons;
+    elif (exp_fam == 'inv_wishart'):
+        sqrtD = int(np.sqrt(D));
+        D_Z = int(sqrtD*(sqrtD+1)/2)
+        ncons = D_Z + 1;
+        if (give_inverse_hint):
+            num_param_net_inputs = 2*D_Z + 1 # < -- something like this
+        else:
+            num_param_net_inputs = ncons;
+
+    return D_Z, ncons, num_param_net_inputs;
+
+def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau):
+    A = abs(num_theta_params-num_param_net_inputs);
+    l = np.arange(L);
     upl = np.exp(l/upl_tau);
     upl = upl - upl[0];
-    upl_theta = np.int32(np.round(A*((upl) / upl[-1]) + ncons));
-    print(ncons, '->', num_theta_params);
-    print(upl_theta, 'sum', sum(upl_theta));
-    theta_nn_hps = {'L':L_theta, 'upl':upl_theta};
-    return theta_nn_hps;
+    upl_param_net = np.int32(np.round(A*((upl) / upl[-1]) + min(num_theta_params, num_param_net_inputs)));
+
+    if (num_param_net_inputs > num_theta_params):
+        upl_param_net = np.flip(upl_param_net, axis=0);
+
+    print(num_param_net_inputs, '->', num_theta_params);
+    print(upl_param_net, 'sum', sum(upl_param_net));
+    param_net_hps = {'L':L, 'upl':upl_param_net};
+    return param_net_hps;
 
 
 
-def construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps):
-    L_theta = theta_nn_hps['L']
-    upl_theta = theta_nn_hps['upl'];
+def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
+    L_theta = param_net_hps['L']
+    upl_theta = param_net_hps['upl'];
     L_flow = len(flow_layers);
-    h = eta;
+    h = param_net_input;
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
             h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
@@ -256,7 +277,7 @@ def approxKL(y_k, X_k, exp_fam, params, plot=False):
         m = params['m'];
         D = Psi.shape[0];
         X_k = np.reshape(X_k, [batch_size, D, D]);
-        log_P = invwishart.logpdf(np.transpose(X_k, [1,2,0]), m, Psi);
+        log_P = invwishart.logpdf(np.transpose(X_k, [1,2,0]), m[0], Psi);
         KL = np.mean(log_Q - log_P);
         if (plot):
             plt.figure();
@@ -294,8 +315,9 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D]); # samps x D
             Tx_mean = X_flat;
             XXT = tf.matmul(tf.expand_dims(X_flat, 3), tf.expand_dims(X_flat, 2));
-
-            Tx_cov = tf.reshape(XXT, [K,M,D**2]);
+            Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(XXT, [2,3,0,1]), cov_con_mask), [1, 2, 0]);
+            #Tx_cov = XXT[:,:,cov_con_mask];
+            #Tx_cov = tf.reshape(XXT, [K,M,D**2]);
             Tx = tf.concat((Tx_mean, Tx_cov), axis=2);
         elif (exp_fam == 'dirichlet'):
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D]); # samps x D
@@ -303,10 +325,12 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             Tx = Tx_log;
         elif (exp_fam == 'inv_wishart'):
             Dsqrt = int(np.sqrt(D));
+            cov_con_mask = np.triu(np.ones((Dsqrt,Dsqrt), dtype=np.bool_), 0);
             X = X[:,:,:,0]; # update for T > 1
             X_KMDsqrtDsqrt = tf.reshape(X, (K,M,Dsqrt,Dsqrt));
             X_inv = tf.matrix_inverse(X_KMDsqrtDsqrt);
-            Tx_inv = tf.reshape(X_inv, (K,M,D));
+            #Tx_inv = tf.reshape(X_inv, (K,M,D));
+            Tx_inv = tf.transpose(tf.boolean_mask(tf.transpose(X_inv, [2,3,0,1]), cov_con_mask), [1, 2, 0]);
             # We already have the Chol factor from earlier in the graph
             zchol = Z_by_layer[-2];
             zchol_KMD_Z = zchol[:,:,:,0]; # generalize this for more time points
@@ -368,72 +392,93 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
     #return cost, costs, R2s;
     return cost, R2s;
 
-def normal_eta(mu, Sigma):
+def normal_eta(mu, Sigma, give_inverse_hint):
     D_Z = mu.shape[0];
     cov_con_inds = np.triu_indices(D_Z, 0);
+    upright_tri_inds = np.triu_indices(D_Z, 1);
     eta1 = np.float64(np.dot(np.linalg.inv(Sigma), np.expand_dims(mu, 1))).T;
     eta2 = np.float64(-np.linalg.inv(Sigma) / 2);
-    #eta2 = np.expand_dims(eta2[cov_con_inds], 0);
-    eta2 = np.reshape(eta2, [1, D_Z*D_Z]);
-    eta = np.concatenate((eta1, eta2), axis=1);
-    return eta
+    # by using the minimal representation, we need to multiply eta by two
+    # for the off diagonal elements
+    eta2[upright_tri_inds] = 2*eta2[upright_tri_inds];
+    eta2_minimal = np.expand_dims(eta2[cov_con_inds], 0);
+    eta = np.concatenate((eta1, eta2_minimal), axis=1);
 
-def inv_wishart_eta(Psi, m):
+    if (give_inverse_hint):
+        Sigma_minimal = np.expand_dims(Sigma[cov_con_inds], 0);
+        param_net_input = np.concatenate((eta, Sigma_minimal), axis=1);
+    else:
+        param_net_input = eta;
+    return eta, param_net_input;
+
+def inv_wishart_eta(Psi, m, give_inverse_hint):
+    Dsqrt = Psi.shape[0];
+    cov_con_inds = np.triu_indices(Dsqrt, 0);
+    upright_tri_inds = np.triu_indices(Dsqrt, 1);
     Dsqrt = Psi.shape[0];
     eta1 = -Psi/2.0;
+    eta1[upright_tri_inds] = 2*eta1[upright_tri_inds];
+    eta1_minimal = np.expand_dims(eta1[cov_con_inds], 0);
     eta2 = np.array([[-(m+Dsqrt+1)/2.0]]);
-    eta = np.concatenate((np.reshape(eta1, (Dsqrt**2,1)).T, eta2), axis=1);
-    return eta;
+    eta = np.concatenate((eta1_minimal, eta2), axis=1);
+
+    if (give_inverse_hint):
+        Psi_inv = np.linalg.inv(Psi);
+        Psi_inv_minimal = np.expand_dims(Psi_inv[cov_con_inds], 0);
+        param_net_input = np.concatenate((eta, Psi_inv_minimal), axis=1);
+    else:
+        param_net_input = eta;
+    return eta, param_net_input;
 
 
-def drawEtas(exp_fam, D_Z, K_eta):
+def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
+    D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+    eta = np.zeros((K_eta, ncons));
+    param_net_inputs = np.zeros((K_eta, num_param_net_inputs));
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
-        ncons = D_Z+D_Z**2;
-        eta = np.zeros((K_eta, ncons));
         df_fac = 2;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
         for k in range(K_eta):
             mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
             Sigma_k = Sigma_dist.rvs(1);
-            eta_k = normal_eta(mu_k, Sigma_k);
+            eta_k, param_net_input_k = normal_eta(mu_k, Sigma_k, give_inverse_hint);
             eta[k,:] = eta_k[0,:];
+            param_net_inputs[k,:] = param_net_input_k[0,:];
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
         params = {'mu':mu_targs, 'Sigma':Sigma_targs, 'D':D_Z};
     elif (exp_fam == 'dirichlet'):
-        D_X = D_Z + 1;
-        eta = np.zeros((K_eta, D_X));
-        alpha_targs = np.zeros((K_eta, D_X));
+        alpha_targs = np.zeros((K_eta, D));
         for k in range(K_eta):
-            alpha_k = np.random.uniform(.5, 5, (D_X,));
+            alpha_k = np.random.uniform(.5, 5, (D,));
             eta_k = alpha_k;
             eta[k,:] = eta_k;
+            param_net_inputs[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
-        params = {'alpha':alpha_targs, 'D':D_X};
+        params = {'alpha':alpha_targs, 'D':D};
     elif (exp_fam == 'inv_wishart'):
-        Dsqrt = int(np.sqrt(0.25 + 2*D_Z) - 0.5);
-        D = Dsqrt**2;
+        Dsqrt = int(np.sqrt(D));
         Psi_targs = np.zeros((K_eta, Dsqrt, Dsqrt));
         m_targs = np.zeros((K_eta, 1));
-        ncons = D+1;
+
         df_fac = 2;
-        df = df_fac*D_Z;
+        df = df_fac*Dsqrt;
         Psi_dist = invwishart(df=df, scale=df_fac*np.eye(Dsqrt));
-        eta = np.zeros((K_eta, ncons));
         for k in range(K_eta):
             Psi_k = Psi_dist.rvs(1);
             m_k = np.random.randint(2,11)*Dsqrt;
             Psi_targs[k,:,:] = Psi_k;
             m_targs[k,0] = m_k;
-            eta_k = inv_wishart_eta(Psi_k, m_k);
+            eta_k, param_net_input_k = inv_wishart_eta(Psi_k, m_k, give_inverse_hint);
             eta[k,:] = eta_k;
+            param_net_inputs[k,:] = param_net_input_k[0,:];
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
     else:
         raise NotImplementedError;
-    return eta, params;
+    return eta, param_net_inputs, params;
 
 def get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers):
     flow_ids = [];

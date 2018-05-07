@@ -7,8 +7,8 @@ from efn_util import get_flowdict, print_flowdict
 
 os.chdir('../');
 
-exp_fam = 'normal';
-D = int(sys.argv[1]);
+exp_fam = 'inv_wishart';
+D = int(sys.argv[1])**2;
 fully_connected_layers = int(sys.argv[2]);
 planar_layers = int(sys.argv[3]);
 spinner_layers = int(sys.argv[4]);
@@ -23,9 +23,9 @@ cost_type = 'KL';
 K_eta = 100;
 M_eta = 100;
 stochastic_eta = True;
-L = 8;
+L = 6;
 upl_tau = 0.5;
-give_inverse_hint = True;
+give_inverse_hint = False;
 lr_order = -3;
 random_seed = 0;
 max_iters = 10000;

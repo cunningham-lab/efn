@@ -11,15 +11,17 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, construct_theta_network, log_grads, \
+                      setup_IO, construct_param_network, log_grads, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params, \
-                      theta_network_hyperparams
+                      get_param_network_hyperparams, get_ef_dimensionalities
 from tensorflow.python import debug as tf_debug
 
 def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
-              L_theta, upl_tau=0.5, batch_norm=False, dropout=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
+              L, upl_tau=0.5, give_inverse_hint=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
+    batch_norm = False;
+    dropout = False;
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = 100;
@@ -29,17 +31,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(random_seed);
     tf.set_random_seed(random_seed);
 
-    if (exp_fam == 'dirichlet'):
-        D_Z = D-1;
-        ncons = D_Z+1;
-    elif (exp_fam == 'normal'):
-        D_Z = D;
-        #ncons = int(D_Z+D_Z*(D_Z+1)/2);
-        ncons = int(D + D**2);
-    elif (exp_fam == 'inv_wishart'):
-        sqrtD = int(np.sqrt(D));
-        D_Z = int(sqrtD*(sqrtD+1)/2);
-        ncons = D + 1;
+    D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # good practice
     tf.reset_default_graph();
@@ -60,19 +52,21 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     tb_save_params = False;
 
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
+    param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
-        _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-        _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+        _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        _eta_test, _param_net_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
-    theta_nn_hps = theta_network_hyperparams(L_theta, ncons, num_theta_params, upl_tau);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, theta_nn_hps, stochastic_eta, random_seed);
+    param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau);
+
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed);
     print(random_seed, savedir);
 
     # construct the parameter network
-    theta = construct_theta_network(eta, K_eta, flow_layers, theta_nn_hps);
+    theta = construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps);
 
     # connect time-invariant flow
     Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta, exp_fam);
@@ -135,9 +129,9 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
-            _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-            _eta_test, eta_test_draw_params = drawEtas(exp_fam, D_Z, K_eta);
-        feed_dict = {Z0:z_i, eta:_eta};
+            _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+            _eta_test, _param_net_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
@@ -163,16 +157,15 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
         print('starting opt');
         has_converged = False;
         while (i < max_iters):
-            print('it', i);
             if (stop_early and i == array_cur_len):
                 memory_extension(cost_grad_vals, array_cur_len);
                 array_cur_len = 2*array_cur_len;
 
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
-                _eta, eta_draw_params = drawEtas(exp_fam, D_Z, K_eta);
+                _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
-            feed_dict = {Z0:z_i, eta:_eta};
+            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
@@ -202,8 +195,8 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                 
                 # compute R^2 and KL for training and batch
                 z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
-                feed_dict_train = {Z0:z_i, eta:_eta};
-                feed_dict_test = {Z0:z_i, eta:_eta_test};
+                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
+                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test};
 
                 train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
                 test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
@@ -231,12 +224,12 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, check_rate=check_rate, eta=_eta, params=eta_draw_params, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs);
+                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                       X=_X, eta=_eta, params=eta_draw_params, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs);
+                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
                 
                 check_it += 1;
             sys.stdout.flush();

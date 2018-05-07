@@ -22,6 +22,7 @@ print_flowdict(flow_dict);
 
 cost_type = 'KL';
 M_eta = 1000;
+give_inverse_hint = False;
 lr_order = -3;
 random_seed = 0;
 check_rate = 100;
@@ -30,11 +31,10 @@ ndraws = 1;
 
 np.random.seed(0);
 for i in range(ndraws):
-	etas, params = drawEtas(exp_fam, D, 1);
-	log_P, X, R2s, KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, M_eta, lr_order, random_seed, max_iters, check_rate);
-	print('xshape', X.shape);
-	print('learned in %d iterations' % it)
+	etas, param_net_input, params = drawEtas(exp_fam, D, 1, give_inverse_hint);
+	log_P, X, R2s, KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, \
+		                              M_eta, lr_order, \
+		                              random_seed, max_iters, check_rate);
 	#plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, it, 'normal %d' % (i+1));
-plt.show();
 
 

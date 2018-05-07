@@ -26,9 +26,10 @@ lr_order = -3;
 random_seed = 0;
 max_iters = 20000;
 check_rate = 100;
+give_inverse_hint = False;
 
 flow_dict = get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers);
 print_flowdict(flow_dict);
 
 X, KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, \
-                       stochastic_eta, L, upl_tau, batch_norm, dropout, lr_order, random_seed, max_iters, check_rate);
+                       stochastic_eta, L, upl_tau, give_inverse_hint, lr_order, random_seed, max_iters, check_rate);
