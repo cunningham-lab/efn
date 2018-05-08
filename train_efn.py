@@ -19,9 +19,12 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
 from tensorflow.python import debug as tf_debug
 
 def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
-              L, upl_tau=0.5, give_inverse_hint=False, lr_order=-3, random_seed=0, max_iters=10000, check_rate=200):
+              give_inverse_hint=False, lr_order=-3, random_seed=0, \
+              max_iters=10000, check_rate=200):
     batch_norm = False;
     dropout = False;
+    upl_tau = None;
+    upl_shape = 'linear';
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     stop_early = False;
     cost_grad_lag = 100;
@@ -32,6 +35,9 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     tf.set_random_seed(random_seed);
 
     D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+
+    # set number of layers in the parameter network
+    L = int(np.ceil(np.sqrt(D_Z)));
 
     # good practice
     tf.reset_default_graph();
@@ -60,7 +66,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
         _eta_test, _param_net_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
 
-    param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau);
+    param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
 
     savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed);
     print(random_seed, savedir);

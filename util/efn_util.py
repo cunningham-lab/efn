@@ -47,12 +47,20 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
 
     return D_Z, ncons, num_param_net_inputs;
 
-def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau):
-    A = abs(num_theta_params-num_param_net_inputs);
-    l = np.arange(L);
-    upl = np.exp(l/upl_tau);
-    upl = upl - upl[0];
-    upl_param_net = np.int32(np.round(A*((upl) / upl[-1]) + min(num_theta_params, num_param_net_inputs)));
+def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
+    if (shape=='linear'):
+        upl_inc = int(np.floor(abs(num_theta_params - num_param_net_inputs) / (L + 1)));
+        upl_param_net = [];
+        upl_i = min(num_theta_params, num_param_net_inputs);
+        for i in range(L):
+            upl_i += upl_inc;
+            upl_param_net.append(upl_i);
+    elif (shape=='exp'):
+        A = abs(num_theta_params-num_param_net_inputs);
+        l = np.arange(L);
+        upl = np.exp(l/upl_tau);
+        upl = upl - upl[0];
+        upl_param_net = np.int32(np.round(A*((upl) / upl[-1]) + min(num_theta_params, num_param_net_inputs)));
 
     if (num_param_net_inputs > num_theta_params):
         upl_param_net = np.flip(upl_param_net, axis=0);
@@ -396,6 +404,7 @@ def normal_eta(mu, Sigma, give_inverse_hint):
     D_Z = mu.shape[0];
     cov_con_inds = np.triu_indices(D_Z, 0);
     upright_tri_inds = np.triu_indices(D_Z, 1);
+    chol_inds = np.tril_indices(D_Z, 0);
     eta1 = np.float64(np.dot(np.linalg.inv(Sigma), np.expand_dims(mu, 1))).T;
     eta2 = np.float64(-np.linalg.inv(Sigma) / 2);
     # by using the minimal representation, we need to multiply eta by two
@@ -405,8 +414,11 @@ def normal_eta(mu, Sigma, give_inverse_hint):
     eta = np.concatenate((eta1, eta2_minimal), axis=1);
 
     if (give_inverse_hint):
-        Sigma_minimal = np.expand_dims(Sigma[cov_con_inds], 0);
-        param_net_input = np.concatenate((eta, Sigma_minimal), axis=1);
+        #Sigma_minimal = np.expand_dims(Sigma[cov_con_inds], 0);
+        #param_net_input = np.concatenate((eta, Sigma_minimal), axis=1);
+        L = np.linalg.cholesky(Sigma);
+        chol_minimal = np.expand_dims(L[chol_inds], 0);
+        param_net_input = np.concatenate((eta, chol_minimal), axis=1);
     else:
         param_net_input = eta;
     return eta, param_net_input;
