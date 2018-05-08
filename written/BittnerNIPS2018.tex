@@ -197,19 +197,20 @@ Toy figure that demonstrates what we are doing and a simple example.  Note this 
  \emph{Chapter 2: Fig 2 and 3 and 4}
  Ground truth toy examples, etc. 
  
- Fig 2.  This says, it works in a sensible case (maybe Dirichlet 25 or NIW 10x10):
- \begin{itemize}
- \item training and test curves (probably both of these are needless since by def train equals test here.
-\item both in $r^2$ and in $KL$ to ground truth.
-\item $MMD$ p values? Can this help give specifics? 
-\end{itemize}
+Figure 2. \\
+Single EFN: \\
+Panel A:  $r^2$ throughout training \\
+Panel B: KL throughout training \\ 
+Panel C: Distributin of MMD p values \\
 
-Fig 3.  This says, it works across a range of Dirichlet and NIW (and perhaps not Gaussian).  Sensitivities
-\begin{itemize}
-\item dimensionality of dir and NIW
-\item choices of $K,M$ (is this really needed)
-\item key comparison to baseline of VI (doing this specifically for K=1 but a fixed K, possibly with no parameter network because it's unnecessary).  The key is to show that it works almost as well as VI in the specific case, but of course VI can't generalize.  And when I say VI I don't really mean VI, I mean just learning a specific member of the exp fam.    
-\end{itemize}
+
+Figure 3: \\
+EFN performance by dimensionality \\
+Panel A: Dir KL for NF1 and EFN \\
+Panel B NIW KL for NF1 and EFN \\
+Panel C: Gaussian KL for NF1 and EFN \\
+
+Note Number of panar flows is always D (intrinsic dimensionality of flows), units per layer ramping is always the same function of D.  The number of layers in the theta network is always a function of D - will probably just always use 8 layers. \\
 
 Fig 4. [This idea was Fig 5 in disguise; see below.  Currently no need for this figure].
 
