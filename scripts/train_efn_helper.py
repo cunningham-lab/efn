@@ -9,12 +9,14 @@ os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
-fully_connected_layers = int(sys.argv[3]);
-planar_layers = int(sys.argv[4]);
-spinner_layers = int(sys.argv[5]);
-nonlin_spinner_layers = int(sys.argv[6]);
-stochastic_eta = int(sys.argv[7]) == 1;
-give_inverse_hint = int(sys.argv[8]) == 1;
+K_eta = int(sys.argv[3]);
+fully_connected_layers = int(sys.argv[4]);
+planar_layers = int(sys.argv[5]);
+spinner_layers = int(sys.argv[6]);
+nonlin_spinner_layers = int(sys.argv[7]);
+stochastic_eta = int(sys.argv[8]) == 1;
+give_inverse_hint = int(sys.argv[9]) == 1;
+random_seed = int(sys.argv[10]);
 
 flow_dict = get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers);
 flow_ids = flow_dict['flow_ids'];
@@ -22,12 +24,10 @@ flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
 cost_type = 'KL';
-K_eta = 100;
 M_eta = 100;
 L = 8;
 upl_tau = 0.5;
 lr_order = -3;
-random_seed = 0;
 max_iters = 50000;
 check_rate = 100;
 
