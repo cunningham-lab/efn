@@ -18,7 +18,7 @@ if (exp_fam == 'inv_wishart'):
 else:
 	planar_layers = D;
 
-flow_dict = get_flowdict(1, 0, 0, 0);
+flow_dict = get_flowdict(0, planar_layers, 0, 0);
 flow_ids = flow_dict['flow_ids'];
 flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
