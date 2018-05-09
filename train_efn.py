@@ -37,7 +37,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # set number of layers in the parameter network
-    L = int(np.ceil(np.sqrt(D_Z)));
+    L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
 
     # good practice
     tf.reset_default_graph();

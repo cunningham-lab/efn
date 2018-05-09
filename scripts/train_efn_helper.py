@@ -16,7 +16,10 @@ if (exp_fam == 'inv_wishart'):
 	sqrtD = int(np.sqrt(D));
 	planar_layers = int(sqrtD*(sqrtD+1)/2);
 else:
-	planar_layers = D;
+	if (D < 10):
+		planar_layers = 10;
+	else:
+		planar_layers = D;
 
 flow_dict = get_flowdict(0, planar_layers, 0, 0);
 flow_ids = flow_dict['flow_ids'];
@@ -24,8 +27,8 @@ flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
 cost_type = 'KL';
-K_eta = 100;
-M_eta = 1000;
+K_eta = 10;
+M_eta = 100;
 stochastic_eta = True;
 lr_order = -3;
 max_iters = 50000;
