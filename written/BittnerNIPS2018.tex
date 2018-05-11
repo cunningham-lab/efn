@@ -159,12 +159,17 @@ $$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
  
  Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
 
+\begin{figure}
+  \centering
+\input{fig/efn1b.tex}
+  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
+\end{figure}
+
 
 \begin{figure}
   \centering
-\input{fig/efn1.tex}
-%\input{fig/neuron_basic_1.tex}
-  \caption{Figure 1: possibly Fig 7.2 bias-variance tradeoff and then benefit of a restricted model from Hastie Book, or similar from W4400 (ask PO for batman permission).}
+\input{fig/efn1a.tex}
+  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  Can dump equations if necessary, as those will be in the text.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
 \end{figure}
 
  \emph{Why this is important}
