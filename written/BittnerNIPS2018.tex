@@ -26,6 +26,22 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 
+
+%% PGF
+\usepackage{tikz,amsmath}
+
+\usetikzlibrary{calc,bayesnet,shapes.geometric,arrows,chains,matrix,positioning,scopes,calendar,decorations.markings,decorations.pathreplacing,intersections}
+
+\makeatletter
+\tikzset{join/.code=\tikzset{after node path={%
+      \ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
+      edge[every join]#1(\tikzchaincurrent)\fi}}
+}
+\tikzset{>=stealth',every on chain/.append style={join},
+  every join/.style={->}
+}
+
+
 \title{Learning Exponential Families}
 
 % The \author macro works with any number of authors. There are two
@@ -142,6 +158,14 @@ $$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
  where the natural parameters of the sampling distribution are indexed by the latent parameter on which we want to inference ($z$).  Here I've written the prior as arbitrary, and possibly not exp fam, which is fine, since this is still an exp fam in the  sense of, for a fixed $\alpha$, the function $g_0$ can just be viewed as a sufficient statistic.  Even if $\alpha$ is not fixed though, we can sample over that too to learn the whole fam (but maybe not if we want to infer it?).  Regardless, life is simpler to make sense of if we take an exp fam prior $g_0(\alpha,z) = \alpha^\top t_0(z)$, and then the desired posterior is an intractable exp fam, but still just an exp fam.
  
  Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
+
+
+\begin{figure}
+  \centering
+\input{fig/efn1.tex}
+%\input{fig/neuron_basic_1.tex}
+  \caption{Figure 1: possibly Fig 7.2 bias-variance tradeoff and then benefit of a restricted model from Hastie Book, or similar from W4400 (ask PO for batman permission).}
+\end{figure}
 
  \emph{Why this is important}
  

@@ -6,11 +6,12 @@ Database file #1: BittnerNIPS2018.bib
 Warning--I didn't find a database entry for "guttman2014statistical"
 Warning--I didn't find a database entry for ""
 Warning--I didn't find a database entry for "wainwrightjordan2008graphical"
+Warning--I didn't find a database entry for "zhou2018compressability"
 Warning--empty journal in Kingma:2013aa
 Warning--empty journal in Mohamed:2016aa
 You've used 5 entries,
             1791 wiz_defined-function locations,
-            478 strings with 4468 characters,
+            479 strings with 4491 characters,
 and the built_in function-call counts, 1196 in all, are:
 = -- 94
 > -- 74
@@ -49,4 +50,4 @@ warning$ -- 2
 while$ -- 9
 width$ -- 6
 write$ -- 53
-(There were 5 warnings)
+(There were 6 warnings)
