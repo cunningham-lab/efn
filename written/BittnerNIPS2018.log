@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  11 MAY 2018 12:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  11 MAY 2018 13:15
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1293,8 +1293,49 @@ n input line 108.
 
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-[2] (./fig/efn1b.tex)
-Overfull \hbox (10.94637pt too wide) in paragraph at lines 162--165
+[2] (./fig/efn1b.tex <fig/t0.png, id=50, 393.47pt x 341.275pt>
+File: fig/t0.png Graphic file (type png)
+
+<use fig/t0.png>
+Package pdftex.def Info: fig/t0.png used on input line 33.
+(pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
+ <fig/t11.png, id=52, 393.47pt x 341.275pt>
+File: fig/t11.png Graphic file (type png)
+ <use fig/t11.png>
+Package pdftex.def Info: fig/t11.png used on input line 39.
+(pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
+
+<fig/t12.png, id=53, 491.8375pt x 420.57124pt>
+File: fig/t12.png Graphic file (type png)
+ <use fig/t12.png>
+Package pdftex.def Info: fig/t12.png used on input line 40.
+(pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
+
+<fig/t13.png, id=54, 491.8375pt x 420.57124pt>
+File: fig/t13.png Graphic file (type png)
+ <use fig/t13.png>
+Package pdftex.def Info: fig/t13.png used on input line 41.
+(pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
+
+<fig/t21.png, id=55, 491.8375pt x 420.57124pt>
+File: fig/t21.png Graphic file (type png)
+ <use fig/t21.png>
+Package pdftex.def Info: fig/t21.png used on input line 49.
+(pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
+
+<fig/t22.png, id=56, 256.96pt x 256.96pt>
+File: fig/t22.png Graphic file (type png)
+ <use fig/t22.png>
+Package pdftex.def Info: fig/t22.png used on input line 50.
+(pdftex.def)             Requested size: 39.83385pt x 39.8323pt.
+
+<fig/t23.png, id=57, 393.47pt x 341.275pt>
+File: fig/t23.png Graphic file (type png)
+ <use fig/t23.png>
+Package pdftex.def Info: fig/t23.png used on input line 51.
+(pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
+)
+Overfull \hbox (10.94637pt too wide) in paragraph at lines 174--165
  [][] 
  []
 
@@ -1311,10 +1352,8 @@ fined on input line 177.
 Package natbib Warning: Citation `zhou2018compressability' on page 3 undefined 
 on input line 181.
 
-
-Underfull \vbox (badness 1259) has occurred while \output is active []
-
- [3]
+[3 <./fig/t0.png> <./fig/t11.png> <./fig/t12.png> <./fig/t13.png> <./fig/t21.pn
+g> <./fig/t22.png> <./fig/t23.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [4]
@@ -1364,10 +1403,10 @@ Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 393.
  ) 
 Here is how much of TeX's memory you used:
- 23369 strings out of 493014
- 468012 string characters out of 6133351
- 614197 words of memory out of 5000000
- 26254 multiletter control sequences out of 15000+600000
+ 23450 strings out of 493014
+ 469092 string characters out of 6133351
+ 616863 words of memory out of 5000000
+ 26327 multiletter control sequences out of 15000+600000
  45400 words of font info for 163 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,13n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1395,10 +1434,10 @@ ts/type1/public/cm-super/sftt1000.pfb></usr/local/texlive/2016/texmf-dist/fonts
 urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/
 utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a.pf
 b>
-Output written on BittnerNIPS2018.pdf (10 pages, 265042 bytes).
+Output written on BittnerNIPS2018.pdf (10 pages, 380052 bytes).
 PDF statistics:
- 180 PDF objects out of 1000 (max. 8388607)
- 144 compressed objects within 2 object streams
+ 195 PDF objects out of 1000 (max. 8388607)
+ 145 compressed objects within 2 object streams
  26 named destinations out of 1000 (max. 500000)
- 21541 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 21576 words of extra memory for PDF output out of 24883 (max. 10000000)
 
