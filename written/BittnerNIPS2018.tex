@@ -26,6 +26,22 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 
+
+%% PGF
+\usepackage{tikz,amsmath}
+
+\usetikzlibrary{calc,bayesnet,shapes.geometric,arrows,chains,matrix,positioning,scopes,calendar,decorations.markings,decorations.pathreplacing,intersections}
+
+\makeatletter
+\tikzset{join/.code=\tikzset{after node path={%
+      \ifx\tikzchainprevious\pgfutil@empty\else(\tikzchainprevious)%
+      edge[every join]#1(\tikzchaincurrent)\fi}}
+}
+\tikzset{>=stealth',every on chain/.append style={join},
+  every join/.style={->}
+}
+
+
 \title{Learning Exponential Families}
 
 % The \author macro works with any number of authors. There are two
@@ -142,6 +158,19 @@ $$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
  where the natural parameters of the sampling distribution are indexed by the latent parameter on which we want to inference ($z$).  Here I've written the prior as arbitrary, and possibly not exp fam, which is fine, since this is still an exp fam in the  sense of, for a fixed $\alpha$, the function $g_0$ can just be viewed as a sufficient statistic.  Even if $\alpha$ is not fixed though, we can sample over that too to learn the whole fam (but maybe not if we want to infer it?).  Regardless, life is simpler to make sense of if we take an exp fam prior $g_0(\alpha,z) = \alpha^\top t_0(z)$, and then the desired posterior is an intractable exp fam, but still just an exp fam.
  
  Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
+
+%\begin{figure}
+%  \centering
+%\input{fig/efn1b.tex}
+%  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
+%\end{figure}
+
+
+%\begin{figure}
+ % \centering
+%\input{fig/efn1a.tex}
+%  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  Can dump equations if necessary, as those will be in the text.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
+%\end{figure}
 
  \emph{Why this is important}
  
@@ -301,6 +330,31 @@ Belief Networks
 
 
 
+\clearpage
+
+\section{Appendix}
+Exponential form of posterior for Dirichlet-Dirichlet \\
+\begin{math}
+\pmb{z} \sim Dir( \pmb{\alpha}_0) \\
+\pmb{x}_i \sim Dir( \gamma \pmb{z}) \\
+p(\pmb{z}) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d))} \\
+p(\pmb{x}_i \mid \pmb{z}) \propto \exp{(\gamma \pmb{z}^T \log(\pmb{x}_i) - \sum_{d=1}^D \log(\pmb{x}_{i,d}))} \\
+p(X \mid \pmb{z}) \propto \exp{(\gamma \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(\pmb{x}_{i,d}))} \\ 
+\end{math}
+
+\begin{math}
+p(\pmb{z} \mid X) \propto p(\pmb{z}) p(X \mid \pmb{z}) \\
+\propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d))}\exp{(\gamma \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(\pmb{x}_{i,d}))}
+\end{math}
+
+We don't care about the term that just has $x$ in it.
+
+\begin{math}
+p(\pmb{z} \mid X) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) + \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right]^T \pmb{z} - \sum_{d=1}^D \log(z_d))} \\
+p(\pmb{z} \mid X) \propto \exp{(\begin{pmatrix} \pmb{\alpha}_0 \\ \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] \end{pmatrix}^T \begin{pmatrix} \log(\pmb{z}) \\ \pmb{z} \end{pmatrix} - \sum_{d=1}^D \log(z_d))}
+\end{math}
+
+  
 \clearpage
 
 \subsubsection*{Acknowledgments}
