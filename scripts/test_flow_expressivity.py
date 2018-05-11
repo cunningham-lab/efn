@@ -1,4 +1,4 @@
-from train_mefn import train_mefn
+from train_nf import train_nf
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
@@ -40,8 +40,8 @@ for i in range(num_Ds):
 	for j in range(ndraws):
 		print('D=%d, draw=%d' % (D, j+1));
 		np.random.seed(j);
-		etas, params = drawEtas(exp_fam, D, 1);
-		log_P, X, R2s_ij, KLs_ij, it = train_mefn(exp_fam, params, flow_dict, cost_type, M_eta, lr_order, random_seed, max_iters, check_rate);
+		etas, param_net_inputs, params = drawEtas(exp_fam, D, 1, False);
+		log_P, X, R2s_ij, KLs_ij, it = train_nf(exp_fam, params, flow_dict, cost_type, M_eta, lr_order, random_seed, max_iters, check_rate);
 		R2s[i,j] = R2s_ij[-1,0];
 		KLs[i,j] = KLs_ij[-1,0];
 	print('saving', fname);
