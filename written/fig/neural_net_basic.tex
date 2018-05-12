@@ -1,0 +1,60 @@
+\def\gmnode{\node[align=left, draw,very thick,circle,black,minimum size=1.0cm,fill=gray!20!white]}
+
+\begin{tikzpicture}[>=triangle 45]%,transform canvas={scale=0.8}]
+  \gmnode (X01) at (-6,2) {$x_1^0$};
+  \gmnode (X02) at (-6,0) {$x_2^0$};
+  \gmnode (X03) at (-6,-2) {$x_3^0$};
+  \gmnode (X11) at (-2,3) {$x_1^1$};
+  \gmnode (X12) at (-2,1) {$x_2^1$};
+  \gmnode (X13) at (-2,-1) {$x_3^1$};
+  \gmnode (X14) at (-2,-3) {$x_4^2$};
+  \gmnode (X21) at (2,3) {$x_1^2$};
+  \gmnode (X22) at (2,1) {$x_2^2$};
+  \gmnode (X23) at (2,-1) {$x_3^2$};
+  \gmnode (X24) at (2,-3) {$x_4^2$};
+  \gmnode (X31) at (6,0) {$x_1^3$};
+
+  \draw[thick] (X01)--(X11) ;
+  \draw[thick] (X01)--(X12) ;
+  \draw[thick] (X01)--(X13) ;
+  \draw[thick] (X01)--(X14) ;
+  \draw[thick] (X02)--(X11) ;
+  \draw[thick] (X02)--(X12) ;
+  \draw[thick] (X02)--(X13) ;
+  \draw[thick] (X02)--(X14) ;
+  \draw[thick] (X03)--(X11) ;
+  \draw[thick] (X03)--(X12) ;
+  \draw[thick] (X03)--(X13) ;
+  \draw[thick] (X03)--(X14) ;
+  \draw[thick] (X11)--(X21) ;
+  \draw[thick] (X11)--(X22) ;
+  \draw[thick] (X11)--(X23) ;
+  \draw[thick] (X11)--(X24) ;
+  \draw[thick] (X12)--(X21) ;
+  \draw[thick] (X12)--(X22) ;
+  \draw[thick] (X12)--(X23) ;
+  \draw[thick] (X12)--(X24) ;
+  \draw[thick] (X13)--(X21) ;
+  \draw[thick] (X13)--(X22) ;
+  \draw[thick] (X13)--(X23) ;
+  \draw[thick] (X13)--(X24) ;
+  \draw[thick] (X14)--(X21) ;
+  \draw[thick] (X14)--(X22) ;
+  \draw[thick] (X14)--(X23) ;
+  \draw[thick] (X14)--(X24) ;
+  \draw[thick] (X21)--(X31) ;
+  \draw[thick] (X22)--(X31) ;
+  \draw[thick] (X23)--(X31) ;
+  \draw[thick] (X24)--(X31) ;
+
+\node[align=center] at (-6,-4) { Input layer};
+%\node[align=center] at (-6,-5) { $\mathbf{x} = \begin{bmatrix} x_1^0 \\ \vdots \\ x_d^0 \end{bmatrix}$};
+\node[align=center] at (6,-4) { Output layer};
+%\node[align=center] at (6,-5) { $\hat{y} = \text{round}\left(x_1^3\right)$};
+\node at (-2,-4) { Hidden layer 1};
+\node at (2,-4) { Hidden layer 2};
+%\node[align=center] at (0,-5) { $~~$ \\ $x^{\ell+1}_j = g\left( \sum_i w_{ij}^\ell x_{i}^\ell + b_j^{\ell+1}\right)$ \\  $~~$ \\ $g(z) = \frac{1}{1 + \exp\{ - z \}}~~~~~~~~~~~~~~~~$ };
+
+
+  
+\end{tikzpicture}
