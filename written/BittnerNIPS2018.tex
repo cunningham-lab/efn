@@ -166,12 +166,6 @@ $$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
 \end{figure}
 
 
-\begin{figure}
-  \centering
-\input{fig/efn1a.tex}
-  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  Can dump equations if necessary, as those will be in the text.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
-\end{figure}
-
  \emph{Why this is important}
  
 Exp fams are awesome and fundamental \cite{}.  Also \cite{wainwrightjordan2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
