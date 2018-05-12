@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  11 MAY 2018 22:51
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  12 MAY 2018 06:14
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1410,19 +1410,19 @@ OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][]
 Package natbib Warning: There were undefined citations.
 
 [10]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 428.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 428.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 435.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 435.
  (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 428.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 428.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 435.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 435.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: 7E6F693E9A077DFAFB08C12AB4D80994;196.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 428.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 435.
  ) 
 Here is how much of TeX's memory you used:
  23641 strings out of 493014
  470894 string characters out of 6133351
- 600396 words of memory out of 5000000
+ 600395 words of memory out of 5000000
  26518 multiletter control sequences out of 15000+600000
  45400 words of font info for 163 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1450,7 +1450,7 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (10 pages, 371711 bytes).
+Output written on BittnerNIPS2018.pdf (10 pages, 372162 bytes).
 PDF statistics:
  194 PDF objects out of 1000 (max. 8388607)
  145 compressed objects within 2 object streams

@@ -358,6 +358,13 @@ $$
 p(\pmb{z} \mid X) \propto \exp\left\{\begin{bmatrix} \pmb{\alpha}_0 - \pmb{1} \\  \sum_{i=1}^N \log(\pmb{x}_i)  \\ -N \pmb{1} \\ -N \end{bmatrix}^\top \begin{bmatrix} \log(\pmb{z}) \\ \beta \pmb{z} \\ \log (\Gamma( \beta \pmb{z})) \\ \log (\Gamma (\beta \pmb{1}^\top \pmb{z}))\end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ \pmb{\eta}^\top t(\pmb{z}) \right\}
 $$
 
+or just using the Beta function:
+
+$$
+p(\pmb{z} \mid X) \propto \exp\left\{\begin{bmatrix} \pmb{\alpha}_0 - \pmb{1} \\  \sum_{i=1}^N \log(\pmb{x}_i)  \\ -N  \end{bmatrix}^\top \begin{bmatrix} \log(\pmb{z}) \\ \beta \pmb{z} \\ \log (B( \beta \pmb{z})) \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ \pmb{\eta}^\top t(\pmb{z}) \right\}
+$$
+
+
 %or not bolded \\
 %
 %$$
