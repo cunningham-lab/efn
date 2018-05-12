@@ -331,34 +331,37 @@ Belief Networks
 Exponential form of posterior for Dirichlet-Dirichlet \\
 \begin{math}
 \pmb{z} \sim Dir( \pmb{\alpha}_0) \\
-\pmb{x}_i \sim Dir( \gamma \pmb{z}) \\
-p(\pmb{z}) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d))} \\
-p(\pmb{x}_i \mid \pmb{z}) \propto \exp{(\gamma \pmb{z}^T \log(\pmb{x}_i) - \sum_{d=1}^D \log(\pmb{x}_{i,d}))} \\
-p(X \mid \pmb{z}) \propto \exp{(\gamma \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(\pmb{x}_{i,d}))} \\ 
+\pmb{x}_i \sim Dir( \beta \pmb{z}) \\
+p(\pmb{z}) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d)) } \\
+p(\pmb{x}_i \mid \pmb{z}) \propto \exp{(\beta \pmb{z}^T \log(\pmb{x}_i) - \sum_{d=1}^D \log(x_{i,d}) - (\sum_{d=1}^{D} \log (\Gamma (\beta z_{d})) - \log (\Gamma (\beta \sum_{d=1}^D z_{d}))))} \\
+p(X \mid \pmb{z}) \propto \exp{(\beta \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(x_{i,d}) - N(\sum_{d=1}^{D} \log (\Gamma (\beta z_{d})) - \log (\Gamma (\beta \sum_{d=1}^D z_{d}))))} \\ 
 \end{math}
 
 \begin{math}
 p(\pmb{z} \mid X) \propto p(\pmb{z}) p(X \mid \pmb{z}) \\
-\propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d))}\exp{(\gamma \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(\pmb{x}_{i,d}))}
+\propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) - \sum_{d=1}^D \log(z_d))} \\
+\exp{(\beta \pmb{z}^T \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] - \sum_{i,d=1}^{N,D} \log(x_{i,d}) - N(\sum_{d=1}^{D} \log (\Gamma (\beta z_{d})) - \log (\Gamma (\beta \sum_{d=1}^D z_{d}))))}
 \end{math}
 
 We don't care about the term that just has $x$ in it.
 
 \begin{math}
-p(\pmb{z} \mid X) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) + \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right]^T \pmb{z} - \sum_{d=1}^D \log(z_d))} \\
-p(\pmb{z} \mid X) \propto \exp{(\begin{pmatrix} \pmb{\alpha}_0 \\ \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] \end{pmatrix}^T \begin{pmatrix} \log(\pmb{z}) \\ \pmb{z} \end{pmatrix} - \sum_{d=1}^D \log(z_d))}
+p(\pmb{z} \mid X) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) + \beta  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right]^T \pmb{z} - \sum_{d=1}^D \log(z_d) - N(\sum_{d=1}^{D} \log (\Gamma (\beta z_{d})) - \log (\Gamma (\beta \sum_{d=1}^D z_{d}))))} \\
+p(\pmb{z} \mid X) \propto \exp{(\begin{pmatrix} \pmb{\alpha}_0 - 1 \\  \sum_{i=1}^N \log(\pmb{x}_i)  \\ -N \\ -N \end{pmatrix}^T \begin{pmatrix} \log(\pmb{z}) \\ \beta \pmb{z} \\ \log (\Gamma( \beta \pmb{z})) \\ \log (\Gamma (\beta \sum_{d=1}^D z_{d}))) \end{pmatrix})}
 \end{math}
 
-swapping $\beta$ for $\gamma$ and using $1^\top$ and some \begin{verbatim}\left, \right\end{verbatim}...
+This seems right to me.  I moved $\beta$ for the second element of the natural parameters to be over with his other $\beta$-friends in the sufficient statistics.
+
+Here's a more cleaned up version:
 
 $$
-p(\pmb{z} \mid X) \propto \exp\left\{\begin{bmatrix} \pmb{\alpha}_0 - \pmb{1} \\ \beta  \sum_{i=1}^N \log(\pmb{x}_i) \end{bmatrix}^\top \begin{bmatrix} \log(\pmb{z}) \\ \pmb{z} \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ \pmb{\eta}^\top t(\pmb{z}) \right\}
+p(\pmb{z} \mid X) \propto \exp\left\{\begin{bmatrix} \pmb{\alpha}_0 - 1 \\  \sum_{i=1}^N \log(\pmb{x}_i)  \\ -N \\ -N \end{bmatrix}^\top \begin{bmatrix} \log(\pmb{z}) \\ \beta \pmb{z} \\ \log (\Gamma( \beta \pmb{z})) \\ \log (\Gamma (\beta \sum_{d=1}^D z_{d}))\end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ \pmb{\eta}^\top t(\pmb{z}) \right\}
 $$
 
-...or without the bold (and $z-1$ or $z$ as you say doesn't matter)...
+or not bolded \\
 
 $$
-p(z \mid X) \propto \exp\left\{\begin{bmatrix} {\alpha}_0 - {1} \\ \beta  \sum_{i=1}^N \log({x}_i) \end{bmatrix}^\top \begin{bmatrix} \log({z}) \\ {z-1} \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ {\eta}^\top t({z}) \right\}
+p(z \mid X) \propto \exp\left\{\begin{bmatrix} \alpha_0 - 1 \\  \sum_{i=1}^N \log(x_i)  \\ -N \\ -N\end{bmatrix}^\top \begin{bmatrix} \log(z) \\ \beta z \\ \log (\Gamma( \beta z)) \\ \log (\Gamma (\beta \sum_{d=1}^D z_{d})) \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ {\eta}^\top t({z}) \right\}
 $$
 
   
