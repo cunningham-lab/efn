@@ -56,6 +56,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     lr = 10**lr_order
     # save tensorboard summary in intervals
     tb_save_every = 50;
+    model_save_every = 1000;
     tb_save_params = False;
 
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
@@ -198,6 +199,15 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
+            if (np.mod(i,model_save_every)==0):
+                # save all the hyperparams
+                if not os.path.exists(savedir):
+                    print('Making directory %s' % savedir );
+                    os.makedirs(savedir);
+                #saveParams(params, savedir);
+                # save the model
+                saver.save(sess, savedir + 'model');
+
             if (np.mod(i+1, check_rate)==0):
                 print(42*'*');
                 print('it = %d ' % (i+1));
@@ -258,14 +268,6 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                 check_it += 1;
             sys.stdout.flush();
             i += 1;
-
-    # save all the hyperparams
-    if not os.path.exists(savedir):
-        print('Making directory %s' % savedir );
-        os.makedirs(savedir);
-    #saveParams(params, savedir);
-    # save the model
-    saver.save(sess, savedir + 'model');
 
     #return _X, train_R2s, train_KLs, i;
     return _X, train_KLs, i;

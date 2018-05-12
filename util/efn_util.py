@@ -482,6 +482,19 @@ def drawPoissonCounts(z, N):
         x[i,:] = np.random.poisson(z[i], (N,));
     return x;
 
+def truncated_multivariate_normal_rvs(mu, Sigma):
+    D = mu.shape[0];
+    zdist = multivariate_normal(mu, Sigma);
+    rejected = True;
+    count = 1;
+    while (rejected):
+        z = zdist.rvs(1);
+        rejected = 1 - np.prod((np.sign(z)+1)/2);
+        count += 1;
+    if (count > 9):
+        print('Performance warning: rejection sampling is now an issue. %d rejected.' % count);
+    return z;
+
 
 def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
     D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
@@ -549,12 +562,10 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
-                mus[k,i] = 5.0;
-                #mus[k,i] = np.random.uniform(0,ratelim);
+                mus[k,i] = np.random.uniform(0,ratelim);
             Sigmas[k,:,:] = np.eye(D_Z);
             N = int(min(np.random.poisson(8), Nmax));
-            zdist = multivariate_normal(mus[k], Sigmas[k]);
-            z = zdist.rvs(1);
+            z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
             xs[k,:,:N] = x;
             zs[k] = z;
@@ -562,7 +573,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             eta_k, param_net_input_k = prp_tn_eta(mus[k], Sigmas[k], x, N, give_inverse_hint);
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = param_net_input_k;
-        params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'Ns':Ns, 'lambda':z, 'D':D};
+        params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
     else:
         raise NotImplementedError;
     return eta, param_net_inputs, params;
