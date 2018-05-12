@@ -3,11 +3,11 @@ import numpy as np
 import time
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
-from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart
+from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart, truncnorm
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
-                  CholProdLayer, StructuredSpinnerLayer, TanhLayer
+                  CholProdLayer, StructuredSpinnerLayer, TanhLayer, ExpLayer
 import os
 import re
 
@@ -15,7 +15,7 @@ p_eps = 10e-6;
 def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
-    eta_str = 'stochaticEta' if stochastic_eta else 'fixedEta';
+    eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
     give_inv_str = 'giveInv_' if give_inverse_hint else '';
     flowstring = get_flowstring(flow_dict);
     if ('L' in param_net_hps and 'upl' in param_net_hps):
@@ -29,6 +29,7 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
         D_Z = D-1;
         ncons = D;
         num_param_net_inputs = ncons;
+
     elif (exp_fam == 'normal'):
         D_Z = D;
         ncons = int(D_Z+D_Z*(D_Z+1)/2);
@@ -36,12 +37,21 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
             num_param_net_inputs = int(D + D*(D+1)); # <- figure out what this number is
         else:
             num_param_net_inputs = ncons;
+
     elif (exp_fam == 'inv_wishart'):
         sqrtD = int(np.sqrt(D));
         D_Z = int(sqrtD*(sqrtD+1)/2)
         ncons = D_Z + 1;
         if (give_inverse_hint):
             num_param_net_inputs = 2*D_Z + 1 # < -- something like this
+        else:
+            num_param_net_inputs = ncons;
+
+    elif (exp_fam == 'prp_tn'):
+        D_Z = D;
+        ncons = int(D_Z+D_Z*(D_Z+1)/2) + D_Z + 1; # poisson likelihood + tn prior
+        if (give_inverse_hint):
+            num_param_net_inputs = int(D_Z+D_Z*(D_Z+1)) + D_Z + 1;
         else:
             num_param_net_inputs = ncons;
 
@@ -155,6 +165,8 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
         layers.append(SimplexBijectionLayer());
     elif (exp_fam == 'inv_wishart'):
         layers.append(CholProdLayer());
+    elif (exp_fam == 'prp_tn'):
+        layers.append(ExpLayer());
 
     nlayers = len(layers); 
 
@@ -249,8 +261,8 @@ def connect_flow(Z, layers, theta, exp_fam):
         Z_by_layer.append(Z);
     return Z, sum_log_det_jacobians, Z_by_layer;
 
-def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_draw_params):
-    _X, _log_p_zs, R2s = sess.run([X, log_p_zs, R2s], feed_dict);
+def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, costs, R2s, eta_draw_params):
+    _X, _log_p_zs, _costs, _R2s = sess.run([X, log_p_zs, costs, R2s], feed_dict);
     KLs = [];
     for k in range(K_eta):
         _y_k = np.expand_dims(_log_p_zs[k,:], 1);
@@ -261,8 +273,11 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, R2s, eta_dra
             params_k = {'alpha':eta_draw_params['alpha'][k]};
         elif (exp_fam == 'inv_wishart'):
             params_k = {'Psi':eta_draw_params['Psi'][k], 'm':eta_draw_params['m'][k]};
+        else:
+            KLs.append(np.nan);
+            continue;
         KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
-    return R2s, KLs;
+    return _costs, _R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
     log_Q = y_k[:,0];
@@ -324,8 +339,6 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             Tx_mean = X_flat;
             XXT = tf.matmul(tf.expand_dims(X_flat, 3), tf.expand_dims(X_flat, 2));
             Tx_cov = tf.transpose(tf.boolean_mask(tf.transpose(XXT, [2,3,0,1]), cov_con_mask), [1, 2, 0]);
-            #Tx_cov = XXT[:,:,cov_con_mask];
-            #Tx_cov = tf.reshape(XXT, [K,M,D**2]);
             Tx = tf.concat((Tx_mean, Tx_cov), axis=2);
         elif (exp_fam == 'dirichlet'):
             X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, D]); # samps x D
@@ -337,7 +350,6 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             X = X[:,:,:,0]; # update for T > 1
             X_KMDsqrtDsqrt = tf.reshape(X, (K,M,Dsqrt,Dsqrt));
             X_inv = tf.matrix_inverse(X_KMDsqrtDsqrt);
-            #Tx_inv = tf.reshape(X_inv, (K,M,D));
             Tx_inv = tf.transpose(tf.boolean_mask(tf.transpose(X_inv, [2,3,0,1]), cov_con_mask), [1, 2, 0]);
             # We already have the Chol factor from earlier in the graph
             zchol = Z_by_layer[-2];
@@ -347,9 +359,14 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             L_pos_diag_els = tf.matrix_diag_part(L_pos_diag);
             Tx_log_det = 2*tf.reduce_sum(tf.log(L_pos_diag_els), 2);
             Tx_log_det = tf.expand_dims(Tx_log_det, 2);
-            #Tx_log_det = tf.expand_dims(tf.linalg.logdet(X_KMDsqrtDsqrt[:,:,:,:]), 2);
             Tx = tf.concat((Tx_inv, Tx_log_det), axis=2);
-        else: 
+        elif (exp_fam == 'prp_tn'):
+            prior_Tx = computeMoments(X, 'normal', D, T, Z_by_layer);
+            logz = tf.log(X[:,:,:,0]);
+            sumz = tf.expand_dims(tf.reduce_sum(X[:,:,:,0], 2), 2);
+            poisson_likelihood_Tx = tf.concat((logz, sumz), axis=2);
+            Tx = tf.concat((prior_Tx, poisson_likelihood_Tx), 2);
+        else:
             raise NotImplementedError;
     else:
         raise NotImplementedError; 
@@ -366,6 +383,8 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
             Bx = -tf.reduce_sum(tf.log(X), [2]);
             Bx = Bx[:,:,0]; # remove singleton time dimension
         elif (exp_fam == 'inv_wishart'):
+            Bx = tf.zeros((K,M), dtype=tf.float64);
+        elif (exp_fam == 'prp_tn'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         else:
             raise NotImplementedError;
@@ -398,7 +417,7 @@ def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
     eta = tf.expand_dims(eta, 2);
     cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(Tx, eta) + Bx), [1,2]));
     #return cost, costs, R2s;
-    return cost, R2s;
+    return cost, costs, R2s;
 
 def normal_eta(mu, Sigma, give_inverse_hint):
     D_Z = mu.shape[0];
@@ -442,6 +461,27 @@ def inv_wishart_eta(Psi, m, give_inverse_hint):
         param_net_input = eta;
     return eta, param_net_input;
 
+def prp_tn_eta(mu, Sigma, x, N, give_inverse_hint):
+    prior_eta, prior_param_net_input = normal_eta(mu, Sigma, give_inverse_hint);
+    sumx = np.expand_dims(np.sum(x[:,:N], 1), 0);
+    eta = np.concatenate((prior_eta, sumx), 1);
+    log_part_pois = np.array([[-N]]);
+    eta = np.concatenate((eta, log_part_pois), 1);
+    param_net_input = np.concatenate((prior_param_net_input, sumx), 1);
+    param_net_input = np.concatenate((param_net_input, log_part_pois), 1);
+    return eta, param_net_input;
+            
+
+def drawPoissonRates(D, ratelim):
+    return np.random.uniform(0.1, ratelim, (D,));
+
+def drawPoissonCounts(z, N):
+    D = z.shape[0];
+    x = np.zeros((D,N));
+    for i in range(D):
+        x[i,:] = np.random.poisson(z[i], (N,));
+    return x;
+
 
 def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
     D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
@@ -462,6 +502,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             mu_targs[k,:] = mu_k;
             Sigma_targs[k,:,:] = Sigma_k;
         params = {'mu':mu_targs, 'Sigma':Sigma_targs, 'D':D_Z};
+
     elif (exp_fam == 'dirichlet'):
         alpha_targs = np.zeros((K_eta, D));
         for k in range(K_eta):
@@ -471,6 +512,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             param_net_inputs[k,:] = eta_k;
             alpha_targs[k,:] = alpha_k;
         params = {'alpha':alpha_targs, 'D':D};
+
     elif (exp_fam == 'inv_wishart'):
         Dsqrt = int(np.sqrt(D));
         Psi_targs = np.zeros((K_eta, Dsqrt, Dsqrt));
@@ -488,6 +530,39 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = param_net_input_k[0,:];
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
+
+    elif (exp_fam == 'prp_tn'):
+        #tn_prior_eta, tn_prior_param_net_input, tn_prior_params = \
+        #                   drawEtas('normal', D, K_eta, give_inverse_hint);
+        #mus = tn_prior_params['mu'];
+        #Sigmas = tn_prior_params['Sigma'];
+        ratelim = 10;
+        Nmean = 8;
+        Nmax = 30;
+        mus = np.zeros((K_eta, D_Z));
+        Sigmas = np.zeros((K_eta, D_Z, D_Z));
+        df_fac = 2;
+        df = df_fac*D_Z;
+        Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
+        xs = np.zeros((K_eta, D_Z, Nmax));
+        zs = np.zeros((K_eta, D_Z));
+        Ns = np.zeros((K_eta,));
+        for k in range(K_eta):
+            for i in range(D_Z):
+                mus[k,i] = 5.0;
+                #mus[k,i] = np.random.uniform(0,ratelim);
+            Sigmas[k,:,:] = np.eye(D_Z);
+            N = int(min(np.random.poisson(8), Nmax));
+            zdist = multivariate_normal(mus[k], Sigmas[k]);
+            z = zdist.rvs(1);
+            x = drawPoissonCounts(z, N);
+            xs[k,:,:N] = x;
+            zs[k] = z;
+            Ns[k] = N;
+            eta_k, param_net_input_k = prp_tn_eta(mus[k], Sigmas[k], x, N, give_inverse_hint);
+            eta[k,:] = eta_k;
+            param_net_inputs[k,:] = param_net_input_k;
+        params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'Ns':Ns, 'lambda':z, 'D':D};
     else:
         raise NotImplementedError;
     return eta, param_net_inputs, params;

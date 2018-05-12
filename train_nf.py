@@ -11,7 +11,7 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, normal_eta, log_grads, inv_wishart_eta, \
+                      setup_IO, normal_eta, log_grads, inv_wishart_eta, prp_tn_eta, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params, get_ef_dimensionalities
@@ -28,7 +28,6 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
 
     D_Z, ncons, _ = get_ef_dimensionalities(exp_fam, D, False);
 
-    print('ncons', ncons);
     # good practice
     tf.reset_default_graph();
 
@@ -65,6 +64,12 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         Psi_targ = params['Psi'];
         m_targ = params['m'];
         _eta, _ = inv_wishart_eta(Psi_targ[0], m_targ[0], False);
+    elif (exp_fam == 'prp_tn'):
+        mus =  params['mu'];
+        Sigmas = params['Sigma'];
+        xs = params['x'];
+        _eta, _ = prp_tn_eta(mus[0], Sigmas[0], xs[0], False);
+
     _eta_test = _eta;
 
     # construct the parameter network
@@ -84,7 +89,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     Tx = computeMoments(X, exp_fam, D, T, Z_by_layer);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
     # exponential family optimization
-    cost, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
+    cost, costs, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
 
     grads_and_vars = [];
@@ -92,9 +97,11 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         grads_and_vars.append((cost_grad[i], all_params[i]));
 
     # set optimization hyperparameters
-    saver = tf.train.Saver();
     tf.add_to_collection('Z0', Z0);
     tf.add_to_collection('X', X);
+    tf.add_to_collection('eta', eta);
+    tf.add_to_collection('log_p_zs', log_p_zs);
+    saver = tf.train.Saver();
 
     # tensorboard logging
     summary_writer = tf.summary.FileWriter(savedir);
@@ -121,10 +128,13 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     array_cur_len = array_init_len;
 
     num_diagnostic_checks = (max_iters // check_rate);
+    train_elbos = np.zeros((num_diagnostic_checks, K_eta));
+    test_elbos = np.zeros((num_diagnostic_checks, K_eta));
     train_R2s = np.zeros((num_diagnostic_checks, K_eta));
     test_R2s = np.zeros((num_diagnostic_checks, K_eta));
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
     test_KLs = np.zeros((num_diagnostic_checks, K_eta));
+    train_elbos = np.zeros((num_diagnostic_checks, K_eta));
     check_it = 0;
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
@@ -167,8 +177,9 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
-            ts, cost_i, _X, _cost_grads, _R2s, _Tx, summary = \
-                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, summary_op], feed_dict);    
+            ts, cost_i, _X, _cost_grads, _R2s, _Tx, _Bx, summary = \
+                    sess.run([train_step, cost, X, cost_grad, R2s, Tx, Bx, summary_op], feed_dict);
+
             if (np.mod(i, check_rate)==0):
                 end_time = time.time();
                 print('iter %d took %f seconds' % (i+1, end_time-start_time));
@@ -191,29 +202,35 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                 z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta};
                 feed_dict_test = {Z0:z_i, eta:_eta_test};
-                train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, params);
-                test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, params);
+                train_costs_i, train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, costs, R2s, params);
+                test_costs_i, test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, costs, R2s, params);
 
+                train_elbos[check_it,:] = np.array(train_costs_i);
+                test_elbos[check_it,:] = np.array(test_costs_i);
                 train_R2s[check_it,:] = np.array(train_R2s_i);
                 train_KLs[check_it,:] = np.array(train_KLs_i);
                 test_R2s[check_it,:] = np.array(test_R2s_i);
                 test_KLs[check_it,:] = np.array(test_KLs_i);
 
-
+                mean_train_elbo = np.mean(train_costs_i);
                 mean_train_R2 = np.mean(train_R2s_i);
                 mean_train_KL = np.mean(train_KLs_i);
 
                 print(42*'*');
                 print('it = %d ' % (i+1));
                 print('cost = %f ' % cost_i);
-                print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
+                print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, train_R2s=train_R2s, test_R2s=test_R2s, train_KLs=train_KLs, \
-                                                      test_KLs=test_KLs);
+                                                      it=i, X=_X, eta=_eta, params=params, check_rate=check_rate, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs);
                 else:
-                    np.savez(savedir + 'results.npz', it=i, X=_X, train_R2s=train_R2s, test_R2s=test_R2s, train_KLs=train_KLs, \
-                                                      test_KLs=test_KLs);
+                    np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, params=params, check_rate=check_rate, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs);
                 
                 check_it += 1;
 
@@ -226,8 +243,8 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
 
         # save all the hyperparams
         if not os.path.exists(savedir):
-                print('Making directory %s' % savedir );
-                os.makedirs(savedir);
+            print('Making directory %s' % savedir );
+            os.makedirs(savedir);
 
         saver.save(sess, savedir + 'model');
     if (len(_X.shape) > 2):

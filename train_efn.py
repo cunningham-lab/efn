@@ -37,7 +37,8 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # set number of layers in the parameter network
-    L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
+    L = 8;
+    #L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
 
     # good practice
     tf.reset_default_graph();
@@ -88,7 +89,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
 
     # exponential family optimization
-    cost, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
+    cost, costs, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
     cost_grad = tf.gradients(cost, all_params);
 
     grads_and_vars = [];
@@ -96,9 +97,12 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
         grads_and_vars.append((cost_grad[i], all_params[i]));
 
     # set optimization hyperparameters
-    saver = tf.train.Saver();
     tf.add_to_collection('Z0', Z0);
     tf.add_to_collection('X', X);
+    tf.add_to_collection('eta', eta);
+    tf.add_to_collection('param_net_input', param_net_input);
+    tf.add_to_collection('log_p_zs', log_p_zs);
+    saver = tf.train.Saver();
 
     # tensorboard logging
     summary_writer = tf.summary.FileWriter(savedir);
@@ -124,6 +128,8 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     array_cur_len = array_init_len;
 
     num_diagnostic_checks = (max_iters // check_rate);
+    train_elbos = np.zeros((num_diagnostic_checks, K_eta));
+    test_elbos = np.zeros((num_diagnostic_checks, K_eta));
     train_R2s = np.zeros((num_diagnostic_checks, K_eta));
     test_R2s = np.zeros((num_diagnostic_checks, K_eta));
     train_KLs = np.zeros((num_diagnostic_checks, K_eta));
@@ -204,50 +210,63 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                 feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
                 feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test};
 
-                train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, R2s, eta_draw_params);
-                test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, R2s, eta_test_draw_params);
+                train_costs_i, train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
+                test_costs_i, test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
                 end_time = time.time();
                 print('check diagnostics processes took: %f seconds' % (end_time-start_time));
 
+                train_elbos[check_it,:] = np.array(train_costs_i);
+                test_elbos[check_it,:] = np.array(test_costs_i);
                 train_R2s[check_it,:] = np.array(train_R2s_i);
                 train_KLs[check_it,:] = np.array(train_KLs_i);
                 test_R2s[check_it,:] = np.array(test_R2s_i);
                 test_KLs[check_it,:] = np.array(test_KLs_i);
-
+                
+                mean_train_elbo = np.mean(train_costs_i);
                 mean_train_R2 = np.mean(train_R2s_i);
                 mean_train_KL = np.mean(train_KLs_i);
+
+                mean_test_elbo = np.mean(test_costs_i);
                 mean_test_R2 = np.mean(test_R2s_i);
                 mean_test_KL = np.mean(test_KLs_i);
                                 
                 print('cost', cost_i);
+                print('train elbo: %f' % mean_train_elbo);
                 print('train R2: %f' % mean_train_R2);
-                print('train KL: %f' % mean_train_KL);
+                if (not (exp_fam in ['prp_tn'])):
+                    print('train KL: %f' % mean_train_KL);
+
+                print('test elbo: %f' % mean_test_elbo);
                 print('test R2: %f' % mean_test_R2);
-                print('test KL: %f' % mean_test_KL);
+                if (not (exp_fam in ['prp_tn'])):
+                    print('test KL: %f' % mean_test_KL);
                 #print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
 
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, check_rate=check_rate, eta=_eta, params=eta_draw_params, \
+                                                      it=i, X=_X, check_rate=check_rate, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                      X=_X, eta=_eta, params=eta_draw_params, \
+                                                      X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
-                
+
                 check_it += 1;
             sys.stdout.flush();
             i += 1;
 
-        # save all the hyperparams
-        if not os.path.exists(savedir):
-                print('Making directory %s' % savedir );
-                os.makedirs(savedir);
-        #saveParams(params, savedir);
-        # save the model
-        saver.save(sess, savedir + 'model');
+    # save all the hyperparams
+    if not os.path.exists(savedir):
+        print('Making directory %s' % savedir );
+        os.makedirs(savedir);
+    #saveParams(params, savedir);
+    # save the model
+    saver.save(sess, savedir + 'model');
+
     #return _X, train_R2s, train_KLs, i;
     return _X, train_KLs, i;
 
