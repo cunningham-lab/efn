@@ -28,7 +28,7 @@
 
 
 %% PGF
-\usepackage{tikz,amsmath}
+\usepackage{tikz,amsmath,amssymb}
 
 \usetikzlibrary{calc,bayesnet,shapes.geometric,arrows,chains,matrix,positioning,scopes,calendar,decorations.markings,decorations.pathreplacing,intersections}
 
@@ -348,6 +348,18 @@ We don't care about the term that just has $x$ in it.
 p(\pmb{z} \mid X) \propto \exp{(\pmb{\alpha}_0^T \log(\pmb{z}) + \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right]^T \pmb{z} - \sum_{d=1}^D \log(z_d))} \\
 p(\pmb{z} \mid X) \propto \exp{(\begin{pmatrix} \pmb{\alpha}_0 \\ \gamma  \left[\sum_{i=1}^N \log(\pmb{x}_i) \right] \end{pmatrix}^T \begin{pmatrix} \log(\pmb{z}) \\ \pmb{z} \end{pmatrix} - \sum_{d=1}^D \log(z_d))}
 \end{math}
+
+swapping $\beta$ for $\gamma$ and using $1^\top$ and some \begin{verbatim}\left, \right\end{verbatim}...
+
+$$
+p(\pmb{z} \mid X) \propto \exp\left\{\begin{bmatrix} \pmb{\alpha}_0 - \pmb{1} \\ \beta  \sum_{i=1}^N \log(\pmb{x}_i) \end{bmatrix}^\top \begin{bmatrix} \log(\pmb{z}) \\ \pmb{z} \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ \pmb{\eta}^\top t(\pmb{z}) \right\}
+$$
+
+...or without the bold (and $z-1$ or $z$ as you say doesn't matter)...
+
+$$
+p(z \mid X) \propto \exp\left\{\begin{bmatrix} {\alpha}_0 - {1} \\ \beta  \sum_{i=1}^N \log({x}_i) \end{bmatrix}^\top \begin{bmatrix} \log({z}) \\ {z-1} \end{bmatrix} \right\}  ~~\triangleq~~ \exp\left\{ {\eta}^\top t({z}) \right\}
+$$
 
   
 \clearpage
