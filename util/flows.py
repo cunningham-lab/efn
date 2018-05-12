@@ -149,7 +149,7 @@ class TanhLayer(Layer):
         z_out = tf.tanh(z);
         log_det_jacobian = tf.reduce_sum(tf.log(1.0 - (z_out**2)), 2);
         sum_log_det_jacobians += log_det_jacobian[:,:,0];
-        return z, sum_log_det_jacobians;
+        return z_out, sum_log_det_jacobians;
 
 class StructuredSpinnerLayer(Layer):
     def __init__(self, name, dim):
