@@ -91,13 +91,14 @@ Department of Statistics\\
 
 \begin{abstract}
   
-Recently much attention has been paid to implicit probabilistic models -- models defined by mapping a simple random variable through a complex transformation, often a deep neural network.  These models have been used to great success for variational inference, generation of complex data types, and more.  In most all of these settings, the goal has been to find a \emph{particular member} of that model family: optimized parameters index a distribution that is close (via a divergence or classification metric) to a target distribution (such as a posterior or data distribution).  Much less attention, however, has been paid to the problem of \emph{learning a model itself}.   Here we define implicit probabilistic models with specific deep network architecture and optimization procedures in order to learn intractable exponential family models (\emph{not} a single distribution from those models).  These exponential families, which are central to some of the most fundamental problems in probabilistic inference, are learned accurately and scalably, allowing operations like posterior inference to be executed directly and generically by an input choice of natural parameters, rather than performing inference via optimization for each particular realization of a distribution within that model.  We demonstrate this ability across a number of non-conjugate exponential family models that appear often in the machine learning literature.
+Recently much attention has been paid to implicit probabilistic models -- models defined by mapping a simple random variable through a complex transformation, often a deep neural network.  These models have been used to great success for variational inference, generation of complex data types, and more.  In most all of these settings, the goal has been to find a \emph{particular member} of that model family: optimized parameters index a distribution that is close (via a divergence or classification metric) to a target distribution (such as a posterior or data distribution).  Much less attention, however, has been paid to the problem of \emph{learning a model itself}.   Here we define implicit probabilistic models with specific deep network architecture and optimization procedures in order to learn intractable exponential family models (\emph{not} a single distribution from those models).  These exponential families, which are central to some of the most fundamental problems in probabilistic inference, are learned accurately and scalably, allowing operations like posterior inference to be executed directly and generically by an input choice of natural parameters, rather than performing inference via optimization for each particular realization of a distribution within that model.  We demonstrate this ability across a number of non-conjugate exponential families that appear often in the machine learning literature.
   
 \end{abstract}
 
 \section{Introduction}
 
 
+choosing and even defining a statistical model is hard (McCullagh 2002 "what is a statistical model", Gelman book)
   
 Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet).
 
@@ -108,6 +109,10 @@ Many intractable distributions encountered in machine learning belong to exponen
  Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.  Also reference to this being super standard and widespread \cite{Devroye:1986aa}.
  The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
  Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
+ 
+ However, these models are chosen to be generic and flexible, rather than in the classic sense of instantiating a set of statistical assumptions concerning the process of generating some data.  somehow offering an explanation or a structured assumption about data.  This is not bad per se, but leaves much to be desired in terms of modeling.
+ 
+ 
  
  \emph{All these learn a single member of a family}
  
