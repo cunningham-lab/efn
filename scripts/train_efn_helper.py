@@ -16,10 +16,9 @@ if (exp_fam == 'inv_wishart'):
 	sqrtD = int(np.sqrt(D));
 	planar_layers = int(sqrtD*(sqrtD+1)/2);
 else:
-	if (D < 10):
-		planar_layers = 10;
-	else:
-		planar_layers = D;
+	planar_layers = D;
+if (planar_layers < 20):
+	planar_layers = 20;
 
 flow_dict = get_flowdict(0, planar_layers, 0, 0);
 flow_ids = flow_dict['flow_ids'];
@@ -27,11 +26,11 @@ flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
 cost_type = 'KL';
-K_eta = 10;
-M_eta = 100;
+K_eta = 100;
+M_eta = 1000;
 stochastic_eta = True;
-lr_order = -3;
-max_iters = 50000;
+lr_order = -4;
+max_iters = 100000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
