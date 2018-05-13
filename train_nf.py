@@ -11,7 +11,7 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, normal_eta, log_grads, inv_wishart_eta, prp_tn_eta, \
+                      setup_IO, normal_eta, log_grads, inv_wishart_eta, prp_tn_eta, dir_dir_eta, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params, get_ef_dimensionalities
@@ -26,7 +26,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
  
     D = params['D'];
 
-    D_Z, ncons, _ = get_ef_dimensionalities(exp_fam, D, False);
+    D_Z, ncons, _, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, False);
 
     # good practice
     tf.reset_default_graph();
@@ -52,32 +52,47 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
 
     savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
+    Tx_input = tf.placeholder(tf.float64, shape=(None, num_Tx_inputs));
 
     if (exp_fam == 'normal'):
         mu_targ =  params['mu'];
         Sigma_targ = params['Sigma'];
         _eta, _ = normal_eta(mu_targ[0], Sigma_targ[0], False);
+        _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'dirichlet'):
         alpha_targ = params['alpha'];
         _eta = alpha_targ;
+        _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'inv_wishart'):
         Psi_targ = params['Psi'];
         m_targ = params['m'];
         _eta, _ = inv_wishart_eta(Psi_targ[0], m_targ[0], False);
+        _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'prp_tn'):
-        mus =  params['mu'];
-        Sigmas = params['Sigma'];
-        xs = params['x'];
-        _eta, _ = prp_tn_eta(mus[0], Sigmas[0], xs[0], False);
+        mus =  params['mus'];
+        Sigmas = params['Sigmas'];
+        xs = params['xs'];
+        Ns = params['Ns'];
+        _eta, _ = prp_tn_eta(mus[0], Sigmas[0], xs[0], Ns[0], False);
+        _Tx_input = np.zeros((K_eta,num_Tx_inputs));
+    elif (exp_fam == 'dir_dir'):
+        alpha_0s = params['alpha_0s'];
+        betas = params['betas'];
+        xs = params['xs'];
+        zs = params['zs'];
+        Ns = params['Ns'];
+        _eta, _ = dir_dir_eta(alpha_0s[0], xs[0], Ns[0], False);
+        _Tx_input = np.array([[betas[0]]]);
 
     _eta_test = _eta;
+    _Tx_input_test = _Tx_input;
 
     # construct the parameter network
     L_flow = len(flow_layers);
     theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta, exp_fam);
+    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -86,7 +101,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
 
     X = Z; # [n,D,T] 
     # set up the constraint computation
-    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer);
+    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
     # exponential family optimization
     cost, costs, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
@@ -141,7 +156,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         sess.run(init_op);
 
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
-        feed_dict = {Z0:z_i, eta:_eta};
+        feed_dict = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
 
         cost_i, _cost_grads, _X, _y, _base_log_p_z, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, base_log_p_z, Tx, summary_op], feed_dict);
@@ -173,7 +188,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                 array_cur_len = 2*array_cur_len;
 
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
-            feed_dict = {Z0:z_i, eta:_eta};
+            feed_dict = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
@@ -200,8 +215,8 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
                 z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
-                feed_dict_train = {Z0:z_i, eta:_eta};
-                feed_dict_test = {Z0:z_i, eta:_eta_test};
+                feed_dict_train = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
+                feed_dict_test = {Z0:z_i, eta:_eta_test, Tx_input:_Tx_input_test};
                 train_costs_i, train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, costs, R2s, params);
                 test_costs_i, test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, costs, R2s, params);
 
@@ -238,7 +253,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
             i += 1;
 
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
-        feed_dict = {Z0:z_i, eta:_eta};
+        feed_dict = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
 
         # save all the hyperparams

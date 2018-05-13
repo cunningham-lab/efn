@@ -34,7 +34,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     np.random.seed(random_seed);
     tf.set_random_seed(random_seed);
 
-    D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # set number of layers in the parameter network
     L = 8;
@@ -61,11 +61,12 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
     param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs));
+    Tx_input = tf.placeholder(tf.float64, shape=(None, num_Tx_inputs));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
-        _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-        _eta_test, _param_net_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
 
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
@@ -77,7 +78,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     theta = construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta, exp_fam);
+    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -86,7 +87,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
     X = Z; # [n,D,T] 
     # set up the constraint computation
-    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer);
+    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input);
     Bx = computeLogBaseMeasure(X, exp_fam, D, T);
 
     # exponential family optimization
@@ -142,9 +143,9 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
-            _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-            _eta_test, _param_net_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
+            _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+            _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
             sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
@@ -176,9 +177,9 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
-                _eta, _param_net_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+                _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
-            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
+            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
@@ -217,8 +218,8 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                 
                 # compute R^2 and KL for training and batch
                 z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
-                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input};
-                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test};
+                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
+                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, Tx_input:_Tx_input_test};
 
                 train_costs_i, train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
                 test_costs_i, test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);

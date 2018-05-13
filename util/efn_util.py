@@ -29,6 +29,7 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
         D_Z = D-1;
         ncons = D;
         num_param_net_inputs = ncons;
+        num_Tx_inputs = 0;
 
     elif (exp_fam == 'normal'):
         D_Z = D;
@@ -37,6 +38,7 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
             num_param_net_inputs = int(D + D*(D+1)); # <- figure out what this number is
         else:
             num_param_net_inputs = ncons;
+        num_Tx_inputs = 0;
 
     elif (exp_fam == 'inv_wishart'):
         sqrtD = int(np.sqrt(D));
@@ -46,6 +48,7 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
             num_param_net_inputs = 2*D_Z + 1 # < -- something like this
         else:
             num_param_net_inputs = ncons;
+        num_Tx_inputs = 0;
 
     elif (exp_fam == 'prp_tn'):
         D_Z = D;
@@ -54,8 +57,15 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
             num_param_net_inputs = int(D_Z+D_Z*(D_Z+1)) + D_Z + 1;
         else:
             num_param_net_inputs = ncons;
+        num_Tx_inputs = 0;
 
-    return D_Z, ncons, num_param_net_inputs;
+    elif (exp_fam == 'dir_dir'):
+        D_Z = D-1;
+        ncons = 3*D + 1;
+        num_param_net_inputs = ncons;
+        num_Tx_inputs = 1;
+
+    return D_Z, ncons, num_param_net_inputs, num_Tx_inputs;
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
     if (shape=='linear'):
@@ -161,7 +171,7 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
                 layers.append(TanhLayer('Tanh_Layer%d' % layer_ind));
             layer_ind += 1;
     # take care of the T-exp family-specific support transformations
-    if (exp_fam == 'dirichlet'):
+    if ((exp_fam == 'dirichlet') or exp_fam == ('dir_dir')):
         layers.append(SimplexBijectionLayer());
     elif (exp_fam == 'inv_wishart'):
         layers.append(CholProdLayer());
@@ -242,7 +252,7 @@ def latent_dynamics(Z0, A, sigma_eps, T):
     log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
     return Z_AR, log_p_Z_AR, Sigma_Z_AR;
 
-def connect_flow(Z, layers, theta, exp_fam):
+def connect_flow(Z, layers, theta):
     Z_shape = tf.shape(Z);
     K = Z_shape[0];
     M = Z_shape[1];
@@ -328,7 +338,7 @@ def checkH(y_k, exp_fam, params):
     print('H = %.3f/%.3f' % (H, H_true));
     return None;
 
-def computeMoments(X, exp_fam, D, T, Z_by_layer):
+def computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input):
     X_shape = tf.shape(X);
     K = X_shape[0];
     M = X_shape[1];
@@ -366,6 +376,13 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer):
             sumz = tf.expand_dims(tf.reduce_sum(X[:,:,:,0], 2), 2);
             poisson_likelihood_Tx = tf.concat((logz, sumz), axis=2);
             Tx = tf.concat((prior_Tx, poisson_likelihood_Tx), 2);
+        elif (exp_fam == 'dir_dir'):
+            logz = tf.log(X[:,:,:,0]);
+            beta = tf.expand_dims(Tx_input, 1);
+            betaz = tf.multiply(beta, X[:,:,:,0]);
+            log_gamma_beta_z = tf.lgamma(betaz);
+            log_gamma_sum_beta_z = tf.expand_dims(tf.lgamma(tf.reduce_sum(betaz, 2)), 2);
+            Tx = tf.concat((logz, betaz, log_gamma_beta_z, log_gamma_sum_beta_z), 2);
         else:
             raise NotImplementedError;
     else:
@@ -385,6 +402,8 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         elif (exp_fam == 'inv_wishart'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         elif (exp_fam == 'prp_tn'):
+            Bx = tf.zeros((K,M), dtype=tf.float64);
+        elif (exp_fam == 'dir_dir'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         else:
             raise NotImplementedError;
@@ -470,7 +489,14 @@ def prp_tn_eta(mu, Sigma, x, N, give_inverse_hint):
     param_net_input = np.concatenate((prior_param_net_input, sumx), 1);
     param_net_input = np.concatenate((param_net_input, log_part_pois), 1);
     return eta, param_net_input;
-            
+
+def dir_dir_eta(alpha_0, x, N, give_inverse_hint):
+    D = alpha_0.shape[0];
+    xsum = np.sum(x, 1);
+    eta = np.expand_dims(np.concatenate((alpha_0-1, xsum, -N*np.ones((D+1,))), 0), 0);
+    param_net_input = eta;
+    return eta, param_net_input;
+    
 
 def drawPoissonRates(D, ratelim):
     return np.random.uniform(0.1, ratelim, (D,));
@@ -498,9 +524,10 @@ def truncated_multivariate_normal_rvs(mu, Sigma):
 
 
 def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
-    D_Z, ncons, num_param_net_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
     eta = np.zeros((K_eta, ncons));
     param_net_inputs = np.zeros((K_eta, num_param_net_inputs));
+    Tx_input = np.zeros((K_eta, num_Tx_inputs));
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
@@ -565,7 +592,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             for i in range(D_Z):
                 mus[k,i] = np.random.uniform(0,ratelim);
             Sigmas[k,:,:] = np.eye(D_Z);
-            N = int(min(np.random.poisson(8), Nmax));
+            N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
             xs[k,:,:N] = x;
@@ -575,9 +602,36 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = param_net_input_k;
         params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
+
+    elif (exp_fam == 'dir_dir'):
+        Nmax = 30;
+        Nmean = 8;
+        alpha_0s = np.zeros((K_eta, D));
+        betas = np.zeros((K_eta,));
+        xs = np.zeros((K_eta, D, Nmax));
+        zs = np.zeros((K_eta, D));
+        Ns = np.zeros((K_eta,));
+        for k in range(K_eta):
+            alpha_0_k = np.random.uniform(.5, 3.0, (D,));
+            beta_k = np.random.uniform(.5, 2.0);
+            N = int(min(np.random.poisson(Nmean), Nmax));
+            dist1 = dirichlet(alpha_0_k);
+            z = dist1.rvs(1);
+            dist2 = dirichlet(beta_k*z[0]);
+            x = dist2.rvs(N).T;
+            eta_k, param_net_inputs_k = dir_dir_eta(alpha_0_k, x, N, False);
+            eta[k,:] = eta_k;
+            param_net_inputs[k,:] = param_net_inputs_k;
+            Tx_input[k,0] = beta_k;
+            alpha_0s[k,:] = alpha_0_k;
+            betas[k] = beta_k;
+            xs[k,:,:N] = x;
+            zs[k] = z;
+            Ns[k] = N;
+        params = {'alpha_0s':alpha_0s, 'betas':betas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
     else:
         raise NotImplementedError;
-    return eta, param_net_inputs, params;
+    return eta, param_net_inputs, Tx_input, params;
 
 def get_flowdict(fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers):
     flow_ids = [];
