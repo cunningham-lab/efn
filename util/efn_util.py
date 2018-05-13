@@ -484,14 +484,15 @@ def drawPoissonCounts(z, N):
 
 def truncated_multivariate_normal_rvs(mu, Sigma):
     D = mu.shape[0];
-    zdist = multivariate_normal(mu, Sigma);
+    L = np.linalg.cholesky(Sigma);
     rejected = True;
     count = 1;
     while (rejected):
-        z = zdist.rvs(1);
+        z0 = np.random.normal(0,1,(D));
+        z = np.dot(L, z0) + mu;
         rejected = 1 - np.prod((np.sign(z)+1)/2);
         count += 1;
-    if (count > 9):
+    if (count > 100):
         print('Performance warning: rejection sampling is now an issue. %d rejected.' % count);
     return z;
 
@@ -505,7 +506,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
         df_fac = 2;
         df = df_fac*D_Z;
-        Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
+        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         for k in range(K_eta):
             mu_k = np.random.multivariate_normal(np.zeros((D_Z,)), np.eye(D_Z));
             Sigma_k = Sigma_dist.rvs(1);
@@ -533,7 +534,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
 
         df_fac = 2;
         df = df_fac*Dsqrt;
-        Psi_dist = invwishart(df=df, scale=df_fac*np.eye(Dsqrt));
+        Psi_dist = invwishart(df=df, scale=df*np.eye(Dsqrt));
         for k in range(K_eta):
             Psi_k = Psi_dist.rvs(1);
             m_k = np.random.randint(2,11)*Dsqrt;
@@ -556,7 +557,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
         df_fac = 2;
         df = df_fac*D_Z;
-        Sigma_dist = invwishart(df=df, scale=df_fac*np.eye(D_Z));
+        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
         Ns = np.zeros((K_eta,));
