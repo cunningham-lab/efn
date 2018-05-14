@@ -43,6 +43,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     # optimization hyperparameters
     lr = 10**lr_order
     # save tensorboard summary in intervals
+    model_save_every = 1000;
     tb_save_every = 50;
     tb_save_params = False;
 
@@ -74,6 +75,9 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         xs = params['xs'];
         Ns = params['Ns'];
         _eta, _ = prp_tn_eta(mus[0], Sigmas[0], xs[0], Ns[0], False);
+        print('eta');
+        print(_eta);
+        exit();
         _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'dir_dir'):
         alpha_0s = params['alpha_0s'];
@@ -116,6 +120,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     tf.add_to_collection('X', X);
     tf.add_to_collection('eta', eta);
     tf.add_to_collection('log_p_zs', log_p_zs);
+    tf.add_to_collection('Tx_input', Tx_input);
     saver = tf.train.Saver();
 
     # tensorboard logging
@@ -210,6 +215,14 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
 
+            if (np.mod(i,model_save_every) == 0):
+                # save all the hyperparams
+                if not os.path.exists(savedir):
+                    print('Making directory %s' % savedir );
+                    os.makedirs(savedir);
+                print('saving model at iter', i);
+                saver.save(sess, savedir + 'model');
+
             if (np.mod(i+1, check_rate)==0 and i > 0):
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
@@ -237,12 +250,12 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
                 print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, eta=_eta, params=params, check_rate=check_rate, \
+                                                      it=i, X=_X, eta=_eta, Tx_input=_Tx_input, params=params, check_rate=check_rate, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);
                 else:
-                    np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, params=params, check_rate=check_rate, \
+                    np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, Tx_input=_Tx_input, params=params, check_rate=check_rate, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs);
@@ -256,12 +269,6 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         feed_dict = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
 
-        # save all the hyperparams
-        if not os.path.exists(savedir):
-            print('Making directory %s' % savedir );
-            os.makedirs(savedir);
-
-        saver.save(sess, savedir + 'model');
     if (len(_X.shape) > 2):
         assert(len(_X.shape) == 4);
         _X = _X[0, :, :, 0];

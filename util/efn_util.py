@@ -21,7 +21,7 @@ def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta,
     if ('L' in param_net_hps and 'upl' in param_net_hps):
         savedir = resdir + '/tb/' + 'EFN_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, eta_str, give_inv_str, D, K_eta, M_eta, flowstring, param_net_hps['L'], random_seed);
     else:
-        savedir = resdir + '/tb/' + 'MEFN_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
+        savedir = resdir + '/tb/' + 'NF1_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
     return savedir
 
 def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
@@ -61,7 +61,7 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
 
     elif (exp_fam == 'dir_dir'):
         D_Z = D-1;
-        ncons = 3*D + 1;
+        ncons = 3*D;
         num_param_net_inputs = ncons;
         num_Tx_inputs = 1;
 
@@ -371,7 +371,7 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input):
             Tx_log_det = tf.expand_dims(Tx_log_det, 2);
             Tx = tf.concat((Tx_inv, Tx_log_det), axis=2);
         elif (exp_fam == 'prp_tn'):
-            prior_Tx = computeMoments(X, 'normal', D, T, Z_by_layer);
+            prior_Tx = computeMoments(X, 'normal', D, T, Z_by_layer, Tx_input);
             logz = tf.log(X[:,:,:,0]);
             sumz = tf.expand_dims(tf.reduce_sum(X[:,:,:,0], 2), 2);
             poisson_likelihood_Tx = tf.concat((logz, sumz), axis=2);
@@ -381,8 +381,7 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input):
             beta = tf.expand_dims(Tx_input, 1);
             betaz = tf.multiply(beta, X[:,:,:,0]);
             log_gamma_beta_z = tf.lgamma(betaz);
-            log_gamma_sum_beta_z = tf.expand_dims(tf.lgamma(tf.reduce_sum(betaz, 2)), 2);
-            Tx = tf.concat((logz, betaz, log_gamma_beta_z, log_gamma_sum_beta_z), 2);
+            Tx = tf.concat((logz, betaz, log_gamma_beta_z), 2);
         else:
             raise NotImplementedError;
     else:
@@ -492,8 +491,8 @@ def prp_tn_eta(mu, Sigma, x, N, give_inverse_hint):
 
 def dir_dir_eta(alpha_0, x, N, give_inverse_hint):
     D = alpha_0.shape[0];
-    xsum = np.sum(x, 1);
-    eta = np.expand_dims(np.concatenate((alpha_0-1, xsum, -N*np.ones((D+1,))), 0), 0);
+    xsum = np.sum(np.log(x), 1);
+    eta = np.expand_dims(np.concatenate((alpha_0-1.0, xsum, -N*np.ones((D,))), 0), 0);
     param_net_input = eta;
     return eta, param_net_input;
     
@@ -582,15 +581,15 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Nmax = 30;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 2;
-        df = df_fac*D_Z;
-        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
+        #df_fac = 1000;
+        #df = df_fac*D_Z;
+        #Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
-                mus[k,i] = np.random.uniform(0,ratelim);
+                mus[k,i] = 5.0; #np.random.uniform(0,ratelim);
             Sigmas[k,:,:] = np.eye(D_Z);
             N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
@@ -604,21 +603,24 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
 
     elif (exp_fam == 'dir_dir'):
-        Nmax = 30;
-        Nmean = 8;
+        Nmax = 15;
+        Nmean = 5;
+        x_eps = 1e-16;
         alpha_0s = np.zeros((K_eta, D));
         betas = np.zeros((K_eta,));
         xs = np.zeros((K_eta, D, Nmax));
         zs = np.zeros((K_eta, D));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
-            alpha_0_k = np.random.uniform(.5, 3.0, (D,));
-            beta_k = np.random.uniform(.5, 2.0);
+            alpha_0_k = np.random.uniform(1.0, 5.0, (D,));
+            beta_k = np.random.uniform(1, 5);
             N = int(min(np.random.poisson(Nmean), Nmax));
             dist1 = dirichlet(alpha_0_k);
             z = dist1.rvs(1);
             dist2 = dirichlet(beta_k*z[0]);
             x = dist2.rvs(N).T;
+            x = (x+x_eps);
+            x = x / np.expand_dims(np.sum(x, 0), 0);
             eta_k, param_net_inputs_k = dir_dir_eta(alpha_0_k, x, N, False);
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = param_net_inputs_k;
