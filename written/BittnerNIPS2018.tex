@@ -98,14 +98,16 @@ Recently much attention has been paid to implicit probabilistic models -- models
 \section{Introduction}
 
 
-choosing and even defining a statistical model is hard (McCullagh 2002 "what is a statistical model", Gelman book)
+choosing and even defining a statistical model is hard \cite{mccullagh2002, gelman2014bayesian}
   
 Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet).
 
   \emph{People use lots of implicit generative models}:
   
-  Across machine learning, including ABC \cite{guttman2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as:
-   $$ \textrm{something like eq 1 and 2 in Mohamed:2016aa, defining}  q_\theta (z) $$
+  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as something like eq 1 and 2 in \cite{Mohamed:2016aa}:
+
+   $$  q_\theta (z) $$
+   
  Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.  Also reference to this being super standard and widespread \cite{Devroye:1986aa}.
  The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
  Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
@@ -128,15 +130,17 @@ Many intractable distributions encountered in machine learning belong to exponen
  You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
  Etc etc what we are doing here is \emph{amortized} amortized inference, in the sense that we are amortizing not the data points, but the distribution itself.
  
-REparameterization trick (Kingma and Welling (2013), Rezende et al. (2014) and Titsias and Lazaro-Gredilla 2014)..  See also Archer 2015 / Gao 2016 for clean explanation.  
+Reparameterization trick \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly} 
  
- Key for obvious norm flow connection but also a good bibliography and some good historical views to Dayan and Gershman and other people who did norm flows.  https://arxiv.org/pdf/1505.05770.pdf
+
+Norm flows \cite{rezende2015variational}
+
  
 \emph{Our contributions include:}
 
 
 ... \\
-This should not be confused with "Learning to learn by gradient descent by gradient descent" (Andrycowicz et. al. 2016) and similar works.
+This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
 
 ...
 
