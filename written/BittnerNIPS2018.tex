@@ -97,8 +97,31 @@ Recently much attention has been paid to implicit probabilistic models -- models
 
 \section{Introduction}
 
+IPMs are used a lot; they matter but aren't perfect.  Set context:
+\begin{itemize}
+\item generative probabilistic models are the fundamental object of bayesian modeling \cite{gelman2014bayesian}.  
+\item classic issue has been tractability-expressivity tradeoff.  choosing and even defining a statistical model is hard \cite{mccullagh2002, gelman2014bayesian}
+\item recently implicit probabilistic models have been used a lot, and for VI in particular
+\item while offering many advantages, two shortcomings: represent a potentially too-flexible model, and are used to find single posterior distributions (often on local variables).
+\item recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.
+\end{itemize}
 
-choosing and even defining a statistical model is hard \cite{mccullagh2002, gelman2014bayesian}
+
+
+Here we learn a model:
+\begin{itemize}
+\item We investigate the problem of learning exp fams, not individual distributions.
+\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because 
+\item EFNs allow the embodiment of modeling assumptions without sacrificing expressiity
+\item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
+\item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
+\item we parameterize a network whose input is the natural parameters of the exponential family being learned
+\item the output of this \emph{parameter} network is the parameters $\phi$ of a bijective neural network that allows density to be calculated.  
+\end{itemize}
+
+
+
+
   
 Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet).
 
@@ -151,7 +174,7 @@ Important to distinguish carefully from VI.  In a sense VI does parameterize a f
 ...
 
   
- \section{Learning exponential families}
+ \section{Exponential family networks}
  
  
 We are interested in perhaps the most classic inference problem:
@@ -184,11 +207,8 @@ Exp fams are awesome and fundamental.  Also \cite{wainwrigh2008graphical} rightl
  
  Note somewhere that the natural parameter space needs to be considered in general.  That is, not all $\eta$ lead to a valid distribution (standard fact, see for example \cite{wainwrigh2008graphical}).  In practice that's not often a problem, as the space is known for most distributions one uses, and when one composes them in a posterior scheme (for example), this is inherited (eg the normal covariance...).  So we skip that here.  But yes in general that needs to be considered.
  
- \emph{Figure 1}
- 
- Figure of model space.  Yeah that's good.  Then graphical model.
- Note that perhaps $\mathcal{Q}$ is too big, and a simpler model space (the $\|\eta\|$ dimensional subspace of $\Theta$) would be better for the usual robustness/generalization reasons.  
- 
+
+
  \emph{Aside}
  
  A neat idea is to ask if learning the $\theta(\eta)$ network leads to better VI in terms of inference networks, since it is apparently appropriately regularized and can just take suff stats.  That's testable if we have time.
@@ -197,17 +217,13 @@ Exp fams are awesome and fundamental.  Also \cite{wainwrigh2008graphical} rightl
  
 Density networks are an old idea \cite{mackay1997density}.
 
- We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, rezende2015variational, dinh2016density, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.
- 
+ We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, rezende2015variational, dinh2016density, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
+
  
  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \emph{ (Saul and Jordan, 1996; Barber and Wiegerinck, 1999); this is called structured variational inference. Another way to expand the family is to consider mixtures of variational densities, i.e., additional latent variables within the variational family (Bishop et al., 1998). } or newer stuff \cite{ } [Tran Copula VI, Hoffman and Blei 2015].
  
  As noted in norm flows paper: "The true posterior distribution will be more com- plex than this assumption allows for, and defining multi- modal and constrained posterior approximations in a scal- able manner remains a significant open problem in varia- tional inference."
  
- Couch this in terms of normalizing flows though point out this is not strictly necessary.     Note in particular 
- Tabak, E. G. and Turner, C. V. A family of nonparametric density estimation algorithms. Communications on Pure and Applied Mathematics, 66(2):145?164, 2013.
-Tabak, E. G and Vanden-Eijnden, E. Density estimation by dual ascent of the log-likelihood. Communications in Mathematical Sciences, 8(1):217?233, 2010.
-  A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
  
 \emph{Related work / How close is this to norm flows or VAE}
 

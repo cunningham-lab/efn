@@ -8,45 +8,45 @@ Warning--I didn't find a database entry for "zhou2018compressability"
 Warning--I didn't find a database entry for ""
 Warning--empty journal in Kingma:2013aa
 Warning--empty journal in Mohamed:2016aa
-You've used 18 entries,
+You've used 19 entries,
             1791 wiz_defined-function locations,
-            551 strings with 6701 characters,
-and the built_in function-call counts, 4678 in all, are:
-= -- 415
-> -- 219
-< -- 8
-+ -- 79
-- -- 61
-* -- 273
-:= -- 712
-add.period$ -- 57
-call.type$ -- 18
+            555 strings with 6853 characters,
+and the built_in function-call counts, 4866 in all, are:
+= -- 429
+> -- 230
+< -- 9
++ -- 83
+- -- 64
+* -- 284
+:= -- 742
+add.period$ -- 60
+call.type$ -- 19
 change.case$ -- 16
 chr.to.int$ -- 0
-cite$ -- 20
-duplicate$ -- 236
-empty$ -- 439
-format.name$ -- 61
-if$ -- 1080
+cite$ -- 21
+duplicate$ -- 246
+empty$ -- 458
+format.name$ -- 64
+if$ -- 1123
 int.to.chr$ -- 0
-int.to.str$ -- 18
-missing$ -- 20
-newline$ -- 93
-num.names$ -- 20
-pop$ -- 77
+int.to.str$ -- 19
+missing$ -- 22
+newline$ -- 98
+num.names$ -- 21
+pop$ -- 83
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 141
+skip$ -- 144
 stack$ -- 0
 substring$ -- 268
-swap$ -- 82
-text.length$ -- 8
+swap$ -- 84
+text.length$ -- 9
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 2
-while$ -- 40
-width$ -- 20
-write$ -- 194
+while$ -- 41
+width$ -- 21
+write$ -- 205
 (There were 5 warnings)

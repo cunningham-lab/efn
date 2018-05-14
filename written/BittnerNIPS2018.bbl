@@ -1,15 +1,20 @@
 \begin{thebibliography}{10}
 
-\bibitem{mccullagh2002}
-Peter McCullagh.
-\newblock What is a statistical model?
-\newblock {\em The Annals of Statistics}, 30(5):1225--1267, 2002.
-
 \bibitem{gelman2014bayesian}
 Andrew Gelman, John~B Carlin, Hal~S Stern, David~B Dunson, Aki Vehtari, and
   Donald~B Rubin.
 \newblock {\em Bayesian data analysis}, volume~2.
 \newblock CRC press Boca Raton, FL, 2014.
+
+\bibitem{mccullagh2002}
+Peter McCullagh.
+\newblock What is a statistical model?
+\newblock {\em The Annals of Statistics}, 30(5):1225--1267, 2002.
+
+\bibitem{friedman2001elements}
+Trevor Hastie, Robert Tibshirani, and Jerome Friedman.
+\newblock {\em The elements of statistical learning}, volume~1.
+\newblock Springer series in statistics New York, 2001.
 
 \bibitem{gutmann2014statistical}
 Michael~U Gutmann, Ritabrata Dutta, Samuel Kaski, and Jukka Corander.
