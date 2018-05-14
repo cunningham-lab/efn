@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 16:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 16:34
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1299,134 +1299,134 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] (./
-fig/efn1b.tex <fig/t0.png, id=69, 393.47pt x 341.275pt>
+fig/efn1b.tex <fig/t0.png, id=68, 393.47pt x 341.275pt>
 File: fig/t0.png Graphic file (type png)
  <use fig/t0.png>
 Package pdftex.def Info: fig/t0.png used on input line 33.
 (pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
 
-<fig/t11.png, id=71, 393.47pt x 341.275pt>
+<fig/t11.png, id=70, 393.47pt x 341.275pt>
 File: fig/t11.png Graphic file (type png)
  <use fig/t11.png>
 Package pdftex.def Info: fig/t11.png used on input line 39.
 (pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
 
-<fig/t12.png, id=72, 491.8375pt x 420.57124pt>
+<fig/t12.png, id=71, 491.8375pt x 420.57124pt>
 File: fig/t12.png Graphic file (type png)
  <use fig/t12.png>
 Package pdftex.def Info: fig/t12.png used on input line 40.
 (pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
 
-<fig/t13.png, id=73, 491.8375pt x 420.57124pt>
+<fig/t13.png, id=72, 491.8375pt x 420.57124pt>
 File: fig/t13.png Graphic file (type png)
  <use fig/t13.png>
 Package pdftex.def Info: fig/t13.png used on input line 41.
 (pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
 
-<fig/t21.png, id=74, 491.8375pt x 420.57124pt>
+<fig/t21.png, id=73, 491.8375pt x 420.57124pt>
 File: fig/t21.png Graphic file (type png)
  <use fig/t21.png>
 Package pdftex.def Info: fig/t21.png used on input line 49.
 (pdftex.def)             Requested size: 39.83385pt x 34.0571pt.
 
-<fig/t22.png, id=75, 256.96pt x 256.96pt>
+<fig/t22.png, id=74, 256.96pt x 256.96pt>
 File: fig/t22.png Graphic file (type png)
  <use fig/t22.png>
 Package pdftex.def Info: fig/t22.png used on input line 50.
 (pdftex.def)             Requested size: 39.83385pt x 39.8323pt.
 
-<fig/t23.png, id=76, 393.47pt x 341.275pt>
+<fig/t23.png, id=75, 393.47pt x 341.275pt>
 File: fig/t23.png Graphic file (type png)
  <use fig/t23.png>
 Package pdftex.def Info: fig/t23.png used on input line 51.
 (pdftex.def)             Requested size: 39.83385pt x 34.54608pt.
 )
-Overfull \hbox (8.10092pt too wide) in paragraph at lines 174--188
+Overfull \hbox (8.10092pt too wide) in paragraph at lines 174--186
  [][] 
  []
 
 
 Package natbib Warning: Citation `wainwrigh2008graphical' on page 3 undefined o
-n input line 195.
+n input line 193.
 
-[3 <./fig/t0.png> <./fig/t11.png> <./fig/t12.png> <./fig/t13.png> <./fig/t21.pn
-g> <./fig/t22.png> <./fig/t23.png>]
+[3]
 
 Package natbib Warning: Citation `zhou2018compressability' on page 4 undefined 
-on input line 199.
+on input line 197.
 
 
 Package natbib Warning: Citation `wainwrigh2008graphical' on page 4 undefined o
-n input line 201.
+n input line 199.
+
+[4 <./fig/t0.png> <./fig/t11.png> <./fig/t12.png> <./fig/t13.png> <./fig/t21.pn
+g> <./fig/t22.png> <./fig/t23.png>] [5]
+Underfull \hbox (badness 10000) in paragraph at lines 242--247
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 249--254
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 255--256
+
+ []
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [4]
-Underfull \hbox (badness 10000) in paragraph at lines 244--249
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 251--256
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 257--258
-
- []
-
-[5]
-Overfull \hbox (26.80038pt too wide) in paragraph at lines 278--279
+ [6]
+Overfull \hbox (26.80038pt too wide) in paragraph at lines 276--277
 []\T1/ptm/m/n/10 (-20) von Mises-Fisher dis-tri-bu-tion, eg http://www.jmlr.org
 /papers/volume6/banerjee05a/banerjee05a.pdf
  []
 
-[6] [7] [8]
-Overfull \hbox (38.15982pt too wide) in paragraph at lines 351--359
+[7] [8]
+Overfull \hbox (38.15982pt too wide) in paragraph at lines 349--357
 \OML/cmm/m/it/10 p\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 X \OMS/cmsy/m/n/10 j []\OT1
 /cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 351--359
+Underfull \hbox (badness 10000) in paragraph at lines 349--357
 
  []
 
 
-Overfull \hbox (80.76028pt too wide) in paragraph at lines 368--372
+Overfull \hbox (80.76028pt too wide) in paragraph at lines 366--370
 []$\OML/cmm/m/it/10 p\OT1/cmr/m/n/10 ([] \OMS/cmsy/m/n/10 j \OML/cmm/m/it/10 X\
 OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
 [9
 
-] (./BittnerNIPS2018.bbl) [10
+] (./BittnerNIPS2018.bbl
+LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 39.
+ [10
 
-]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [11]
+]) [11]
 
 Package natbib Warning: There were undefined citations.
 
 [12]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 455.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 455.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 453.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 453.
  (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 455.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 455.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 453.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 453.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: E559C40A99A2C3AD3CEAD2D4BD7184E4;194.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 455.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 453.
  ) 
 Here is how much of TeX's memory you used:
- 23712 strings out of 493014
- 472386 string characters out of 6133351
- 600041 words of memory out of 5000000
- 26555 multiletter control sequences out of 15000+600000
- 43367 words of font info for 173 fonts, out of 8000000 for 9000
+ 23723 strings out of 493014
+ 472616 string characters out of 6133351
+ 604901 words of memory out of 5000000
+ 26564 multiletter control sequences out of 15000+600000
+ 46089 words of font info for 175 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,12n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/t
@@ -1452,10 +1452,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (12 pages, 378063 bytes).
+Output written on BittnerNIPS2018.pdf (12 pages, 380440 bytes).
 PDF statistics:
- 241 PDF objects out of 1000 (max. 8388607)
- 190 compressed objects within 2 object streams
- 42 named destinations out of 1000 (max. 500000)
- 20560 words of extra memory for PDF output out of 20736 (max. 10000000)
+ 243 PDF objects out of 1000 (max. 8388607)
+ 192 compressed objects within 2 object streams
+ 43 named destinations out of 1000 (max. 500000)
+ 21072 words of extra memory for PDF output out of 24883 (max. 10000000)
 
