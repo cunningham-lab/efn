@@ -101,25 +101,39 @@ IPMs are used a lot; they matter but aren't perfect.  Set context:
 \begin{itemize}
 \item generative probabilistic models are the fundamental object of bayesian modeling \cite{gelman2014bayesian}.  
 \item classic issue has been tractability-expressivity tradeoff.  choosing and even defining a statistical model is hard \cite{mccullagh2002, gelman2014bayesian}
-\item recently implicit probabilistic models have been used a lot, and for VI in particular
+\item  However, these models are chosen to be generic and flexible, rather than in the classic sense of instantiating a set of statistical assumptions concerning the process of generating some data.  somehow offering an explanation or a structured assumption about data.  This is not bad per se, but leaves much to be desired in terms of modeling.
+\item recently implicit probabilistic models have been used a lot, and for VI in particular \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}  (more blei stuff here)
 \item while offering many advantages, two shortcomings: represent a potentially too-flexible model, and are used to find single posterior distributions (often on local variables).
-\item recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.
+\item VI has to re-learn on every dataset; yes it can amortize across points from the same dataset, but not across datasets in the same model.  Given the frequency of certain non-conjugate models appearing -- hierarchies of Dirichlet distributions, log Gaussian Poisson models, etc -- this seems needless to continue considering this as an ``intractable'' exp fam. 
+\item recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.  
+\item Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
 \end{itemize}
 
 
-
-Here we learn a model:
+Here we learn an exp fam \emph{model}:
 \begin{itemize}
-\item We investigate the problem of learning exp fams, not individual distributions.
+
+\item We investigate the problem of learning exp fams, not individual distributions.  Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
+
 \item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because 
 \item EFNs allow the embodiment of modeling assumptions without sacrificing expressiity
 \item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
 \item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
 \item we parameterize a network whose input is the natural parameters of the exponential family being learned
 \item the output of this \emph{parameter} network is the parameters $\phi$ of a bijective neural network that allows density to be calculated.  
+\item Can use this as an initializer if more specific training is required.
 \end{itemize}
 
-
+Our contributions include:
+\begin{itemize}
+\item novel architecture to learn a model, not a particular member
+\item stochastic optimization that samples over the model space: sampling both natural parameters (the family member to be learned) and data points (the observed density points)
+\item our choice of exp fam produces a linear regression type problem in KL divergence.   
+ We leverage the natural parameterization of exponential families to derive a novel objective that is amenable to stochastic optimization.
+\item empirical results confirming against ground truth in known ``tractable'' families like the Dirichlet, inverse Wishart, and Gaussian.
+\item empirical results demonstrating inference performance in common ``intractable'' families including the hierarchical dirichlet, the log Gaussian Poisson.
+\item Demonstration that there is surprisingly little performance loss training a single posterior vs an entire model, advocating its broader use, at least as an intiializer if not as an amortizer. 
+\end{itemize}
 
 
   
@@ -131,36 +145,16 @@ Many intractable distributions encountered in machine learning belong to exponen
 
    $$  q_\theta (z) $$
    
- Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.  Also reference to this being super standard and widespread \cite{Devroye:1986aa}.
- The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
+ Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.   The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
  Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
  
- However, these models are chosen to be generic and flexible, rather than in the classic sense of instantiating a set of statistical assumptions concerning the process of generating some data.  somehow offering an explanation or a structured assumption about data.  This is not bad per se, but leaves much to be desired in terms of modeling.
  
- 
- 
- \emph{All these learn a single member of a family}
- 
- Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
- 
- \emph{Here we learn the family}
- 
- We leverage the natural parameterization of exponential families to derive a novel objective that is amenable to stochastic optimization.
  
  \emph{A note on amortization}
  
  Several have pointed out that these IGMs are in fact strictly less expressive than a mean field, at least in the conventional VI setting.  See for example http://dustintran.com/blog/variational-auto-encoders-do-not-train-complex-generative-models  (here I like the line ``The neural network used in the encoder (variational distribution) does not lead to any richer approximating distribution. It is a way to amortize inference such that the number of parameters does not grow with the size of the data (an incredible feat, but not one for expressivity!) (Stuhlmuller et al., 2013)``).
  You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
  Etc etc what we are doing here is \emph{amortized} amortized inference, in the sense that we are amortizing not the data points, but the distribution itself.
- 
-Reparameterization trick \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly} 
- 
-
-Norm flows \cite{rezende2015variational}
-
- 
-\emph{Our contributions include:}
-
 
 ... \\
 This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
@@ -169,9 +163,6 @@ This should not be confused with "Learning to learn by gradient descent by gradi
 
 Important to distinguish carefully from VI.  In a sense VI does parameterize a family: given data, you get local variational parameters and that parmaterizes a density (like a regular VAE).  Inference networks are exclusively used to data to amortize with a global set of parameters a variational distribution, not a model.  Of course it is in a sense a model, but that's a bunch of normals.  The sampling mechanism is easy (Guassian).  
 
-\emph{Our results demonstrate}
-
-...
 
   
  \section{Exponential family networks}
