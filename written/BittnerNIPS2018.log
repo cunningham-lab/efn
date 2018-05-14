@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 11:50
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 13:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1341,60 +1341,64 @@ Overfull \hbox (8.10092pt too wide) in paragraph at lines 174--172
  []
 
 
-Package natbib Warning: Citation `wainwrightjordan2008graphical' on page 3 unde
-fined on input line 179.
+Package natbib Warning: Citation `wainwrigh2008graphical' on page 3 undefined o
+n input line 179.
 
 
 Package natbib Warning: Citation `zhou2018compressability' on page 3 undefined 
 on input line 183.
+
+
+Package natbib Warning: Citation `wainwrigh2008graphical' on page 3 undefined o
+n input line 185.
 
 [3 <./fig/t0.png> <./fig/t11.png> <./fig/t12.png> <./fig/t13.png> <./fig/t21.pn
 g> <./fig/t22.png> <./fig/t23.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [4]
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 221.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 225.
 
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 221.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 225.
 
-Underfull \hbox (badness 10000) in paragraph at lines 231--236
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 238--243
+Underfull \hbox (badness 10000) in paragraph at lines 235--240
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 244--245
+Underfull \hbox (badness 10000) in paragraph at lines 242--247
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 248--249
 
  []
 
 [5]
-Overfull \hbox (26.80038pt too wide) in paragraph at lines 265--266
+Overfull \hbox (26.80038pt too wide) in paragraph at lines 269--270
 []\T1/ptm/m/n/10 (-20) von Mises-Fisher dis-tri-bu-tion, eg http://www.jmlr.org
 /papers/volume6/banerjee05a/banerjee05a.pdf
  []
 
 [6] [7] [8]
-Overfull \hbox (38.15982pt too wide) in paragraph at lines 338--346
+Overfull \hbox (38.15982pt too wide) in paragraph at lines 342--350
 \OML/cmm/m/it/10 p\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 X \OMS/cmsy/m/n/10 j []\OT1
 /cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 338--346
+Underfull \hbox (badness 10000) in paragraph at lines 342--350
 
  []
 
 
-Overfull \hbox (80.76028pt too wide) in paragraph at lines 355--359
+Overfull \hbox (80.76028pt too wide) in paragraph at lines 359--363
 []$\OML/cmm/m/it/10 p\OT1/cmr/m/n/10 ([] \OMS/cmsy/m/n/10 j \OML/cmm/m/it/10 X\
 OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
@@ -1404,25 +1408,28 @@ OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][]
 ] (./BittnerNIPS2018.bbl) [10
 
 ]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [11]
 
 Package natbib Warning: There were undefined citations.
 
-[11]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 442.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 442.
+[12]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 446.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 446.
  (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 442.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 442.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 446.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 446.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: 7E6F693E9A077DFAFB08C12AB4D80994;196.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 442.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 446.
  ) 
 Here is how much of TeX's memory you used:
- 23667 strings out of 493014
- 471500 string characters out of 6133351
- 600291 words of memory out of 5000000
- 26531 multiletter control sequences out of 15000+600000
- 42467 words of font info for 165 fonts, out of 8000000 for 9000
+ 23705 strings out of 493014
+ 472247 string characters out of 6133351
+ 600507 words of memory out of 5000000
+ 26552 multiletter control sequences out of 15000+600000
+ 43142 words of font info for 171 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,12n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}{/usr/local/t
@@ -1448,10 +1455,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (11 pages, 374807 bytes).
+Output written on BittnerNIPS2018.pdf (12 pages, 377279 bytes).
 PDF statistics:
- 214 PDF objects out of 1000 (max. 8388607)
- 164 compressed objects within 2 object streams
- 33 named destinations out of 1000 (max. 500000)
+ 238 PDF objects out of 1000 (max. 8388607)
+ 187 compressed objects within 2 object streams
+ 41 named destinations out of 1000 (max. 500000)
  20560 words of extra memory for PDF output out of 20736 (max. 10000000)
 

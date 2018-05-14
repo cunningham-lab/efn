@@ -64,4 +64,42 @@ Marcin Andrychowicz, Misha Denil, Sergio Gomez, Matthew~W Hoffman, David Pfau,
 \newblock In {\em Advances in Neural Information Processing Systems}, pages
   3981--3989, 2016.
 
+\bibitem{mackay1997density}
+D.~J.~C. MacKay and M.~N. Gibbs.
+\newblock Density networks.
+\newblock In {\em Statistics and Neural Networks}, pages 129--146. Oxford,
+  1997.
+
+\bibitem{baird2005one}
+Leemon Baird, David Smalenberger, and Shawn Ingkiriwang.
+\newblock One-step neural network inversion with pdf learning and emulation.
+\newblock In {\em Neural Networks, 2005. IJCNN'05. Proceedings. 2005 IEEE
+  International Joint Conference on}, volume~2, pages 966--971. IEEE, 2005.
+
+\bibitem{rippel2013high}
+Oren Rippel and Ryan~Prescott Adams.
+\newblock High-dimensional probability estimation with deep density models.
+\newblock {\em arXiv preprint arXiv:1302.5125}, 2013.
+
+\bibitem{dinh2016density}
+Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio.
+\newblock Density estimation using real nvp.
+\newblock {\em arXiv preprint arXiv:1605.08803}, 2016.
+
+\bibitem{jacobsen2018revnet}
+J{\"o}rn-Henrik Jacobsen, Arnold Smeulders, and Edouard Oyallon.
+\newblock i-revnet: Deep invertible networks.
+\newblock {\em arXiv preprint arXiv:1802.07088}, 2018.
+
+\bibitem{chen2001gaussianization}
+Scott~Saobing Chen and Ramesh~A Gopinath.
+\newblock Gaussianization.
+\newblock In {\em Advances in neural information processing systems}, pages
+  423--429, 2001.
+
+\bibitem{tabak2010density}
+Esteban~G Tabak, Eric Vanden-Eijnden, et~al.
+\newblock Density estimation by dual ascent of the log-likelihood.
+\newblock {\em Communications in Mathematical Sciences}, 8(1):217--233, 2010.
+
 \end{thebibliography}
