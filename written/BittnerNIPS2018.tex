@@ -136,28 +136,16 @@ Our contributions include:
 
   
 
-  \emph{People use lots of implicit generative models}:
+  \emph{People use lots of implicit probability models}:
   
-  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, density estimation \cite{papamakarios2017masked}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as something like eq 1 and 2 in \cite{Mohamed:2016aa}:
+  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, density estimation \cite{papamakarios2017masked}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  Such implicit probability models have a rich history and newer contributions (density networks all the way through \cite{Mohamed:2016aa}).  Some equations:
 
    $$  q_\theta (z) $$
    
  Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.   The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
  Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
  
- 
- 
- \emph{A note on amortization}
- 
- Several have pointed out that these IGMs are in fact strictly less expressive than a mean field, at least in the conventional VI setting.  See for example http://dustintran.com/blog/variational-auto-encoders-do-not-train-complex-generative-models  (here I like the line ``The neural network used in the encoder (variational distribution) does not lead to any richer approximating distribution. It is a way to amortize inference such that the number of parameters does not grow with the size of the data (an incredible feat, but not one for expressivity!) (Stuhlmuller et al., 2013)``).
- You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
- Etc etc what we are doing here is amortized inference in a different sense, in the sense that we are amortizing not the data points, but the distribution itself.
-
-... \\
-
-...
-
-Important to distinguish carefully from VI.  In a sense VI does parameterize a family: given data, you get local variational parameters and that parmaterizes a density (like a regular VAE).  Inference networks are exclusively used to data to amortize with a global set of parameters a variational distribution, not a model.  Of course it is in a sense a model, but that's a bunch of normals.  The sampling mechanism is easy (Guassian).  
+VI in this style can be seen and is often referred to as amortized inference, in the sense that it is in fact less expressive than full mean field (eg the VAE), but (1) it offers the usual benefits of a restricted model space in terms of bias-variance tradeoff \cite{friedman2001elements} (Fig 7.2), and (2) it offers test time speed up by pretraining (hence the term amortization).  Here we offer what can be seen as a different sort of amortization, over datasets themselves.   The exp fam may be challenging to learn, but then it can be used at trivial cost.  We will focus more on the distinction with variational inference later.    We use IPM vs generative to clarify that we are not simply dealing in the inference case, but the more general problem of learning probabilistic models (nor just single members of these models).
 
 
   
@@ -224,6 +212,8 @@ $$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
  shown with the attached plate model (not local latents).  Supposing as is often the case that the likelihood is a member of the $s$ exp fam, we have:
  
  $$p(z | x ) \propto \exp\left\{ \left[ \sum_{i=1}^n s(x_i) \right]^\top\left[ t(z) \right] + g_0(\alpha,z) \right\}$$
+ 
+ Important to distinguish carefully from VI.  In a sense VI does parameterize a family: given data, you get local variational parameters and that parmaterizes a density (like a regular VAE).  Inference networks are exclusively used to data to amortize with a global set of parameters a variational distribution, not a model.  Of course it is in a sense a model, but that's a bunch of normals.  The sampling mechanism is easy (Guassian).  
  
  where the natural parameters of the sampling distribution are indexed by the latent parameter on which we want to inference ($z$).  Here I've written the prior as arbitrary, and possibly not exp fam, which is fine, since this is still an exp fam in the  sense of, for a fixed $\alpha$, the function $g_0$ can just be viewed as a sufficient statistic.  Even if $\alpha$ is not fixed though, we can sample over that too to learn the whole fam (but maybe not if we want to infer it?).  Regardless, life is simpler to make sense of if we take an exp fam prior $g_0(\alpha,z) = \alpha^\top t_0(z)$, and then the desired posterior is an intractable exp fam, but still just an exp fam.
  
