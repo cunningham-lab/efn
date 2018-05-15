@@ -286,7 +286,11 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, costs, R2s, 
         else:
             KLs.append(np.nan);
             continue;
-        KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
+        try:
+            KL_k = approxKL(_y_k, _X_k, exp_fam, params_k);
+        except:
+            KL_k = np.nan;
+        KLs.append(KL_k);
     return _costs, _R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
@@ -531,7 +535,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 2;
+        df_fac = 100;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         for k in range(K_eta):
@@ -559,12 +563,12 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Psi_targs = np.zeros((K_eta, Dsqrt, Dsqrt));
         m_targs = np.zeros((K_eta, 1));
 
-        df_fac = 2;
+        df_fac = 100;
         df = df_fac*Dsqrt;
         Psi_dist = invwishart(df=df, scale=df*np.eye(Dsqrt));
         for k in range(K_eta):
             Psi_k = Psi_dist.rvs(1);
-            m_k = np.random.randint(2,11)*Dsqrt;
+            m_k = np.random.randint(2*Dsqrt,3*Dsqrt+1)
             Psi_targs[k,:,:] = Psi_k;
             m_targs[k,0] = m_k;
             eta_k, param_net_input_k = inv_wishart_eta(Psi_k, m_k, give_inverse_hint);
