@@ -277,6 +277,9 @@ Panel C: Gaussian KL for NF1 and EFN \\
 
 \subsection{Hierarchical Dirichlets}
 
+Some math detail here.  Eq 4 of the Blei LDA paper chooses a factorized posterior in theta and z (the topics and the per document whatever).  Is this actually Dir Dir posterior, we could use just single variational parameters.
+
+
 Fig 5.  The intractable posterior inference example.  {\bf Key real data result}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
 Now, as Alternative 1 do full norm flow variational inference (explore all of $\phi$ space with the full flow network model $\mathcal{Q}$), which is to say $\arg\min_\phi KL(q_\phi || p)$: the key difference here is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.   As Alternative 2, be literal to Figure 2 of the Norm Flow VI paper, give the sufficient statistics of that K=1 dataset, and learn an EFN from scratch.  This alternative is important because it is the most specific (but kind of annoying, hence alternative 1) interpretation of norm flow VI paper.  
 
