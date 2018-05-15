@@ -140,7 +140,7 @@ Our contributions include:
 
   \emph{People use lots of implicit generative models}:
   
-  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as something like eq 1 and 2 in \cite{Mohamed:2016aa}:
+  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, density estimation \cite{papamakarios2017masked}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  We prefer and use the terminology  of \cite{Mohamed:2016aa}, calling such a distribution an \emph{implicit generative model}, defined as something like eq 1 and 2 in \cite{Mohamed:2016aa}:
 
    $$  q_\theta (z) $$
    
@@ -176,7 +176,7 @@ bants.  defines a Q.
  
 Density networks are an old idea \cite{mackay1997density}.
 
- We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, rezende2015variational, dinh2016density, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
+ We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
  
  More generally there has been a lot of attention to making these more flexible in structured variatonal inference.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \emph{ (Saul and Jordan, 1996; Barber and Wiegerinck, 1999); this is called structured variational inference. Another way to expand the family is to consider mixtures of variational densities, i.e., additional latent variables within the variational family (Bishop et al., 1998). } or newer stuff \cite{ } [Tran Copula VI, Hoffman and Blei 2015].
 
@@ -187,13 +187,13 @@ Density networks are an old idea \cite{mackay1997density}.
 bants.  Pitman-Koopman.  Defines an M.  
 
  \emph{Why this is important}. 
-Exp fams are awesome and fundamental.  Also \cite{wainwrigh2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
+Exp fams are awesome and fundamental.  Also \cite{wainwright2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
 
 Common examples in the ML community include hierarchical Dirichlet and log Gaussian Poisson.
 
 Note briefly that one common model that this does not conveniently include is local latent variable models like LDA and logistic regression, as they define larger and larger exp fams as they go (yes they are exp fams, but not of a fixed parameterization under sampling).
 
- Note somewhere that the natural parameter space needs to be considered in general.  That is, not all $\eta$ lead to a valid distribution (standard fact, see for example \cite{wainwrigh2008graphical}).  In practice that's not often a problem, as the space is known for most distributions one uses, and when one composes them in a posterior scheme (for example), this is inherited (eg the normal covariance...).  So we skip that here.  But yes in general that needs to be considered.
+ Note somewhere that the natural parameter space needs to be considered in general.  That is, not all $\eta$ lead to a valid distribution (standard fact, see for example \cite{wainwright2008graphical}).  In practice that's not often a problem, as the space is known for most distributions one uses, and when one composes them in a posterior scheme (for example), this is inherited (eg the normal covariance...).  So we skip that here.  But yes in general that needs to be considered.
 
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -210,6 +210,8 @@ includes the network definition of Fig 1c, the objective, and the optimization a
 
 Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
 Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
+
+Note that this objective can also produce approximations of the log partition, via essentially linear regression; more nuanced schemes are recommended \cite{papamakarios2015distilling}.  We don't explore that here.
 
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
