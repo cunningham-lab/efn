@@ -55,7 +55,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     lr = 10**lr_order
     # save tensorboard summary in intervals
     tb_save_every = 50;
-    model_save_every = 1000;
+    model_save_every = 49999;
     tb_save_params = False;
 
     eta = tf.placeholder(tf.float64, shape=(None, ncons));

@@ -43,7 +43,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     # optimization hyperparameters
     lr = 10**lr_order
     # save tensorboard summary in intervals
-    model_save_every = 1000;
+    model_save_every = 49999;
     tb_save_every = 50;
     tb_save_params = False;
 
