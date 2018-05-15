@@ -14,7 +14,7 @@ Peter McCullagh.
 \bibitem{Kingma:2013aa}
 Diederik~P Kingma and Max Welling.
 \newblock Auto-encoding variational bayes.
-\newblock 12 2013.
+\newblock {\em arXiv}, 12 2013.
 
 \bibitem{rezende2014stochastic}
 Danilo~Jimenez Rezende, Shakir Mohamed, and Daan Wierstra.
@@ -67,7 +67,12 @@ George Papamakarios, Iain Murray, and Theo Pavlakou.
 \bibitem{Mohamed:2016aa}
 Shakir Mohamed and Balaji Lakshminarayanan.
 \newblock Learning in implicit generative models.
-\newblock 10 2016.
+\newblock {\em arXiv}, 10 2016.
+
+\bibitem{zhou2018compressibility}
+Wenda Zhou, Victor Veitch, Morgane Austern, Ryan~P Adams, and Peter Orbanz.
+\newblock Compressibility and generalization in large-scale deep learning.
+\newblock {\em arXiv preprint arXiv:1804.05862}, 2018.
 
 \bibitem{mackay1997density}
 D.~J.~C. MacKay and M.~N. Gibbs.
@@ -121,6 +126,30 @@ Scott~Saobing Chen and Ramesh~A Gopinath.
 Esteban~G Tabak, Eric Vanden-Eijnden, et~al.
 \newblock Density estimation by dual ascent of the log-likelihood.
 \newblock {\em Communications in Mathematical Sciences}, 8(1):217--233, 2010.
+
+\bibitem{saul1996exploiting}
+Lawrence~K Saul and Michael~I Jordan.
+\newblock Exploiting tractable substructures in intractable networks.
+\newblock In {\em Advances in neural information processing systems}, pages
+  486--492, 1996.
+
+\bibitem{barber1999tractable}
+David Barber and Wim Wiegerinck.
+\newblock Tractable variational structures for approximating graphical models.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  183--189, 1999.
+
+\bibitem{hoffman2015stochastic}
+Matthew Hoffman and David Blei.
+\newblock Stochastic structured variational inference.
+\newblock In {\em Artificial Intelligence and Statistics}, pages 361--369,
+  2015.
+
+\bibitem{tran2015copula}
+Dustin Tran, David Blei, and Edo~M Airoldi.
+\newblock Copula variational inference.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  3564--3572, 2015.
 
 \bibitem{robert2007bayesian}
 Christian Robert.

@@ -3,49 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: BittnerNIPS2018.aux
 The style file: unsrt.bst
 Database file #1: BittnerNIPS2018.bib
-Warning--I didn't find a database entry for "zhou2018compressability"
-Warning--I didn't find a database entry for ""
-Warning--empty journal in Kingma:2013aa
-Warning--empty journal in Mohamed:2016aa
-You've used 34 entries,
+You've used 39 entries,
             1791 wiz_defined-function locations,
-            646 strings with 9601 characters,
-and the built_in function-call counts, 9044 in all, are:
-= -- 819
-> -- 397
-< -- 14
-+ -- 144
-- -- 110
-* -- 564
-:= -- 1350
-add.period$ -- 107
-call.type$ -- 34
-change.case$ -- 30
+            669 strings with 10285 characters,
+and the built_in function-call counts, 10715 in all, are:
+= -- 982
+> -- 449
+< -- 18
++ -- 163
+- -- 124
+* -- 649
+:= -- 1566
+add.period$ -- 122
+call.type$ -- 39
+change.case$ -- 35
 chr.to.int$ -- 0
-cite$ -- 36
-duplicate$ -- 442
-empty$ -- 875
-format.name$ -- 110
-if$ -- 2089
+cite$ -- 39
+duplicate$ -- 536
+empty$ -- 1044
+format.name$ -- 124
+if$ -- 2501
 int.to.chr$ -- 0
-int.to.str$ -- 34
-missing$ -- 38
-newline$ -- 173
-num.names$ -- 36
-pop$ -- 137
+int.to.str$ -- 39
+missing$ -- 43
+newline$ -- 198
+num.names$ -- 41
+pop$ -- 160
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 248
+skip$ -- 321
 stack$ -- 0
-substring$ -- 603
-swap$ -- 148
-text.length$ -- 14
+substring$ -- 739
+swap$ -- 197
+text.length$ -- 18
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 2
-while$ -- 84
-width$ -- 36
-write$ -- 369
-(There were 4 warnings)
+warning$ -- 0
+while$ -- 101
+width$ -- 41
+write$ -- 425
