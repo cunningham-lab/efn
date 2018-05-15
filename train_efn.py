@@ -30,17 +30,17 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     cost_grad_lag = 100;
     pthresh = 0.1;
 
-    # seed RNGs
-    np.random.seed(random_seed);
-    tf.set_random_seed(random_seed);
 
     D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # set number of layers in the parameter network
-    L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
+    L = 6; #max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
 
     # good practice
     tf.reset_default_graph();
+    # seed RNGs
+    tf.set_random_seed(random_seed);
+    np.random.seed(random_seed);
 
     flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_dict, D_Z, T);
     K = tf.shape(Z0)[0];
@@ -65,6 +65,13 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     if (not stochastic_eta):
         # get etas based on constraint_id
         _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        print('eta 0');
+        print(_eta[0]);
+        print('pni 0');
+        print(_param_net_input[0]);
+        print('tx_input 0');
+        print(_Tx_input[0]);
+        exit();
         _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
 
@@ -103,6 +110,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     tf.add_to_collection('eta', eta);
     tf.add_to_collection('param_net_input', param_net_input);
     tf.add_to_collection('log_p_zs', log_p_zs);
+    tf.add_to_collection('Tx_input', Tx_input);
     saver = tf.train.Saver();
 
     # tensorboard logging
@@ -255,12 +263,14 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, check_rate=check_rate, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                      Tx_input=_Tx_input, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                       X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                      Tx_input=_Tx_input, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
