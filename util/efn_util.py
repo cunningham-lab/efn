@@ -576,25 +576,21 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        #tn_prior_eta, tn_prior_param_net_input, tn_prior_params = \
-        #                   drawEtas('normal', D, K_eta, give_inverse_hint);
-        #mus = tn_prior_params['mu'];
-        #Sigmas = tn_prior_params['Sigma'];
         ratelim = 10;
         Nmean = 8;
-        Nmax = 30;
+        Nmax = 15;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
-        #df_fac = 1000;
-        #df = df_fac*D_Z;
-        #Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
+        df_fac = 10;
+        df = df_fac*D_Z;
+        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
-                mus[k,i] = 5.0; #np.random.uniform(0,ratelim);
-            Sigmas[k,:,:] = np.eye(D_Z);
+                mus[k,i] = np.random.uniform(0,ratelim);
+            Sigmas[k,:,:] = Sigma_dist.rvs(1);
             N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
@@ -616,8 +612,8 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         zs = np.zeros((K_eta, D));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
-            alpha_0_k = np.random.uniform(1.0, 5.0, (D,));
-            beta_k = np.random.uniform(1, 5);
+            alpha_0_k = np.random.uniform(1.0, 10.0, (D,));
+            beta_k = np.random.uniform(D, 2*D);
             N = int(min(np.random.poisson(Nmean), Nmax));
             dist1 = dirichlet(alpha_0_k);
             z = dist1.rvs(1);
