@@ -277,7 +277,7 @@ Panel C: Gaussian KL for NF1 and EFN \\
 
 \subsection{Hierarchical Dirichlets}
 
-Some math detail here.  Eq 4 of the Blei LDA paper chooses a factorized posterior in theta and z (the topics and the per document whatever).  Is this actually Dir Dir posterior, we could use just single variational parameters.  Also add hierarchical DPs here to clarify the need for dirdir.
+Some math detail here.  Eq 4 of the Blei LDA paper chooses a factorized posterior in theta and z (the topics and the per document whatever).  Is this actually Dir Dir posterior, we could use just single variational parameters.  And note that the bottom level is a mixture model, not an exp fam (at least not in theta and w, marginalizing out z), so that won't work.  But for alpha and theta; can do VI directly on that family.  Also add hierarchical DPs here to clarify the need for dirdir.
 
 
 Fig 5.  The intractable posterior inference example.  {\bf Key real data result}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
