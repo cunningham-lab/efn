@@ -1,6 +1,7 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 20:44
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 21:45
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
 **BittnerNIPS2018.tex
 (./BittnerNIPS2018.tex
@@ -1298,138 +1299,108 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] (./
-fig/efn1b.tex
-Package epstopdf Info: Source file: <fig/t0.eps>
-(epstopdf)                    date: 2018-05-14 20:40:38
-(epstopdf)                    size: 1802288 bytes
-(epstopdf)             Output file: <fig/t0-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:42:06
-(epstopdf)                    size: 361639 bytes
-(epstopdf)             Command: <repstopdf --outfile=fig/t0-eps-converted-to.pd
-f fig/t0.eps>
-(epstopdf)             \includegraphics on input line 33.
-Package epstopdf Info: Output file is already uptodate.
-<fig/t0-eps-converted-to.pdf, id=68, 433.62pt x 433.62pt>
-File: fig/t0-eps-converted-to.pdf Graphic file (type pdf)
-
-<use fig/t0-eps-converted-to.pdf>
-Package pdftex.def Info: fig/t0-eps-converted-to.pdf used on input line 33.
-(pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+fig/efn1b.tex <fig/t0.png, id=68, 336.25626pt x 292.09125pt>
+File: fig/t0.png Graphic file (type png)
+ <use fig/t0.png>
+Package pdftex.def Info: fig/t0.png used on input line 33.
+(pdftex.def)             Requested size: 39.83385pt x 34.59927pt.
 Package epstopdf Info: Source file: <fig/t11.eps>
-(epstopdf)                    date: 2018-05-14 20:40:23
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 2575797 bytes
 (epstopdf)             Output file: <fig/t11-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 531810 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t11-eps-converted-to.p
 df fig/t11.eps>
 (epstopdf)             \includegraphics on input line 39.
-runsystem(repstopdf --outfile=fig/t11-eps-converted-to.pdf fig/t11.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t11-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:20
-(epstopdf)                    size: 531810 bytes.
-
-<fig/t11-eps-converted-to.pdf, id=69, 433.62pt x 433.62pt>
+<fig/t11-eps-converted-to.pdf, id=70, 433.62pt x 433.62pt>
 File: fig/t11-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t11-eps-converted-to.pdf>
 Package pdftex.def Info: fig/t11-eps-converted-to.pdf used on input line 39.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 Package epstopdf Info: Source file: <fig/t12.eps>
-(epstopdf)                    date: 2018-05-14 20:40:31
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 2587055 bytes
 (epstopdf)             Output file: <fig/t12-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 534533 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t12-eps-converted-to.p
 df fig/t12.eps>
 (epstopdf)             \includegraphics on input line 40.
-runsystem(repstopdf --outfile=fig/t12-eps-converted-to.pdf fig/t12.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t12-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:20
-(epstopdf)                    size: 534533 bytes.
-
-<fig/t12-eps-converted-to.pdf, id=70, 433.62pt x 433.62pt>
+<fig/t12-eps-converted-to.pdf, id=71, 433.62pt x 433.62pt>
 File: fig/t12-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t12-eps-converted-to.pdf>
 Package pdftex.def Info: fig/t12-eps-converted-to.pdf used on input line 40.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 Package epstopdf Info: Source file: <fig/t13.eps>
-(epstopdf)                    date: 2018-05-14 20:40:39
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 199802 bytes
 (epstopdf)             Output file: <fig/t13-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 44768 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t13-eps-converted-to.p
 df fig/t13.eps>
 (epstopdf)             \includegraphics on input line 41.
-runsystem(repstopdf --outfile=fig/t13-eps-converted-to.pdf fig/t13.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t13-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:21
-(epstopdf)                    size: 44768 bytes.
-
-<fig/t13-eps-converted-to.pdf, id=71, 433.62pt x 433.62pt>
+<fig/t13-eps-converted-to.pdf, id=72, 433.62pt x 433.62pt>
 File: fig/t13-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t13-eps-converted-to.pdf>
 Package pdftex.def Info: fig/t13-eps-converted-to.pdf used on input line 41.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 Package epstopdf Info: Source file: <fig/t21.eps>
-(epstopdf)                    date: 2018-05-14 20:40:26
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 658439 bytes
 (epstopdf)             Output file: <fig/t21-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 102502 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t21-eps-converted-to.p
 df fig/t21.eps>
 (epstopdf)             \includegraphics on input line 49.
-runsystem(repstopdf --outfile=fig/t21-eps-converted-to.pdf fig/t21.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t21-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:21
-(epstopdf)                    size: 102502 bytes.
-
-<fig/t21-eps-converted-to.pdf, id=72, 433.62pt x 433.62pt>
+<fig/t21-eps-converted-to.pdf, id=73, 433.62pt x 433.62pt>
 File: fig/t21-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t21-eps-converted-to.pdf>
 Package pdftex.def Info: fig/t21-eps-converted-to.pdf used on input line 49.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 Package epstopdf Info: Source file: <fig/t22.eps>
-(epstopdf)                    date: 2018-05-14 20:40:34
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 375574 bytes
 (epstopdf)             Output file: <fig/t22-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 62827 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t22-eps-converted-to.p
 df fig/t22.eps>
 (epstopdf)             \includegraphics on input line 50.
-runsystem(repstopdf --outfile=fig/t22-eps-converted-to.pdf fig/t22.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t22-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:21
-(epstopdf)                    size: 62827 bytes.
-
-<fig/t22-eps-converted-to.pdf, id=73, 433.62pt x 433.62pt>
+<fig/t22-eps-converted-to.pdf, id=74, 433.62pt x 433.62pt>
 File: fig/t22-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t22-eps-converted-to.pdf>
 Package pdftex.def Info: fig/t22-eps-converted-to.pdf used on input line 50.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 Package epstopdf Info: Source file: <fig/t23.eps>
-(epstopdf)                    date: 2018-05-14 20:40:42
+(epstopdf)                    date: 2018-05-14 21:02:44
 (epstopdf)                    size: 115554 bytes
 (epstopdf)             Output file: <fig/t23-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-05-14 21:02:44
+(epstopdf)                    size: 24876 bytes
 (epstopdf)             Command: <repstopdf --outfile=fig/t23-eps-converted-to.p
 df fig/t23.eps>
 (epstopdf)             \includegraphics on input line 51.
-runsystem(repstopdf --outfile=fig/t23-eps-converted-to.pdf fig/t23.eps)...execu
-ted safely (allowed).
+Package epstopdf Info: Output file is already uptodate.
 
-Package epstopdf Info: Result file: <fig/t23-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-05-14 20:44:22
-(epstopdf)                    size: 24876 bytes.
-
-<fig/t23-eps-converted-to.pdf, id=74, 433.62pt x 433.62pt>
+<fig/t23-eps-converted-to.pdf, id=75, 433.62pt x 433.62pt>
 File: fig/t23-eps-converted-to.pdf Graphic file (type pdf)
 
 <use fig/t23-eps-converted-to.pdf>
@@ -1453,46 +1424,42 @@ on input line 197.
 Package natbib Warning: Citation `wainwrigh2008graphical' on page 4 undefined o
 n input line 199.
 
-[4 <./fig/t0-eps-converted-to.pdf> <./fig/t11-eps-converted-to.pdf> <./fig/t12-
-eps-converted-to.pdf> <./fig/t13-eps-converted-to.pdf> <./fig/t21-eps-converted
--to.pdf> <./fig/t22-eps-converted-to.pdf> <./fig/t23-eps-converted-to.pdf>]
-[5]
-Underfull \hbox (badness 10000) in paragraph at lines 242--247
+[4 <./fig/t0.png> <./fig/t11-eps-converted-to.pdf> <./fig/t12-eps-converted-to.
+pdf> <./fig/t13-eps-converted-to.pdf> <./fig/t21-eps-converted-to.pdf> <./fig/t
+22-eps-converted-to.pdf> <./fig/t23-eps-converted-to.pdf>] [5]
+Underfull \hbox (badness 10000) in paragraph at lines 246--251
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 249--254
+Underfull \hbox (badness 10000) in paragraph at lines 253--258
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 255--256
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
 
  []
 
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [6]
-Overfull \hbox (26.80038pt too wide) in paragraph at lines 276--277
+[6]
+Overfull \hbox (26.80038pt too wide) in paragraph at lines 280--281
 []\T1/ptm/m/n/10 (-20) von Mises-Fisher dis-tri-bu-tion, eg http://www.jmlr.org
 /papers/volume6/banerjee05a/banerjee05a.pdf
  []
 
 [7] [8]
-Overfull \hbox (38.15982pt too wide) in paragraph at lines 349--357
+Overfull \hbox (38.15982pt too wide) in paragraph at lines 353--361
 \OML/cmm/m/it/10 p\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 X \OMS/cmsy/m/n/10 j []\OT1
 /cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 349--357
+Underfull \hbox (badness 10000) in paragraph at lines 353--361
 
  []
 
 
-Overfull \hbox (80.76028pt too wide) in paragraph at lines 366--370
+Overfull \hbox (80.76028pt too wide) in paragraph at lines 370--374
 []$\OML/cmm/m/it/10 p\OT1/cmr/m/n/10 ([] \OMS/cmsy/m/n/10 j \OML/cmm/m/it/10 X\
 OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
@@ -1509,19 +1476,19 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
 Package natbib Warning: There were undefined citations.
 
 [12]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 453.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 453.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 457.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 457.
  (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 453.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 453.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 457.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 457.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: E559C40A99A2C3AD3CEAD2D4BD7184E4;194.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 453.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 457.
  ) 
 Here is how much of TeX's memory you used:
- 23723 strings out of 493014
- 473092 string characters out of 6133351
- 604868 words of memory out of 5000000
+ 23724 strings out of 493014
+ 473028 string characters out of 6133351
+ 605874 words of memory out of 5000000
  26564 multiletter control sequences out of 15000+600000
  46089 words of font info for 175 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1549,10 +1516,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (12 pages, 1914261 bytes).
+Output written on BittnerNIPS2018.pdf (12 pages, 1573407 bytes).
 PDF statistics:
  250 PDF objects out of 1000 (max. 8388607)
- 205 compressed objects within 3 object streams
+ 204 compressed objects within 3 object streams
  43 named destinations out of 1000 (max. 500000)
  21072 words of extra memory for PDF output out of 24883 (max. 10000000)
 

@@ -286,7 +286,11 @@ def batch_diagnostics(exp_fam, K_eta, sess, feed_dict, X, log_p_zs, costs, R2s, 
         else:
             KLs.append(np.nan);
             continue;
-        KLs.append(approxKL(_y_k, _X_k, exp_fam, params_k));
+        try:
+            KL_k = approxKL(_y_k, _X_k, exp_fam, params_k);
+        except:
+            KL_k = np.nan;
+        KLs.append(KL_k);
     return _costs, _R2s, KLs;
 
 def approxKL(y_k, X_k, exp_fam, params, plot=False):
@@ -530,7 +534,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 2;
+        df_fac = 100;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         for k in range(K_eta):
@@ -558,12 +562,12 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         Psi_targs = np.zeros((K_eta, Dsqrt, Dsqrt));
         m_targs = np.zeros((K_eta, 1));
 
-        df_fac = 2;
+        df_fac = 100;
         df = df_fac*Dsqrt;
         Psi_dist = invwishart(df=df, scale=df*np.eye(Dsqrt));
         for k in range(K_eta):
             Psi_k = Psi_dist.rvs(1);
-            m_k = np.random.randint(2,11)*Dsqrt;
+            m_k = np.random.randint(2*Dsqrt,3*Dsqrt+1)
             Psi_targs[k,:,:] = Psi_k;
             m_targs[k,0] = m_k;
             eta_k, param_net_input_k = inv_wishart_eta(Psi_k, m_k, give_inverse_hint);
@@ -572,25 +576,21 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        #tn_prior_eta, tn_prior_param_net_input, tn_prior_params = \
-        #                   drawEtas('normal', D, K_eta, give_inverse_hint);
-        #mus = tn_prior_params['mu'];
-        #Sigmas = tn_prior_params['Sigma'];
         ratelim = 10;
         Nmean = 8;
-        Nmax = 30;
+        Nmax = 15;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
-        #df_fac = 1000;
-        #df = df_fac*D_Z;
-        #Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
+        df_fac = 10;
+        df = df_fac*D_Z;
+        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
-                mus[k,i] = 5.0; #np.random.uniform(0,ratelim);
-            Sigmas[k,:,:] = np.eye(D_Z);
+                mus[k,i] = np.random.uniform(0,ratelim);
+            Sigmas[k,:,:] = Sigma_dist.rvs(1);
             N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
@@ -612,8 +612,8 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         zs = np.zeros((K_eta, D));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
-            alpha_0_k = np.random.uniform(1.0, 5.0, (D,));
-            beta_k = np.random.uniform(1, 5);
+            alpha_0_k = np.random.uniform(1.0, 10.0, (D,));
+            beta_k = np.random.uniform(D, 2*D);
             N = int(min(np.random.poisson(Nmean), Nmax));
             dist1 = dirichlet(alpha_0_k);
             z = dist1.rvs(1);
