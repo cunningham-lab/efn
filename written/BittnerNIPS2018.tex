@@ -115,7 +115,7 @@ Here we learn an exp fam \emph{model}:
 
 \item We investigate the problem of learning exp fams, not individual distributions.  Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
 
-\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because 
+\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because hard work has not yet been put into deriving transformation samplers Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions.
 \item EFNs allow the embodiment of modeling assumptions without sacrificing expressiity
 \item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
 \item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
@@ -137,7 +137,6 @@ Our contributions include:
 
 
   
-Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet).
 
   \emph{People use lots of implicit generative models}:
   
@@ -167,6 +166,21 @@ Important to distinguish carefully from VI.  In a sense VI does parameterize a f
   
  \section{Exponential family networks}
  
+ \subsection{Density network models}
+
+bants.  defines a Q.
+
+ \subsection{Exponential families}
+
+bants.  Pitman-Koopman.  Defines an M.  
+
+ \subsection{Exponential family networks}
+
+includes the network definition of Fig 1c, the objective, and the optimization algorithm.
+ 
+ \subsection{Relation to variational inference}
+ 
+ We have already covered related work; here we scrutinize EFNs in terms of VI.
  
 We are interested in perhaps the most classic inference problem:
 
@@ -224,6 +238,13 @@ Another related work is that this is somehow the dual of MEFN, or a generalizati
   
   Another point is that it's unknown if posterior contraction can be well modeled.  As in, we know that most VI NF type things are conditioned on a single data point, so the posterior variance can tend to be rather homogenous.  One more contribution is to offer that contraction study; as we get more data points we will get more posterior contraction, so this tests the ability of this model to learn that.
   
+  
+  Key distinctions:
+  \begin{itemize}
+  \item narrow mechanical sense this is VI with an observation of the natural parameters, namely the sample exp fam over all data.  but that's pedantic.
+  \item no generative model in the usual sense: yes, we can consider a prior and then some observation model as the genrative model, but in any event it's not a neural net.
+  \item we lack a finite data set $X$, so the objective is technically different.  We stipulate a distribution and then this is expectation over that model space, a KL or a KL to the broader joint with $\eta$.  This is concretely different, as we typically use a fixed size dataset $X$ so we can calculate the ELBO over the 
+  \end{itemize}
   
   
   
