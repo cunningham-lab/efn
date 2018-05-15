@@ -5,48 +5,47 @@ The style file: unsrt.bst
 Database file #1: BittnerNIPS2018.bib
 Warning--I didn't find a database entry for "zhou2018compressability"
 Warning--I didn't find a database entry for ""
-Warning--I didn't find a database entry for "wainwrigh2008graphical"
 Warning--empty journal in Kingma:2013aa
 Warning--empty journal in Mohamed:2016aa
-You've used 23 entries,
+You've used 34 entries,
             1791 wiz_defined-function locations,
-            576 strings with 7565 characters,
-and the built_in function-call counts, 5848 in all, are:
-= -- 516
-> -- 271
-< -- 10
-+ -- 98
-- -- 75
-* -- 339
-:= -- 886
-add.period$ -- 72
-call.type$ -- 23
-change.case$ -- 20
+            646 strings with 9601 characters,
+and the built_in function-call counts, 9044 in all, are:
+= -- 819
+> -- 397
+< -- 14
++ -- 144
+- -- 110
+* -- 564
+:= -- 1350
+add.period$ -- 107
+call.type$ -- 34
+change.case$ -- 30
 chr.to.int$ -- 0
-cite$ -- 25
-duplicate$ -- 298
-empty$ -- 560
-format.name$ -- 75
-if$ -- 1352
+cite$ -- 36
+duplicate$ -- 442
+empty$ -- 875
+format.name$ -- 110
+if$ -- 2089
 int.to.chr$ -- 0
-int.to.str$ -- 23
-missing$ -- 26
-newline$ -- 118
-num.names$ -- 25
-pop$ -- 100
+int.to.str$ -- 34
+missing$ -- 38
+newline$ -- 173
+num.names$ -- 36
+pop$ -- 137
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 173
+skip$ -- 248
 stack$ -- 0
-substring$ -- 327
-swap$ -- 101
-text.length$ -- 10
+substring$ -- 603
+swap$ -- 148
+text.length$ -- 14
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 2
-while$ -- 50
-width$ -- 25
-write$ -- 247
-(There were 5 warnings)
+while$ -- 84
+width$ -- 36
+write$ -- 369
+(There were 4 warnings)

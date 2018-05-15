@@ -55,15 +55,13 @@
 % author name.
 
 \author{
-  Sean R. Bittner \thanks{Use footnote for providing further
-    information about author (webpage, alternative
-    address)---\emph{not} for acknowledging funding agencies.} \\
+  Sean R. Bittner \\ %\thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.} \\
   Department of Neuroscience\\
   Columbia University\\
   \texttt{srb2201@columbia.edu} \\
   %% examples of more authors
  \And
-Coauthor \\
+John P. Cunningham \\
 Department of Statistics\\
   Columbia University\\
  \texttt{jpc2181@columbia.edu} \\
@@ -153,10 +151,9 @@ Our contributions include:
  
  Several have pointed out that these IGMs are in fact strictly less expressive than a mean field, at least in the conventional VI setting.  See for example http://dustintran.com/blog/variational-auto-encoders-do-not-train-complex-generative-models  (here I like the line ``The neural network used in the encoder (variational distribution) does not lead to any richer approximating distribution. It is a way to amortize inference such that the number of parameters does not grow with the size of the data (an incredible feat, but not one for expressivity!) (Stuhlmuller et al., 2013)``).
  You have to optimize for every data point individually, or instead you get to do so in aggregate once in advance (at a much higher cost) and then recover that cost over future data points within that distribution (and hence the term amortization, though perhaps there is shared statistical power as well)
- Etc etc what we are doing here is \emph{amortized} amortized inference, in the sense that we are amortizing not the data points, but the distribution itself.
+ Etc etc what we are doing here is amortized inference in a different sense, in the sense that we are amortizing not the data points, but the distribution itself.
 
 ... \\
-This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
 
 ...
 
@@ -207,6 +204,7 @@ includes the network definition of Fig 1c, the objective, and the optimization a
   \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
 \end{figure}
 
+This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
 
 Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
 Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
