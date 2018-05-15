@@ -34,7 +34,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
 
     # set number of layers in the parameter network
-    L = 6; #max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
+    L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
 
     # good practice
     tf.reset_default_graph();
@@ -65,13 +65,6 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     if (not stochastic_eta):
         # get etas based on constraint_id
         _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-        print('eta 0');
-        print(_eta[0]);
-        print('pni 0');
-        print(_param_net_input[0]);
-        print('tx_input 0');
-        print(_Tx_input[0]);
-        exit();
         _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
 
 
