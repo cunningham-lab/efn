@@ -256,7 +256,7 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
 Introductory remarks and then comments about architectural particulars, including planar flow networks of \cite{rezende2015variational}. Note Number of panar flows is always D (intrinsic dimensionality of flows), units per layer ramping is always the same function of D.  The number of layers in the theta network is always a function of D - will probably just always use 8 layers.
 Remember 
 
-\subsection{Validation in tractable exponential families}
+\subsection{Tractable exponential families}
 
  \emph{Chapter 2: Fig 2 and 3 and 4}
  Ground truth toy examples, etc. 
@@ -275,9 +275,30 @@ Panel B NIW KL for NF1 and EFN \\
 Panel C: Gaussian KL for NF1 and EFN \\
 
 
-\subsection{Hierarchical Dirichlets}
+\subsection{Intractable exponential families}
 
-Some math detail here.  Eq 4 of the Blei LDA paper chooses a factorized posterior in theta and z (the topics and the per document whatever).  Is this actually Dir Dir posterior, we could use just single variational parameters.  And note that the bottom level is a mixture model, not an exp fam (at least not in theta and w, marginalizing out z), so that won't work.  But for alpha and theta; can do VI directly on that family.  Also add hierarchical DPs here to clarify the need for dirdir.
+
+\emph{concept and detail of hiearchical Dir and TNP}
+
+\paragraph{Hierarchical Dirichlets}
+
+Hierarchical dirichlets are useful and have some history; most notable is with the  Hierarchical Dirichlet Process \cite{teh2006hdp}, but historically this was done in the finite case also \cite{mackay1995hierarchical}.  Here is some math.    Note that this matters for multi-corpus LDA generally as well \cite{blei2003latent, pritchard2000inference}.
+
+
+\paragraph{Truncated- and log-normal Poisson}
+
+used a lot \cite{gao2016linear}\cite{adams2009tractable}\cite{cunningham2008fast,cunningham2008inferring}
+Figure 4: \\
+EFN performance by dimensionality on Dir-Dir \\
+
+
+\subsection{Truncated-Gaussian and log-Gaussian Poisson}
+
+
+Figure 4: \\
+Truncated \\
+
+
 
 
 Fig 5.  The intractable posterior inference example.  {\bf Key real data result}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
@@ -288,43 +309,10 @@ Now, PANEL A of this figure shows performance as a size of the dataset.  This wi
 This will be for one real example $X$.  As such, to get error bars, just take a big dataset and randomly subsample.  Then the posterior performance is really for that very dataset, so the sem is coherent and the right thing to calculate/show.  Important to clarify that doing so \emph{does not} test how well this does across the entire exp fam, but just this one posterior.  To test that, we do it in simulation: generate \emph{many datasets $X$}, then do the above for every one of them.  Same computation for EFN (since its just plugging in a dataset), but VI alternatives 1 and 2 now need to be rerun for every dataset.  And it's still simulated data, not really offering something fundamentally more than Fig 3 (well ok it's an intractable model, but I'm not sure that offers so much).
 
 
-\subsection{Truncated-Gaussian and log-Gaussian Poisson}
-
-
-\begin{figure}
-  \centering
-  \fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
-  \caption{Figure 1: possibly Fig 7.2 bias-variance tradeoff and then benefit of a restricted model from Hastie Book, or similar from W4400 (ask PO for batman permission).}
-\end{figure}
 
 
 
-\begin{table}
-  \caption{Sample table title}
-  \label{sample-table}
-  \centering
-  \begin{tabular}{lll}
-    \toprule
-    \multicolumn{2}{c}{Part}                   \\
-    \cmidrule(r){1-2}
-    Name     & Description     & Size ($\mu$m) \\
-    \midrule
-    Dendrite & Input terminal  & $\sim$100     \\
-    Axon     & Output terminal & $\sim$10      \\
-    Soma     & Cell body       & up to $10^6$  \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-
-\begin{verbatim}
-   \usepackage[pdftex]{graphicx} ...
-   \includegraphics[width=0.8\linewidth]{myfile.pdf}
-\end{verbatim}
-
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 
 \section{Appendix}
@@ -472,6 +460,30 @@ Belief Networks
 \item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
 \item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
 \end{itemize}  
+
+
+\begin{table}
+  \caption{Sample table title}
+  \label{sample-table}
+  \centering
+  \begin{tabular}{lll}
+    \toprule
+    \multicolumn{2}{c}{Part}                   \\
+    \cmidrule(r){1-2}
+    Name     & Description     & Size ($\mu$m) \\
+    \midrule
+    Dendrite & Input terminal  & $\sim$100     \\
+    Axon     & Output terminal & $\sim$10      \\
+    Soma     & Cell body       & up to $10^6$  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\begin{verbatim}
+   \usepackage[pdftex]{graphicx} ...
+   \includegraphics[width=0.8\linewidth]{myfile.pdf}
+\end{verbatim}
 
 
 
