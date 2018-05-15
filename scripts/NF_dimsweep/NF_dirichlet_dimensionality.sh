@@ -9,5 +9,6 @@ do
     ((counter++))
   done
   nohup python3 train_nf_helper.py dirichlet $D 0 10 2>&1 > $counter.log
+  ((counter++))
 done
 

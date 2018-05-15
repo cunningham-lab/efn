@@ -10,5 +10,6 @@ do
     ((counter++))
   done
   nohup python3 train_efn1_helper.py dirichlet $D 0 10 2>&1 > $counter.log
+  ((counter++))
 done
 

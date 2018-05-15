@@ -67,7 +67,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     elif (exp_fam == 'inv_wishart'):
         Psi_targ = params['Psi'];
         m_targ = params['m'];
-        _eta, _ = inv_wishart_eta(Psi_targ[0], m_targ[0], False);
+        _eta, _ = inv_wishart_eta(Psi_targ[0], m_targ[0,0], False);
         _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'prp_tn'):
         mus =  params['mus'];
@@ -75,9 +75,6 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         xs = params['xs'];
         Ns = params['Ns'];
         _eta, _ = prp_tn_eta(mus[0], Sigmas[0], xs[0], Ns[0], False);
-        print('eta');
-        print(_eta);
-        exit();
         _Tx_input = np.zeros((K_eta,num_Tx_inputs));
     elif (exp_fam == 'dir_dir'):
         alpha_0s = params['alpha_0s'];

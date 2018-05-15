@@ -10,5 +10,6 @@ do
     ((counter++))
   done
   nohup python3 train_efn1_helper.py inv_wishart $D 1 10 2>&1 > $counter.log
+  ((counter++))
 done
 
