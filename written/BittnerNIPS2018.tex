@@ -174,7 +174,7 @@ bants.  defines a Q.
  $\Theta$ defines quite a big $\mathcal{Q}$, and indeed the subject of compressibility, generalization, etc is of keen interest to many \cite{zhou2018compressability}.  So actually the space of distributions is quite large, and in many cases certainly larger than it needs be.  Why?  Well, we know precisely the parameter space of the exponential family; it is defined by the \emph{natural} parameters $\eta \in \mathbb{R}^p$ (or whatever we choose there).
 
  
-Density networks are an old idea \cite{mackay1997density}.
+Density networks are an old idea \cite{mackay1997density}, as are neural networks to fit a probability model to data \cite{dayan1995helmholtz,hinton1995wake}.
 
  We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    A nice line from Rezende and Mohamed is: Thus, an ideal family of variational distributions q(z|x) is one that is highly flexible, preferably flexible enough to contain the true posterior as one solution. One path towards this ideal is based on the principle of nor- malizing flows (Tabak Turner, 2013; Tabak VandenEijnden, 2010).
  
@@ -184,7 +184,7 @@ Density networks are an old idea \cite{mackay1997density}.
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \subsection{Exponential families}
 
-bants.  Pitman-Koopman.  Defines an M.  
+bants.  Pitman-Koopman Lemma \cite[\S 3.3.3]{robert2007bayesian}  Defines an M.  
 
  \emph{Why this is important}. 
 Exp fams are awesome and fundamental.  Also \cite{wainwright2008graphical} rightly point out that many many inference problems can be cast as exponential families.  Can we cast the VAE encoder network as a suitable exp fam... sure I think that's right; the network parameters of z form the statistics, and then the observations are eta's.  
@@ -373,7 +373,6 @@ acknowledgments in the anonymized submission, only in the final paper.
 \bibliographystyle{unsrt}
 \bibliography{BittnerNIPS2018}
 
-Stuff on wake sleep and the Helmholtz machine
 
 
 
