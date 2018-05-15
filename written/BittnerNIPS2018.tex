@@ -282,6 +282,7 @@ Panel B TNP picture example of prior and posterior with a few samples, just for 
 Panel C: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
 Panel D (as time allows): Log-normal Poisson example of prior (or perhaps exp prior) and posterior with a few samples, just for feel good  \\
 
+\subsection{Neural spike train analysis}
 
 Figure 5: \\
 Real data analysis and posterior inference.  {\bf Key real data result on TNP}.  \\
@@ -304,6 +305,25 @@ The key point with these is that, while you have the \emph{same exact} flow netw
 We hope and expect this will show that when the dataset gets small, this "traditional VI" will get arbitrarily bad (can't learn a network); eventually, there will be so much data that the VI will match or outperform the EFN... outperform because VI can focus specifically on this distribution rather than over the whole family, so the EFN has less effective data for this $\eta$ (but not because it has a broader range of models, since we believe the EFN contains the closest member).  Performance metric should be ELBO on some held out data or something like that (it's a posterior, so log likelihood doesn't really make sense).  Test data anyway.   Check VI papers for usual metrics.  A key point to make here is that one great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff (see for example Hastie and Tibshirani book, Fig 7.2). Or Figure 4 is bias-variance and some sample posteriors in 2-d (showing how nicely it works), and then Fig 5 is the above performance, with both train and test.   
 
 This will be for one real example $X$.  As such, to get error bars, just take a big dataset and randomly subsample the test set.  Then the posterior performance is really for that very dataset, so the sem is coherent and the right thing to calculate/show.  Important to clarify that doing so \emph{does not} test how well this does across the entire exp fam, but just this one posterior.  ((To test that, we would do it in simulation: generate \emph{many datasets $X$}, then do the above for every one of them.  Same computation for EFN (since its just plugging in a dataset), but VI alternatives 1 and 2 now need to be rerun for every dataset.  And it's still simulated data, not really offering something fundamentally more than Fig 3 (well ok it's an intractable model, but I'm not sure that offers so much)...let's skip that altogether)).
+
+
+
+\section{Conclusion}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsubsection*{Acknowledgments}
+%
+%Peter Orbanz.  Funding.
+
+
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{References}
+
+\bibliographystyle{unsrt}
+\bibliography{BittnerNIPS2018}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -359,55 +379,6 @@ $$
   
 \clearpage
 
-\subsubsection*{Acknowledgments}
-
-Use unnumbered third level headings for the acknowledgments. All
-acknowledgments go at the end of the paper. Do not include
-acknowledgments in the anonymized submission, only in the final paper.
-
-\section*{References}
-
-\bibliographystyle{unsrt}
-\bibliography{BittnerNIPS2018}
-
-
-
-
-
-From Blei review on VI.
-ThedevelopmentofvariationaltechniquesforBayesian inference followed two parallel, yet separate, tracks. Peterson and Anderson (1987) is arguably the first variational procedure for a particular model: a neural network. This paper, along with insights from statistical mechanics (Parisi, 1988), led to a flurry of variational inference procedures for a wide class of models (Saul et al., 1996; Jaakkola and Jordan, 1996, 1997; Ghahramani and Jordan, 1997; Jordan et al., 1999). In parallel, Hinton and Van Camp (1993) proposed a variational algorithm for a similar neural network model. Neal and Hinton (1999) (first published in 1993) made important connections to the expectation maximization (EM) algorithm (Dempster et al., 1977), which then led to a variety of variational inference algorithms for other types of models (Waterhouse et al., 1996; MacKay, 1997).
-
-Salimans, T. and Knowles, D. (2014). On using control variates with stochastic approximation for variational Bayes. arXiv preprint arXiv:1401.1022.
-
-Salimans, T., Kingma, D., and Welling, M. (2015). Markov chain Monte Carlo and variational inference: Bridging the gap. In International Conference on Machine Learning, pages 1218? 1226.
-
-Ranganath, R., Gerrish, S., and Blei, D. (2014). Black box variational inference. In Artificial Intelligence and Statistics.
-
-Hoffman, M. D. and Blei, D. M. (2015). Structured stochastic variational inference. In Artificial Intelligence and Statistics.
-
-
-Possibly some of 
-Burda, Y., Grosse, R., \& Salakhutdinov, R. (2016). Importance Weighted Autoencoders. In International Conference on Learning Representations.
-Damianou, A. C., \& Lawrence, N. D. (2013). Deep Gaussian Processes. In Artificial Intelligence and Statistics.
-Dayan, P., Hinton, G. E., Neal, R. M., \& Zemel, R. S. (1995). The Helmholtz Machine. Neural Computation, 7(5), 889?904. http://doi.org/10.1162/neco.1995.7.5.889
-Dinh, L., Sohl-Dickstein, J., \& Bengio, S. (2016). Density estimation using Real NVP. arXiv.org.
-Harville, D. A (1977). Maximum likelihood approaches to variance component estimation and to related problems. Journal of the American Statistical Association, 72(358):320?338.
-Hinton, G. and Van Camp, D (1993). Keeping the neural networks simple by minimizing the description length of the weights. In Computational Learning Theory, pp. 5?13. ACM.
-Johnson, M. J., Duvenaud, D., Wiltschko, A. B., Datta, S. R., \& Adams, R. P. (2016). Composing graphical models with neural networks for structured representations and fast inference. arXiv.org.
-Kingma, D. P., \& Welling, M. (2014). Auto-Encoding Variational Bayes. In International Conference on Learning Representations.
-Kingma, D. P., Salimans, T., \& Welling, M. (2016). Improving Variational Inference with Inverse Autoregressive Flow. arXiv.org.
-Louizos, C., \& Welling, M. (2016). Structured and Efficient Variational Deep Learning with Matrix Gaussian Posteriors. In International Conference on Machine Learning.
-Maaloe, L., Sonderby, C. K., Sonderby, S. K., \& Winther, O. (2016). Auxiliary Deep Generative Models. In International Conference on Machine Learning.
-MacKay, D. J., \& Gibbs, M. N. (1999). Density networks. Statistics and neural networks: advances at the interface. Oxford University Press, Oxford, 129-144.
-Mnih, A., \& Rezende, D. J. (2016). Variational inference for Monte Carlo objectives. In International Conference on Machine Learning.
-Ranganath, R., Tran, D., \& Blei, D. M. (2016). Hierarchical Variational Models. In International Conference on Machine Learning.
-Rezende, D. J., Mohamed, S., \& Wierstra, D. (2014). Stochastic Backpropagation and Approximate Inference in Deep Generative Models. In International Conference on Machine Learning.
-Salimans, T., Kingma, D. P., \& Welling, M. (2015). Markov Chain Monte Carlo and Variational Inference: Bridging the Gap. In International Conference on Machine Learning.
-Salakhutdinov, R., Tenenbaum, J. B., and Torralba, A (2013). Learning with hierarchical-deep models. Pattern Analysis and Machine Intelligence, IEEE Transactions on, 35 (8):1958?1971.
-Stuhlmuller, A., Taylor, J., \& Goodman, N. (2013). Learning Stochastic Inverses. In Neural Information Processing Systems.
-Tran, D., Blei, D. M., \& Airoldi, E. M. (2015). Copula variational inference. In Neural Information Processing Systems.
-Tran, D., Ranganath, R., \& Blei, D. M. (2016). The Variational Gaussian Process. International Conference on Learning Representations.
-Waterhouse, S., MacKay, D., and Robinson, T (1996). Bayesian methods for mixtures of experts. In Neural Information Processing Systems.
 
 \end{document}
 
