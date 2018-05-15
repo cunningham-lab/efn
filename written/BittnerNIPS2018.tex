@@ -259,11 +259,8 @@ Panel A: Dir KL for NF1 and EFN and EFN1\\
 Panel B NIW KL for NF1 and EFN and EFN1 \\
 Panel C: Gaussian KL for NF1 and EFN and EFN1 \\
 
-
 \subsection{Intractable exponential families}
 
-
-\emph{concept and detail of hiearchical Dir and TNP}
 
 \paragraph{Hierarchical Dirichlets}
 
@@ -273,20 +270,18 @@ Hierarchical dirichlets are useful and have some history; most notable is with t
 \paragraph{Truncated- and log-normal Poisson}
 
 used a lot \cite{gao2016linear}\cite{adams2009tractable}\cite{cunningham2008fast,cunningham2008inferring}
-Figure 4: \\
-EFN performance by dimensionality on Dir-Dir \\
-
-
-\subsection{Truncated-Gaussian and log-Gaussian Poisson}
-
 
 Figure 4: \\
-Truncated \\
+EFN in intractable exp fams (connecting to above, but with hard distribs and the ELBO) \\
+Panel A: Dir-Dir ELBO by dimensionality for NF1 and EFN and EFN1\\
+Panel B TNP picture example of prior and posterior with a few samples, just for feel good  \\
+Panel C: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
+Panel D (as time allows): Log-normal Poisson example of prior (or perhaps exp prior) and posterior with a few samples, just for feel good  \\
 
 
 
-
-Fig 5.  The intractable posterior inference example.  {\bf Key real data result}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
+Figure 5: \\
+Real data analysis and posterior inference.  {\bf Key real data result on TNP}.  Learn the full posterior family for some problem (see ideas below).  Then get some data $X$.  Then find the posterior distribution for that data by indexing the natural parameters (as in, just plugging in the correct choice of $\eta$, which is after all some function of the prior and $X$).  That gives the EFN posterior  $q(z | X)$.  (Possible preceeding figure: show its properties, show a low-d picture, show its non-Gaussianity).  
 Now, as Alternative 1 do full norm flow variational inference (explore all of $\phi$ space with the full flow network model $\mathcal{Q}$), which is to say $\arg\min_\phi KL(q_\phi || p)$: the key difference here is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.   As Alternative 2, be literal to Figure 2 of the Norm Flow VI paper, give the sufficient statistics of that K=1 dataset, and learn an EFN from scratch.  This alternative is important because it is the most specific (but kind of annoying, hence alternative 1) interpretation of norm flow VI paper.  
 
 Now, PANEL A of this figure shows performance as a size of the dataset.  This will likely show that when the dataset gets small, this "traditional VI" will get arbitrarily bad (can't learn a network); eventually, there will be so much data that the VI will match or outperform the EFN... outperform because VI can focus specifically on this distribution rather than over the whole family, so the EFN has less effective data for this $\eta$ (but not because it has a broader range of models, since we believe the EFN contains the closest member).  Alternative 2 should do shittier across the board than alt 1, I think?   Performance metric should be ELBO on some held out data or something like that (it's a posterior, so log likelihood doesn't really make sense).  Test data anyway.   Check VI papers for usual metrics.  PANEL B of this figure shows performance as dimension of the problem grows.  Pick some middle dataset size, then repeat same performance metric as in Panel A for a range of dimensionalities of the exponential family.   VI will generalize to test data worse and worse as dimensionality grows, but EFN will learn the family less well on its computational budget.  This could go either way but will be interesting regardless.  I suppose we should also have those panels for training data.   A key point to make here is that one great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff (see for example Hastie and Tibshirani book, Fig 7.2).  Maybe that's Panel A.  Or Figure 4 is bias-variance and some sample posteriors in 2-d (showing how nicely it works), and then Fig 5 is the above performance, with both train and test.   Notice one pain here is that Panel B requires training a new EFN at every dimensionality.  Sorry.
