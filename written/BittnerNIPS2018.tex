@@ -291,16 +291,17 @@ Those spike trains should be conditionally independent draws from the same under
 Bin the length of time $T$ into $\approx 20-30$ equally spaced time bins.  Thus $z$ is now a vector in $\mathbb{R}^20$. \\
 Now each spike train $x_i$ is a conditionally independent Poisson vector observation, with rate vector $z$.\\
 Learn the 20 dimensional TNP exp fam, without any regard to this dataset $X$. \\
-{\bf Now we want to learn the posterior $p(z | \textrm{ some fixed number $R$ of data points})$.  \\
+{\bf Now we want to learn the posterior $p(z | \textrm{ some fixed number $R$ of data points})$}.  \\
 To do this for an EFN, just plug in those $R$ points $x_{i_1},...,x_{i_R}$ and the prior as a natural parameter, and job done. \\
 To do this for an NF1, train a VI model by taking the log joint with $R$ data points, then go through and resample $R$ points every time from your training dataset with $N$ data points. \\
 {\bf PANEL A: ELBO on held out data as a function of $R$, for a middle choice of training dataset size $N$.} \\ 
 {\bf PANEL B: ELBO on held out data as a function of $N$, for a middle choice of number of samples in the posterior $R$.} \\
 {\bf PANEL C: (ELBO EFN - ELBO NF1) as a surface plot as a function of $R,N$.  That is, positive places is where EFN outperforms, negative NF1.} \\  
 The key point with these is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.  Learning a restricted model space is good for the bias-variance tradeoff!  Do this many times so that variance will become clear.  
-{\bf Panel C v2: Possibly want to explicitly plot variance of EFN and NF1 to focus on the variance tradeoff}
-{\bf Panel C v3: change time bin granularity from 10 to 50 to show how this story changes in $D$.  My thought is that all will be exhausted by dimensionality sweeps by this point, so no.}
-{\bf also Notice one pain here is that these panels requires training a new EFN1 at every choice of $N$ and $R$ (but only one EFN).  Sorry.}
+{\bf Panel C v2: Possibly want to explicitly plot variance of EFN and NF1 to focus on the variance tradeoff}\\
+{\bf Panel C v3: change time bin granularity from 10 to 50 to show how this story changes in $D$.  My thought is that all will be exhausted by dimensionality sweeps by this point, so no.}\\
+ also Notice one pain here is that these panels requires training a new EFN1 at every choice of $N$ and $R$ (but only one EFN).  Sorry. \\
+
 
 We hope and expect this will show that when the dataset gets small, this "traditional VI" will get arbitrarily bad (can't learn a network); eventually, there will be so much data that the VI will match or outperform the EFN... outperform because VI can focus specifically on this distribution rather than over the whole family, so the EFN has less effective data for this $\eta$ (but not because it has a broader range of models, since we believe the EFN contains the closest member).  Performance metric should be ELBO on some held out data or something like that (it's a posterior, so log likelihood doesn't really make sense).  Test data anyway.   Check VI papers for usual metrics.  A key point to make here is that one great virtue of EFNs is is learning a restricted model, which should demonstrate the usual bias-variance tradeoff (see for example Hastie and Tibshirani book, Fig 7.2). Or Figure 4 is bias-variance and some sample posteriors in 2-d (showing how nicely it works), and then Fig 5 is the above performance, with both train and test.   
 
@@ -310,6 +311,7 @@ This will be for one real example $X$.  As such, to get error bars, just take a 
 
 \section{Conclusion}
 
+Snappy closing remarks!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %\subsubsection*{Acknowledgments}
@@ -319,7 +321,7 @@ This will be for one real example $X$.  As such, to get error bars, just take a 
 
 \clearpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{References}
+%\section*{References}
 
 \bibliographystyle{unsrt}
 \bibliography{BittnerNIPS2018}
