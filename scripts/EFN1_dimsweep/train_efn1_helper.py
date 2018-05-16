@@ -25,6 +25,11 @@ flow_ids = flow_dict['flow_ids'];
 flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
+if (exp_fam == 'dir_dir'):
+	model_info = {'Ndrawtype':'stochastic', 'subclass':'EFN1', 'extrastr':''}
+else:
+	model_info = {'subclass':'EFN1', 'extrastr':''};
+
 cost_type = 'KL';
 K_eta = 1;
 M_eta = 1000;
@@ -33,5 +38,5 @@ lr_order = -4;
 max_iters = 50000;
 check_rate = 100;
 
-X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
+X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stochastic_eta, \
 	                         give_inverse_hint, lr_order, random_seed, max_iters, check_rate);

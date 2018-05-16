@@ -18,7 +18,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       get_param_network_hyperparams, get_ef_dimensionalities
 from tensorflow.python import debug as tf_debug
 
-def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
+def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stochastic_eta, \
               give_inverse_hint=False, lr_order=-3, random_seed=0, \
               max_iters=10000, check_rate=200):
     batch_norm = False;
@@ -31,7 +31,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
     pthresh = 0.1;
 
 
-    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint);
 
     # set number of layers in the parameter network
     L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
@@ -64,13 +64,13 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
     if (not stochastic_eta):
         # get etas based on constraint_id
-        _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-        _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+        _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
+        _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
 
 
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, model_info, stochastic_eta, give_inverse_hint, random_seed);
     print(random_seed, savedir);
 
     # construct the parameter network
@@ -143,8 +143,8 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
-            _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
-            _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+            _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
+            _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
         feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
 
         cost_i, _cost_grads, _X, _y, _Tx, summary = \
@@ -177,7 +177,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
 
             z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
-                _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, give_inverse_hint);
+                _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
 
             feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
 

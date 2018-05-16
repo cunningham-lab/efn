@@ -12,19 +12,21 @@ import os
 import re
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, stochastic_eta, give_inverse_hint, random_seed):
+def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, model_info, stochastic_eta, give_inverse_hint, random_seed):
 # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
     give_inv_str = 'giveInv_' if give_inverse_hint else '';
     flowstring = get_flowstring(flow_dict);
-    if ('L' in param_net_hps and 'upl' in param_net_hps):
+    subclass = model_info['subclass'];
+    extrastr = model_info['extrastr'];
+    if (subclass == 'EFN'):
         savedir = resdir + '/tb/' + 'EFN_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, eta_str, give_inv_str, D, K_eta, M_eta, flowstring, param_net_hps['L'], random_seed);
     else:
-        savedir = resdir + '/tb/' + 'NF1_%s_D=%d_flow=%s_rs=%d/' % (exp_fam, D, flowstring, random_seed);
+        savedir = resdir + '/tb/' + '%s_%s_%sD=%d_flow=%s_rs=%d/' % (subclass, exp_fam, extrastr, D, flowstring, random_seed);
     return savedir
 
-def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
+def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
     if (exp_fam == 'dirichlet'):
         D_Z = D-1;
         ncons = D;
@@ -61,8 +63,19 @@ def get_ef_dimensionalities(exp_fam, D, give_inverse_hint):
 
     elif (exp_fam == 'dir_dir'):
         D_Z = D-1;
-        ncons = 3*D;
-        num_param_net_inputs = ncons;
+        prior_ncons = D;
+        likelihood_ncons = 2*D;
+        ncons = prior_ncons + likelihood_ncons;
+        subclass = model_info['subclass'];
+        if (subclass == 'EFN' or subclass == 'EFN1'): # everything
+            num_param_net_inputs = prior_ncons + likelihood_ncons;
+        elif (subclass == 'EFN1a'): #just the prior
+            num_param_net_inputs = prior_ncons;
+        elif (subclass == 'EFN1b'): # just the likelihood
+            num_param_net_inputs = likelihood_ncons;
+        elif (subclass == 'EFN1c'):
+            num_param_net_inputs = D;
+
         num_Tx_inputs = 1;
 
     return D_Z, ncons, num_param_net_inputs, num_Tx_inputs;
@@ -493,11 +506,21 @@ def prp_tn_eta(mu, Sigma, x, N, give_inverse_hint):
     param_net_input = np.concatenate((param_net_input, log_part_pois), 1);
     return eta, param_net_input;
 
-def dir_dir_eta(alpha_0, x, N, give_inverse_hint):
+def dir_dir_eta(alpha_0, x, N, model_info, give_inverse_hint):
+    subclass = model_info['subclass'];
     D = alpha_0.shape[0];
-    xsum = np.sum(np.log(x), 1);
+    xsum = np.sum(np.log(x[:,:int(N)]), 1);
     eta = np.expand_dims(np.concatenate((alpha_0-1.0, xsum, -N*np.ones((D,))), 0), 0);
-    param_net_input = eta;
+
+    if (subclass == 'EFN1'):
+        param_net_input = eta;
+    elif (subclass == 'EFN1a'):
+        param_net_input = np.expand_dims(alpha_0 - 1.0, 0);
+    elif (subclass == 'EFN1b'):
+        param_net_input = np.expand_dims(np.concatenate((xsum, -N*np.ones((D,))), 0), 0);
+    elif (subclass == 'EFN1c'):
+        assert(x.shape[1] == 1 and N == 1);
+        param_net_input = x.T;
     return eta, param_net_input;
     
 
@@ -524,8 +547,8 @@ def truncated_multivariate_normal_rvs(mu, Sigma):
     return z;
 
 
-def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
-    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, give_inverse_hint);
+def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
+    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint);
     eta = np.zeros((K_eta, ncons));
     param_net_inputs = np.zeros((K_eta, num_param_net_inputs));
     Tx_input = np.zeros((K_eta, num_Tx_inputs));
@@ -601,6 +624,8 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
 
     elif (exp_fam == 'dir_dir'):
+        Ndrawtype = model_info['Ndrawtype'];
+        subclass = model_info['subclass'];
         Nmax = 15;
         Nmean = 5;
         x_eps = 1e-16;
@@ -612,16 +637,18 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         for k in range(K_eta):
             alpha_0_k = np.random.uniform(1.0, 10.0, (D,));
             beta_k = np.random.uniform(D, 2*D);
-            N = int(min(np.random.poisson(Nmean), Nmax));
+            if (Ndrawtype == '1'):
+                N = 1;
+            else:
+                N = int(min(np.random.poisson(Nmean), Nmax));
             dist1 = dirichlet(alpha_0_k);
             z = dist1.rvs(1);
             dist2 = dirichlet(beta_k*z[0]);
             x = dist2.rvs(N).T;
             x = (x+x_eps);
             x = x / np.expand_dims(np.sum(x, 0), 0);
-            eta_k, param_net_inputs_k = dir_dir_eta(alpha_0_k, x, N, False);
+            eta_k, param_net_inputs_k = dir_dir_eta(alpha_0_k, x, N, model_info, False);
             eta[k,:] = eta_k;
-            param_net_inputs[k,:] = param_net_inputs_k;
             Tx_input[k,0] = beta_k;
             alpha_0s[k,:] = alpha_0_k;
             betas[k] = beta_k;
