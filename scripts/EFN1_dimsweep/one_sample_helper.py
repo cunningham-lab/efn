@@ -42,9 +42,9 @@ cost_type = 'KL';
 K_eta = 100;
 M_eta = 100;
 stochastic_eta = True;
-lr_order = -5;
+lr_order = -4;
 max_iters = 50000;
-check_rate = 1;
+check_rate = 100;
 
 if (subclass[:3] == 'EFN'):
 	X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stochastic_eta, \
