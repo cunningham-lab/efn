@@ -512,7 +512,7 @@ def dir_dir_eta(alpha_0, x, N, model_info, give_inverse_hint):
     xsum = np.sum(np.log(x[:,:int(N)]), 1);
     eta = np.expand_dims(np.concatenate((alpha_0-1.0, xsum, -N*np.ones((D,))), 0), 0);
 
-    if (subclass == 'EFN1'):
+    if (subclass == 'EFN' or subclass == 'EFN1'):
         param_net_input = eta;
     elif (subclass == 'EFN1a'):
         param_net_input = np.expand_dims(alpha_0 - 1.0, 0);
