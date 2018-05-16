@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 MAY 2018 04:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 MAY 2018 05:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1361,16 +1361,18 @@ File: figs/fig2/fig2.png Graphic file (type png)
 Package pdftex.def Info: figs/fig2/fig2.png used on input line 255.
 (pdftex.def)             Requested size: 311.95998pt x 90.33589pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 259--264
+<figs/fig3/fig3.png, id=187, 817.0525pt x 211.79124pt>
+File: figs/fig3/fig3.png Graphic file (type png)
 
- []
-
+<use figs/fig3/fig3.png>
+Package pdftex.def Info: figs/fig3/fig3.png used on input line 261.
+(pdftex.def)             Requested size: 326.81522pt x 84.715pt.
 
 Underfull \hbox (badness 10000) in paragraph at lines 277--283
 
  []
 
-[6 <./figs/fig2/fig2.png>]
+[6 <./figs/fig2/fig2.png> <./figs/fig3/fig3.png>]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <7> not available
 (Font)              Font shape `T1/ptm/b/n' tried instead on input line 293.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <5> not available
@@ -1381,7 +1383,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 286--303
  []
 
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 3128) has occurred while \output is active []
 
  [7]
 [8] (./BittnerNIPS2018.bbl
@@ -1422,10 +1424,10 @@ Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 384.
  ) 
 Here is how much of TeX's memory you used:
- 23816 strings out of 493014
- 475064 string characters out of 6133351
+ 23823 strings out of 493014
+ 475181 string characters out of 6133351
  599508 words of memory out of 5000000
- 26636 multiletter control sequences out of 15000+600000
+ 26640 multiletter control sequences out of 15000+600000
  49221 words of font info for 173 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,12n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1452,10 +1454,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (11 pages, 431249 bytes).
+Output written on BittnerNIPS2018.pdf (11 pages, 455746 bytes).
 PDF statistics:
- 321 PDF objects out of 1000 (max. 8388607)
- 268 compressed objects within 3 object streams
- 68 named destinations out of 1000 (max. 500000)
- 22165 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 324 PDF objects out of 1000 (max. 8388607)
+ 269 compressed objects within 3 object streams
+ 69 named destinations out of 1000 (max. 500000)
+ 22170 words of extra memory for PDF output out of 24883 (max. 10000000)
 
