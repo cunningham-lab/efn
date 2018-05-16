@@ -33,7 +33,7 @@ max_iters = 50000;
 check_rate = 100;
 
 if (exp_fam == 'dir_dir'):
-	model_info = {'Ndrawtype':'1','subclass':NF1, 'extrastr':''}
+	model_info = {'Ndrawtype':'1','subclass':'NF1', 'extrastr':''}
 else:
 	model_info = {'subclass':NF1, 'extrastr':''};
 

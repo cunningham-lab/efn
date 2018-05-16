@@ -51,7 +51,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, False, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, model_info, False, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
     Tx_input = tf.placeholder(tf.float64, shape=(None, num_Tx_inputs));
 

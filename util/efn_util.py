@@ -67,7 +67,7 @@ def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
         likelihood_ncons = 2*D;
         ncons = prior_ncons + likelihood_ncons;
         subclass = model_info['subclass'];
-        if (subclass == 'EFN' or subclass == 'EFN1'): # everything
+        if (subclass == 'EFN' or subclass == 'NF1' or subclass == 'EFN1'): # everything
             num_param_net_inputs = prior_ncons + likelihood_ncons;
         elif (subclass == 'EFN1a'): #just the prior
             num_param_net_inputs = prior_ncons;
@@ -512,7 +512,7 @@ def dir_dir_eta(alpha_0, x, N, model_info, give_inverse_hint):
     xsum = np.sum(np.log(x[:,:int(N)]), 1);
     eta = np.expand_dims(np.concatenate((alpha_0-1.0, xsum, -N*np.ones((D,))), 0), 0);
 
-    if (subclass == 'EFN' or subclass == 'EFN1'):
+    if (subclass == 'EFN' or subclass == 'NF1' or subclass == 'EFN1'):
         param_net_input = eta;
     elif (subclass == 'EFN1a'):
         param_net_input = np.expand_dims(alpha_0 - 1.0, 0);
