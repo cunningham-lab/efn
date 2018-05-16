@@ -278,19 +278,31 @@ used a lot \cite{gao2016linear}\cite{adams2009tractable}\cite{cunningham2008fast
 Figure 4: \\
 EFN in intractable exp fams (connecting to above, but with hard distribs and the ELBO) \\
 Panel A: Dir-Dir ELBO by dimensionality for NF1 and EFN and EFN1\\
-Panel B TNP picture example of prior and posterior with a few samples, just for feel good  \\
-Panel C: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
-Panel D (as time allows): Log-normal Poisson example of prior (or perhaps exp prior) and posterior with a few samples, just for feel good  \\
+Panel B: Dir-Dir ELBO by dimensionality for EFN1 vs EFN1a vs 1b vs 1c vs NF1 (with $N=1$ data point)\\
+
 
 \subsection{Neural spike train analysis}
 
 Figure 5: \\
+Panel A TNP picture example of prior and posterior with a few samples, just for feel good  \\
+PANEL B: ELBO on held out data as a function of $R$, for a middle choice of training dataset size $N$ and $D$. \\ 
+PANEL C: ELBO on held out data as a function of $N$, for a middle choice of number of samples in the posterior $R$. \\
+
+
+PANEL D (optional): (ELBO EFN - ELBO NF1) as a surface plot as a function of $R,N$.  That is, positive places is where EFN outperforms, negative NF1. \\  
+The key point with these is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.  Learning a restricted model space is good for the bias-variance tradeoff!  Do this many times so that variance will become clear.  
+
+
+---other thoughts---
 Real data analysis and posterior inference.  {\bf Key real data result on TNP}.  \\
 Get some data from CRCNS that has many spike trains $x_i$ for $i=1,...,N$ (ask Gabriel, as he has done some poking around recently; or look at some of the above TNP/LNP refs). \\
 Those spike trains should be conditionally independent draws from the same underlying intensity function $z$.  (for example, trials under the same stimulus)\\
 Bin the length of time $T$ into $\approx 20-30$ equally spaced time bins.  Thus $z$ is now a vector in $\mathbb{R}^20$. \\
 Now each spike train $x_i$ is a conditionally independent Poisson vector observation, with rate vector $z$.\\
 Learn the 20 dimensional TNP exp fam, without any regard to this dataset $X$. \\
+No: Panel No: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
+Panel A TNP picture example of prior and posterior with a few samples, just for feel good  \\
+
 {\bf Now we want to learn the posterior $p(z | \textrm{ some fixed number $R$ of data points})$}.  \\
 To do this for an EFN, just plug in those $R$ points $x_{i_1},...,x_{i_R}$ and the prior as a natural parameter, and job done. \\
 To do this for an NF1, train a VI model by taking the log joint with $R$ data points, then go through and resample $R$ points every time from your training dataset with $N$ data points. \\
