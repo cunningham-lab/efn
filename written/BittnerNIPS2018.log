@@ -1,7 +1,6 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  15 MAY 2018 19:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 MAY 2018 05:03
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **BittnerNIPS2018.tex
 (./BittnerNIPS2018.tex
@@ -1303,122 +1302,132 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
 Package natbib Warning: Citation `uria2013rnade' on page 3 undefined on input l
 ine 164.
 
-[3] (./fig/efn1b.tex <fig/t0.png, id=145, 433.62pt x 433.62pt>
-File: fig/t0.png Graphic file (type png)
+[3] (./figs/fig1/efn1b.tex <figs/fig1/t0.png, id=145, 433.62pt x 433.62pt>
+File: figs/fig1/t0.png Graphic file (type png)
 
-<use fig/t0.png>
-Package pdftex.def Info: fig/t0.png used on input line 33.
+<use figs/fig1/t0.png>
+Package pdftex.def Info: figs/fig1/t0.png used on input line 33.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
- <fig/t11.png, id=147, 433.62pt x 433.62pt>
-File: fig/t11.png Graphic file (type png)
- <use fig/t11.png>
-Package pdftex.def Info: fig/t11.png used on input line 39.
-(pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t11.png, id=147, 433.62pt x 433.62pt>
+File: figs/fig1/t11.png Graphic file (type png)
 
-<fig/t12.png, id=148, 433.62pt x 433.62pt>
-File: fig/t12.png Graphic file (type png)
- <use fig/t12.png>
-Package pdftex.def Info: fig/t12.png used on input line 40.
+<use figs/fig1/t11.png>
+Package pdftex.def Info: figs/fig1/t11.png used on input line 39.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t12.png, id=148, 433.62pt x 433.62pt>
+File: figs/fig1/t12.png Graphic file (type png)
 
-<fig/t13.png, id=149, 433.62pt x 433.62pt>
-File: fig/t13.png Graphic file (type png)
- <use fig/t13.png>
-Package pdftex.def Info: fig/t13.png used on input line 41.
+<use figs/fig1/t12.png>
+Package pdftex.def Info: figs/fig1/t12.png used on input line 40.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t13.png, id=149, 433.62pt x 433.62pt>
+File: figs/fig1/t13.png Graphic file (type png)
 
-<fig/t21.png, id=150, 433.62pt x 433.62pt>
-File: fig/t21.png Graphic file (type png)
- <use fig/t21.png>
-Package pdftex.def Info: fig/t21.png used on input line 49.
+<use figs/fig1/t13.png>
+Package pdftex.def Info: figs/fig1/t13.png used on input line 41.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t21.png, id=150, 433.62pt x 433.62pt>
+File: figs/fig1/t21.png Graphic file (type png)
 
-<fig/t22.png, id=151, 433.62pt x 433.62pt>
-File: fig/t22.png Graphic file (type png)
- <use fig/t22.png>
-Package pdftex.def Info: fig/t22.png used on input line 50.
+<use figs/fig1/t21.png>
+Package pdftex.def Info: figs/fig1/t21.png used on input line 49.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t22.png, id=151, 433.62pt x 433.62pt>
+File: figs/fig1/t22.png Graphic file (type png)
 
-<fig/t23.png, id=152, 433.62pt x 433.62pt>
-File: fig/t23.png Graphic file (type png)
- <use fig/t23.png>
-Package pdftex.def Info: fig/t23.png used on input line 51.
+<use figs/fig1/t22.png>
+Package pdftex.def Info: figs/fig1/t22.png used on input line 50.
+(pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
+ <figs/fig1/t23.png, id=152, 433.62pt x 433.62pt>
+File: figs/fig1/t23.png Graphic file (type png)
+
+<use figs/fig1/t23.png>
+Package pdftex.def Info: figs/fig1/t23.png used on input line 51.
 (pdftex.def)             Requested size: 39.83385pt x 39.83133pt.
 )
 Overfull \hbox (8.10092pt too wide) in paragraph at lines 174--192
  [][] 
  []
 
-[4 <./fig/t0.png> <./fig/t11.png> <./fig/t12.png> <./fig/t13.png> <./fig/t21.pn
-g> <./fig/t22.png> <./fig/t23.png>]
+[4 <./figs/fig1/t0.png> <./figs/fig1/t11.png> <./figs/fig1/t12.png> <./figs/fig
+1/t13.png> <./figs/fig1/t21.png> <./figs/fig1/t22.png> <./figs/fig1/t23.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [5]
-Underfull \hbox (badness 10000) in paragraph at lines 253--258
+<figs/fig2/fig2.png, id=186, 779.91376pt x 225.84375pt>
+File: figs/fig2/fig2.png Graphic file (type png)
+
+<use figs/fig2/fig2.png>
+Package pdftex.def Info: figs/fig2/fig2.png used on input line 255.
+(pdftex.def)             Requested size: 311.95998pt x 90.33589pt.
+
+<figs/fig3/fig3.png, id=187, 817.0525pt x 211.79124pt>
+File: figs/fig3/fig3.png Graphic file (type png)
+
+<use figs/fig3/fig3.png>
+Package pdftex.def Info: figs/fig3/fig3.png used on input line 261.
+(pdftex.def)             Requested size: 326.81522pt x 84.715pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 277--283
 
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 260--265
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 278--284
-
- []
-
+[6 <./figs/fig2/fig2.png> <./figs/fig3/fig3.png>]
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 294.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 293.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <5> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 294.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 293.
 
-Underfull \hbox (badness 10000) in paragraph at lines 287--304
+Underfull \hbox (badness 10000) in paragraph at lines 286--303
 
  []
 
-[6] [7] (./BittnerNIPS2018.bbl
+
+Underfull \vbox (badness 3128) has occurred while \output is active []
+
+ [7]
+[8] (./BittnerNIPS2018.bbl
 LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 39.
- [8
+ [9
 
-]) [9]
-Overfull \hbox (38.15982pt too wide) in paragraph at lines 338--346
+]) [10]
+Overfull \hbox (38.15982pt too wide) in paragraph at lines 337--345
 \OML/cmm/m/it/10 p\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 X \OMS/cmsy/m/n/10 j []\OT1
 /cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 338--346
+Underfull \hbox (badness 10000) in paragraph at lines 337--345
 
  []
 
 
-Overfull \hbox (80.76028pt too wide) in paragraph at lines 355--359
+Overfull \hbox (80.76028pt too wide) in paragraph at lines 354--358
 []$\OML/cmm/m/it/10 p\OT1/cmr/m/n/10 ([] \OMS/cmsy/m/n/10 j \OML/cmm/m/it/10 X\
 OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
-[10
+[11
 
 ]
 
 Package natbib Warning: There were undefined citations.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 385.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 385.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 384.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 384.
 (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 385.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 385.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 384.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 384.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: CB69C13E6A572351E9AC658EBD90F3F0;802.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 385.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 384.
  ) 
 Here is how much of TeX's memory you used:
- 23808 strings out of 493014
- 474754 string characters out of 6133351
- 599506 words of memory out of 5000000
- 26632 multiletter control sequences out of 15000+600000
+ 23823 strings out of 493014
+ 475181 string characters out of 6133351
+ 599508 words of memory out of 5000000
+ 26640 multiletter control sequences out of 15000+600000
  49221 words of font info for 173 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,12n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1445,10 +1454,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (10 pages, 2498346 bytes).
+Output written on BittnerNIPS2018.pdf (11 pages, 455746 bytes).
 PDF statistics:
- 313 PDF objects out of 1000 (max. 8388607)
- 263 compressed objects within 3 object streams
- 66 named destinations out of 1000 (max. 500000)
- 22160 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 324 PDF objects out of 1000 (max. 8388607)
+ 269 compressed objects within 3 object streams
+ 69 named destinations out of 1000 (max. 500000)
+ 22170 words of extra memory for PDF output out of 24883 (max. 10000000)
 
