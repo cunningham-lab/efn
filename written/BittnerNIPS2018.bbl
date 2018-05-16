@@ -106,6 +106,12 @@ Oren Rippel and Ryan~Prescott Adams.
 \newblock High-dimensional probability estimation with deep density models.
 \newblock {\em arXiv preprint arXiv:1302.5125}, 2013.
 
+\bibitem{uria2013rnade}
+Benigno Uria, Iain Murray, and Hugo Larochelle.
+\newblock Rnade: The real-valued neural autoregressive density-estimator.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  2175--2183, 2013.
+
 \bibitem{dinh2016density}
 Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio.
 \newblock Density estimation using real nvp.

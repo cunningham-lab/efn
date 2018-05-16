@@ -232,6 +232,11 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
   \item we lack a finite data set $X$, so the objective is technically different.  We stipulate a distribution and then this is expectation over that model space, a KL or a KL to the broader joint with $\eta$.  This is concretely different, as we typically use a fixed size dataset $X$ so we can calculate the ELBO over the 
   \end{itemize}
   
+Latest key distinctions:
+\begin{itemize}
+\item prior is in parameter network, unlike essentially all others, even if you take a narrow view that $\sum_i t(x_i)$ is a single data point.
+\item data is given via an assumption of sufficiency, namely in natural form \cite{robert2007bayesian}, not in $x$ form.  Of course this is sensible as in some settings we don't know the natural form of the generative model, but that's a key difference with SVI; plenty of those models are not deep nets (and shouldn't be, if there is an intent of statistical inference rather than nonlinear dimensionality reduction / autoencoding ) and there we \emph{do} know the natural parameters.
+\end{itemize}
 
  
  
