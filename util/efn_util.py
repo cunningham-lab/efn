@@ -521,8 +521,6 @@ def truncated_multivariate_normal_rvs(mu, Sigma):
         z = np.dot(L, z0) + mu;
         rejected = 1 - np.prod((np.sign(z)+1)/2);
         count += 1;
-    if (count > 100):
-        print('Performance warning: rejection sampling is now an issue. %d rejected.' % count);
     return z;
 
 
@@ -576,12 +574,12 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        ratelim = 10;
-        Nmean = 8;
-        Nmax = 15;
+        ratelim = 2;
+        Nmean = 5;
+        Nmax = 10;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 10;
+        df_fac = 100;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
