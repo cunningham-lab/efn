@@ -534,7 +534,7 @@ def drawEtas(exp_fam, D, K_eta, give_inverse_hint):
     if (exp_fam == 'normal'):
         mu_targs = np.zeros((K_eta, D_Z));
         Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 100;
+        df_fac = 5;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         for k in range(K_eta):

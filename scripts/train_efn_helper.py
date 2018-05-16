@@ -30,7 +30,7 @@ K_eta = 100;
 M_eta = 1000;
 stochastic_eta = True;
 lr_order = -4;
-max_iters = 100000;
+max_iters = 50000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, stochastic_eta, \
