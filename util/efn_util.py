@@ -498,7 +498,7 @@ def inv_wishart_eta(Psi, m, give_inverse_hint):
 
 def prp_tn_eta(mu, Sigma, x, N, give_inverse_hint):
     prior_eta, prior_param_net_input = normal_eta(mu, Sigma, give_inverse_hint);
-    sumx = np.expand_dims(np.sum(x[:,:N], 1), 0);
+    sumx = np.expand_dims(np.sum(x[:,:int(N)], 1), 0);
     eta = np.concatenate((prior_eta, sumx), 1);
     log_part_pois = np.array([[-N]]);
     eta = np.concatenate((eta, log_part_pois), 1);
@@ -546,6 +546,15 @@ def truncated_multivariate_normal_rvs(mu, Sigma):
         count += 1;
     return z;
 
+def get_GP_Sigma(tau, T, Ts):
+    K = np.zeros((T, T));
+    for i in range(T):
+        for j in range(i,T):
+            diff = (i-j)*Ts;
+            K[i,j] = np.exp(-(np.abs(diff)**2) / (2*(tau**2)));
+            if (i != j):
+                K[j,i] = K[i,j];
+    return K;
 
 def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
     D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint);
@@ -598,21 +607,24 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
 
     elif (exp_fam == 'prp_tn'):
         ratelim = 2;
-        Nmean = 1;
-        Nmax = 1;
+        Nmean = 5;
+        Nmax = 10;
+        Ts = .05;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
         df_fac = 100;
         df = df_fac*D_Z;
-        Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
+        #Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
                 mus[k,i] = np.random.uniform(0,ratelim);
-            Sigmas[k,:,:] = Sigma_dist.rvs(1);
-            N = Nmean; #int(min(np.random.poisson(Nmean), Nmax));
+            tau = np.random.uniform(.05, .15);
+            Sigmas[k,:,:] = get_GP_Sigma(tau, D_Z, Ts)
+            #Sigmas[k,:,:] = Sigma_dist.rvs(1);
+            N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
             xs[k,:,:N] = x;

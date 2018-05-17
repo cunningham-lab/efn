@@ -35,7 +35,7 @@ check_rate = 100;
 if (exp_fam == 'dir_dir'):
 	model_info = {'Ndrawtype':'1','subclass':'NF1', 'extrastr':''}
 else:
-	model_info = {'subclass':NF1, 'extrastr':''};
+	model_info = {'subclass':'NF1', 'extrastr':''};
 
 np.random.seed(random_seed);
 eta, param_net_input, Tx_input, params = drawEtas(exp_fam, D, 1, model_info, give_inverse_hint);
