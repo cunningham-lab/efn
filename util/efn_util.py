@@ -649,6 +649,7 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
             x = x / np.expand_dims(np.sum(x, 0), 0);
             eta_k, param_net_inputs_k = dir_dir_eta(alpha_0_k, x, N, model_info, False);
             eta[k,:] = eta_k;
+            param_net_inputs[k,:] = param_net_input_k;
             Tx_input[k,0] = beta_k;
             alpha_0s[k,:] = alpha_0_k;
             betas[k] = beta_k;
