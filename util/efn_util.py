@@ -7,7 +7,8 @@ from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart,
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
-                  CholProdLayer, StructuredSpinnerLayer, TanhLayer, ExpLayer
+                  CholProdLayer, StructuredSpinnerLayer, TanhLayer, ExpLayer, \
+                  SoftPlusLayer
 import os
 import re
 
@@ -189,7 +190,7 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
     elif (exp_fam == 'inv_wishart'):
         layers.append(CholProdLayer());
     elif (exp_fam == 'prp_tn'):
-        layers.append(ExpLayer());
+        layers.append(SoftPlusLayer());
 
     nlayers = len(layers); 
 
@@ -606,14 +607,14 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        ratelim = 2;
-        Nmean = 5;
-        Nmax = 10;
+        ratelim = 5;
+        Nmean = 8;
+        Nmax = 15;
         Ts = .05;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
-        df_fac = 100;
-        df = df_fac*D_Z;
+        #df_fac = 100;
+        #df = df_fac*D_Z;
         #Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
         xs = np.zeros((K_eta, D_Z, Nmax));
         zs = np.zeros((K_eta, D_Z));
@@ -623,6 +624,10 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
                 mus[k,i] = np.random.uniform(0,ratelim);
             tau = np.random.uniform(.05, .15);
             Sigmas[k,:,:] = get_GP_Sigma(tau, D_Z, Ts)
+            plt.figure();
+            plt.imshow(Sigmas[k]);
+            plt.colorbar();
+            plt.show();
             #Sigmas[k,:,:] = Sigma_dist.rvs(1);
             N = int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);

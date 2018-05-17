@@ -164,6 +164,22 @@ class ExpLayer(Layer):
         sum_log_det_jacobians += log_det_jacobian[:,:,0];
         return z_out, sum_log_det_jacobians;
 
+class SoftPlusLayer(Layer):
+    def __init__(self, name='SoftPlusLayer'):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.param_names = [];
+        self.param_network = False;
+
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        z_out = tf.log(1 + tf.exp(z));
+        jacobian = tf.divide(1.0, 1.0 + tf.exp(-z));
+        log_det_jacobian = tf.log(tf.reduce_prod(jacobian, 2));
+        sum_log_det_jacobians += log_det_jacobian[:,:,0];
+        return z_out, sum_log_det_jacobians;
+
+
+
 
 class StructuredSpinnerLayer(Layer):
     def __init__(self, name, dim):
