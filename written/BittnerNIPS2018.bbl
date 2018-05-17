@@ -85,11 +85,6 @@ Martin~J Wainwright, Michael~I Jordan, et~al.
 \newblock {\em Foundations and Trends{\textregistered} in Machine Learning},
   1(1--2):1--305, 2008.
 
-\bibitem{Devroye:1986aa}
-Luc Devroye.
-\newblock {\em Non-uniform random variate generation}.
-\newblock Springer-Verlag, New York, 1986.
-
 \bibitem{hinton1995wake}
 Geoffrey~E Hinton, Peter Dayan, Brendan~J Frey, and Radford~M Neal.
 \newblock The" wake-sleep" algorithm for unsupervised neural networks.

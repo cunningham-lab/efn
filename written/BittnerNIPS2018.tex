@@ -99,70 +99,79 @@ Probability models, the fundamental object of Bayesian machine learning, have lo
 Though well understood that a model should be chosen to instantiate a set of assumptions and capture existing domain knowledge \cite{gelman2014bayesian, tenenbaum2006theory, mccullagh2002}, for many years too-simple models were chosen for their practical advantanges (such as conditional conjugacy), which left much to be desired in terms of expressive performance and scalability of these models.  
 
 More recently the pendulum has swung, via a resurgence in models which map a latent random variable $z\sim \mathbb{P}_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ \mathbb{P}(g_\theta \circ z) : \theta \in \Theta \right\}$.  
-Choosing $\mathcal{G}$ to be a parameter-indexed family of deep neural networks has both a rich history \cite{dayan1995helmholtz,mackay1997density}, and has recently been used to produce exciting results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  
-A noted advantage of these models is that in many cases they make minimal assumptions about the data generative (or posterior inference) process.  
+Choosing $\mathcal{G}$ to be a parameter-indexed family of deep neural \emph{density networks} has both a rich history \cite{dayan1995helmholtz,mackay1997density}, and has recently been used to produce exciting results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  
+A noted advantage of these implicit density network models is that in many cases they make minimal assumptions about the data generative (or posterior inference) process.  
 On the other hand, since these models have been chosen to be generic and flexible, they can lack the classic stipulation that a model instantiates existing domain knowledge.  
-The downsides of a too-flexible model with finite data (albeit large) -- and the corresponding bias-variance benefit of a restricted model -- are textbook knowledge \cite[\S 7.3]{friedman2001elements}, and work on generalization and compressibility in deep networks suggests that these function families $\mathcal{G}$ are indeed quite large, perhaps larger than needs be \cite{zhou2018compressibility}.  
+The downsides of a too-flexible model with finite data (albeit large) -- and the corresponding bias-variance benefit of a restricted model -- are textbook knowledge \cite[\S 7.3]{friedman2001elements}, and work on generalization and compressibility in deep networks suggests that this broad class of function families are indeed quite large, perhaps problematically so \cite{zhou2018compressibility}.  
 
-Need to bring exp fams in here, as the motivating problem, rather than "aiming for a middle ground" bs.
+Is all the flexibility of an implicit density network model $\mathcal{M}$ always necessary?  
+Consider the case of variational inference, where a generative model $p(z)p_\beta(X | z)$ (latent $z$, observed data $X$) is stipulated in the classic sense to embody modeling assumptions (hierarchical model, topic model, Bayesian logistic regression, etc.).  
+When such a model is intractable, it is increasingly common to deploy an implicit ``recognition network'' model for variational inference \cite{Kingma:2013aa}, which finds a $q_{\theta^*}(z) \in \mathcal{M}$ such that an evidence bound is optimized with respect to the true posterior $p(z|X)$.  
+However, note the widely recognized fact \cite{wainwright2008graphical} that many such true posteriors $p(z|X)$ belong to models that can be written as exponential families (albeit intractable, due to the choice of sufficient statistics $t(z)$), of the form: $\mathcal{P} = \left\{ \frac{h(z)}{A(\eta)} \exp\left\{ \eta^\top t(z) \right \} : \eta \in H \right\}$.
 
-Here we seek a middle ground and aim to learn a restricted model $\mathcal{Q} = \left\{ q(z; \eta: \eta \in H)\right\}$ that will be a strict subset of the deep implicit model $\mathcal{M}$.  
-Note the critical difference between this aim and much of the literature that seeks to learn a density $q_{\theta}^* \in \mathcal{M}$ (we explore this distinction in depth both theoretically and empirically).  
+ Should we be able to learn a tractable approximation to this exponential family model (not simply members thereof), we would in the very least get the bias-variance benefits of an intelligently restricted model space, and at best would get inference ``for free'' in the sense that we could evaluate approximate posteriors directly without case by case optimization.  
+ In this paper we aim to learn a restricted model $\mathcal{Q} = \left\{ q(z; \eta: \eta \in H)\right\}$ that will be a strict subset of the deep implicit model $\mathcal{M}$ and will closely approximate a target exponential family $\mathcal{P}$.  
+ Note the critical difference between this aim and much of the literature that seeks to learn a density $q_{\theta}^* \in \mathcal{M}$ (we explore this distinction in depth both algorithmically and empirically).  
+ 
 To proceed, we must first specify a set of models $\mathbb{Q} = \left\{ \mathcal{Q}_\phi : \phi \in \Phi \right\}$, from which we can learn a single model $\mathcal{Q}_{\phi^*}$, and we must second define a sensible parameter space $H$ of each model.  
-To the first, we restrict $\Theta$, the parameter space of $\mathcal{M}$, to be itself the image of another deep network family $\mathcal{F} = \left\{f_\phi : \phi \in \Phi\right\}$, such that $\left\{ f_\phi(\eta) : \eta \in H \right\} \subset \Theta$.
+To the first, we restrict $\Theta$, the parameter space of $\mathcal{M}$, to be itself the image of a second deep \emph{parameter network} family $\mathcal{F} = \left\{f_\phi : \phi \in \Phi\right\}$, such that $\left\{ f_\phi(\eta) : \eta \in H \right\} \subset \Theta$.
+The second part is answered immediately by our choice of target $\mathcal{P}$, an exponential family which by definition has \emph{natural} parameterization $\eta \in H$.  
+Thus, appealingly, we know that $H$ is precisely the correct parameter space for $\mathcal{Q}$ (as it defines $\mathcal{P}$), and that the image of $H$ under $f_\phi$ will be of the correct dimensionality within the codomain $\Theta$; approximation error between $\mathcal{Q}$ and $\mathcal{P}$ will be caused by the flexibility and learnability of the parameter network $f_\phi$ and the density network $g_{f_{\phi}(\eta)}$.  
 
-To answer the second part, we note the widely recognized fact that many Bayesian models can be written as (intractable) exponential families \cite{wainwright2008graphical}.    One of many special features of exponential families is that they are endowed with a \emph{natural} parameterization, that is, $\mathcal{P} = \left\{ \frac{h(z)}{A(\eta)} \exp\left\{ \eta^\top t(z) \right \} : \eta \in H \right\} $.
-
-
-
-
-Need to get to the meat now.  Here we consider the problem of learning a model, not a distribution from within that model.  Specifically, noting that many of our most common problems in probabilistic inference in fact have the form of an intractable exponential famile  \cite{wainwright2008graphical}, we treat the problem of learning models of the form....  most fundamental problem in probabilistic inference inference of a latent parameter $z$ given some conditionally iid observations $x_i | z$. 
-
-
-Consider specifically the popular problem of variational inference with an approximate posterior model defined by a deep recognition (inference) network \cite{dayan1995helmholtz,hinton1995wake, Kingma:2013aa}.
-
-  with deep neural networks forming the , where implicit probability models are  as recognition inference for variational inference.  
-
+We define this two-network architecture, which we term an \emph{exponential family network} (EFN), and we specify a stochastic optimization procedure over a variant of the typical Kullback-Leibler divergence.  
+We then demonstrate the ability of EFNs to approximately learn exponential families, both known tractable families and well-used intractable families, including hierarchical Dirichlet and truncated normal Poisson families.  
+Finally we demonstrate the utility of this approach in an example inferring the posterior distribution of the latent intensity of a point-process, given neural spike train data.  
+In all, our contributions include: 
 \begin{itemize}
-\item while offering many advantages, two shortcomings: represent a potentially too-flexible model, and are used to find single posterior distributions (often on local variables).
-\item VI has to re-learn on every dataset; yes it can amortize across points from the same dataset, but not across datasets in the same model.  Given the frequency of certain non-conjugate models appearing -- hierarchies of Dirichlet distributions, log Gaussian Poisson models, etc -- this seems needless to continue considering this as an ``intractable'' exp fam. 
+\item a novel implicit model: a two-network deep architecture to learn a probability model along with a doubly stochastic optimization that samples over both natural parameters (the family member to be learned) and data points (observations of the target density);
+\item analysis of the connections between approximately learning a model and approximate variational inference, and an empirical study that gives insight to possible improvements to variational inference;
+\item empirical results confirming performance against ground truth in known tractable exponential families and in common intractable exponential families.
 \end{itemize}
 
 
-Here we learn an exp fam \emph{model}:
-\begin{itemize}
-\item We investigate the problem of learning exp fams, not individual distributions.  Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
-\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because hard work has not yet been put into deriving transformation samplers Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions. Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
-\item We leverage old and new work recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.  
-\item EFNs allow the embodiment of modeling assumptions without sacrificing expressivity
-\item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
-\item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
-\end{itemize}
+%
+%
+%
+%
+%Here we learn an exp fam \emph{model}:
+%\begin{itemize}
+%\item We investigate the problem of learning exp fams, not individual distributions.  Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
+%\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because hard work has not yet been put into deriving transformation samplers Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions. Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
+%\item We leverage old and new work recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.  
+%\item EFNs allow the embodiment of modeling assumptions without sacrificing expressivity
+%\item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
+%\item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
+%\end{itemize}
+%
+%
+%Mechanically: 
+%\begin{itemize}
+%\item we parameterize a network whose input is the natural parameters of the exponential family being learned
+%\item the output of this \emph{parameter} network is the parameters $\phi$ of a bijective neural network that allows density to be calculated.  
+%\item Can use this as an initializer if more specific training is required.
+%\end{itemize}
+%
+%
+%Our contributions include:
+%\begin{itemize}
+%\item novel architecture to learn a model, not a particular member
+%\item stochastic optimization that samples over the model space: sampling both natural parameters (the family member to be learned) and data points (the observed density points)
+%\item our choice of exp fam produces a linear regression type problem in KL divergence.   
+% We leverage the natural parameterization of exponential families to derive a novel objective that is amenable to stochastic optimization.
+%\item empirical results confirming against ground truth in known ``tractable'' families like the Dirichlet, inverse Wishart, and Gaussian.
+%\item empirical results demonstrating inference performance in common ``intractable'' families including the hierarchical dirichlet, the log Gaussian Poisson.
+%\item Demonstration that there is surprisingly little performance loss training a single posterior vs an entire model, advocating its broader use, at least as an initializer if not as an amortizer. 
+%Here we offer what can be seen as a different sort of amortization, over datasets themselves.   The exp fam may be challenging to learn, but then it can be used at trivial cost.  We will focus more on the distinction with variational inference later.    We use IPM vs generative to clarify that we are not simply dealing in the inference case, but the more general problem of learning probabilistic models (nor just single members of these models).
+%\item offer insights into parameterizing existing VI and similar to increase performance (Fig 4)
+%\item careful treatment distinguishing this from VI.  The similarities to VI are clear.s
+%\end{itemize}
+%
 
-
-Mechanically: 
-\begin{itemize}
-\item we parameterize a network whose input is the natural parameters of the exponential family being learned
-\item the output of this \emph{parameter} network is the parameters $\phi$ of a bijective neural network that allows density to be calculated.  
-\item Can use this as an initializer if more specific training is required.
-\end{itemize}
-
-
-Our contributions include:
-\begin{itemize}
-\item novel architecture to learn a model, not a particular member
-\item stochastic optimization that samples over the model space: sampling both natural parameters (the family member to be learned) and data points (the observed density points)
-\item our choice of exp fam produces a linear regression type problem in KL divergence.   
- We leverage the natural parameterization of exponential families to derive a novel objective that is amenable to stochastic optimization.
-\item empirical results confirming against ground truth in known ``tractable'' families like the Dirichlet, inverse Wishart, and Gaussian.
-\item empirical results demonstrating inference performance in common ``intractable'' families including the hierarchical dirichlet, the log Gaussian Poisson.
-\item Demonstration that there is surprisingly little performance loss training a single posterior vs an entire model, advocating its broader use, at least as an initializer if not as an amortizer. 
-Here we offer what can be seen as a different sort of amortization, over datasets themselves.   The exp fam may be challenging to learn, but then it can be used at trivial cost.  We will focus more on the distinction with variational inference later.    We use IPM vs generative to clarify that we are not simply dealing in the inference case, but the more general problem of learning probabilistic models (nor just single members of these models).
-\item offer insights into parameterizing existing VI and similar to increase performance (Fig 4)
-\item careful treatment distinguishing this from VI.  The similarities to VI are clear.s
-\end{itemize}
-
-
+%
+%\begin{itemize}
+%\item while offering many advantages, two shortcomings: represent a potentially too-flexible model, and are used to find single posterior distributions (often on local variables).
+%\item VI has to re-learn on every dataset; yes it can amortize across points from the same dataset, but not across datasets in the same model.  Given the frequency of certain non-conjugate models appearing -- hierarchies of Dirichlet distributions, log Gaussian Poisson models, etc -- this seems needless to continue considering this as an ``intractable'' exp fam. 
+%\end{itemize}
   
 
 %  \emph{People use lots of implicit probability models}:
@@ -281,20 +290,20 @@ EFN1:  be literal to Figure 1C, give the sufficient statistics of that K=1 datas
 
  \begin{figure}
   \centering
-\includegraphics[scale=0.46]{figs/fig2/fig2.png}
+\includegraphics[scale=0.46]{figs/fig2/fig2.pdf}
   \caption{25-dimensional Dirichlet exopnential family network.  A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta$ throughout optimization.  B.) Distribution of KL divergence across choices of $\eta$ throughout optimization.  C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization \cite{gretton2012kernel}.}
 \end{figure}
 
  \begin{figure}
   \centering
-\includegraphics[scale=0.46]{figs/fig3/fig3.png}
+\includegraphics[scale=0.46]{figs/fig3/fig3.pdf}
   \caption{Scaling exponential family networks.  A.) Dirichlet.  B.) Gaussian  C.) Inverse-Wishart}
 \end{figure}
 
 \subsection{Intractable exponential families}
 
 
-\paragraph{Hierarchical Dirichlets}å
+\paragraph{Hierarchical Dirichlets}
 
 Hierarchical dirichlets are useful and have some history; most notable is with the  Hierarchical Dirichlet Process \cite{teh2006hdp}, but historically this was done in the finite case also \cite{mackay1995hierarchical}.  Here is some math.    Note that this matters for multi-corpus LDA generally as well \cite{blei2003latent, pritchard2000inference}.
 
