@@ -3,44 +3,46 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: BittnerNIPS2018.aux
 The style file: unsrt.bst
 Database file #1: BittnerNIPS2018.bib
-You've used 40 entries,
+Warning--I didn't find a database entry for "cremer2018inference"
+You've used 42 entries,
             1791 wiz_defined-function locations,
-            673 strings with 10421 characters,
-and the built_in function-call counts, 11124 in all, are:
-= -- 1023
-> -- 460
+            686 strings with 10836 characters,
+and the built_in function-call counts, 11582 in all, are:
+= -- 1059
+> -- 485
 < -- 19
-+ -- 167
-- -- 127
-* -- 671
-:= -- 1615
-add.period$ -- 125
-call.type$ -- 40
-change.case$ -- 36
++ -- 176
+- -- 134
+* -- 703
+:= -- 1688
+add.period$ -- 131
+call.type$ -- 42
+change.case$ -- 38
 chr.to.int$ -- 0
-cite$ -- 40
-duplicate$ -- 559
-empty$ -- 1085
-format.name$ -- 127
-if$ -- 2603
+cite$ -- 42
+duplicate$ -- 580
+empty$ -- 1134
+format.name$ -- 134
+if$ -- 2704
 int.to.chr$ -- 0
-int.to.str$ -- 40
-missing$ -- 44
-newline$ -- 203
-num.names$ -- 42
-pop$ -- 166
+int.to.str$ -- 42
+missing$ -- 46
+newline$ -- 213
+num.names$ -- 44
+pop$ -- 174
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 340
+skip$ -- 347
 stack$ -- 0
-substring$ -- 779
-swap$ -- 210
+substring$ -- 804
+swap$ -- 213
 text.length$ -- 19
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 105
-width$ -- 42
-write$ -- 436
+while$ -- 109
+width$ -- 44
+write$ -- 457
+(There was 1 warning)

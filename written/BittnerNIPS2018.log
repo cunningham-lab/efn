@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 MAY 2018 16:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  16 MAY 2018 21:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1298,48 +1298,45 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
  [1
 
 
-{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2]
+{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
 
-Package natbib Warning: Citation `uria2013rnade' on page 3 undefined on input l
-ine 164.
-
-[3] (./figs/fig1/efn1b.tex <figs/fig1/t0.png, id=145, 433.62pt x 433.62pt>
+(./figs/fig1/efn1b.tex <figs/fig1/t0.png, id=147, 433.62pt x 433.62pt>
 File: figs/fig1/t0.png Graphic file (type png)
 
 <use figs/fig1/t0.png>
 Package pdftex.def Info: figs/fig1/t0.png used on input line 33.
 (pdftex.def)             Requested size: 52.63759pt x 52.63425pt.
- <figs/fig1/t11a.png, id=147, 434.1018pt x 433.62pt>
+ <figs/fig1/t11a.png, id=149, 434.1018pt x 433.62pt>
 File: figs/fig1/t11a.png Graphic file (type png)
 
 <use figs/fig1/t11a.png>
 Package pdftex.def Info: figs/fig1/t11a.png used on input line 39.
 (pdftex.def)             Requested size: 52.63759pt x 52.5747pt.
- <figs/fig1/t12.png, id=148, 433.62pt x 433.62pt>
+ <figs/fig1/t12.png, id=150, 433.62pt x 433.62pt>
 File: figs/fig1/t12.png Graphic file (type png)
 
 <use figs/fig1/t12.png>
 Package pdftex.def Info: figs/fig1/t12.png used on input line 40.
 (pdftex.def)             Requested size: 52.63759pt x 52.63425pt.
- <figs/fig1/t13.png, id=149, 433.62pt x 433.62pt>
+ <figs/fig1/t13.png, id=151, 433.62pt x 433.62pt>
 File: figs/fig1/t13.png Graphic file (type png)
 
 <use figs/fig1/t13.png>
 Package pdftex.def Info: figs/fig1/t13.png used on input line 41.
 (pdftex.def)             Requested size: 52.63759pt x 52.63425pt.
- <figs/fig1/t21.png, id=150, 433.62pt x 433.62pt>
+ <figs/fig1/t21.png, id=152, 433.62pt x 433.62pt>
 File: figs/fig1/t21.png Graphic file (type png)
 
 <use figs/fig1/t21.png>
 Package pdftex.def Info: figs/fig1/t21.png used on input line 49.
 (pdftex.def)             Requested size: 52.63759pt x 52.63425pt.
- <figs/fig1/t22.png, id=151, 433.62pt x 433.62pt>
+ <figs/fig1/t22.png, id=153, 433.62pt x 433.62pt>
 File: figs/fig1/t22.png Graphic file (type png)
 
 <use figs/fig1/t22.png>
 Package pdftex.def Info: figs/fig1/t22.png used on input line 50.
 (pdftex.def)             Requested size: 52.63759pt x 52.63425pt.
- <figs/fig1/t23.png, id=152, 433.62pt x 433.62pt>
+ <figs/fig1/t23.png, id=154, 433.62pt x 433.62pt>
 File: figs/fig1/t23.png Graphic file (type png)
 
 <use figs/fig1/t23.png>
@@ -1355,14 +1352,18 @@ g1/t13.png> <./figs/fig1/t21.png> <./figs/fig1/t22.png> <./figs/fig1/t23.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [5]
-<figs/fig2/fig2.png, id=187, 779.91376pt x 225.84375pt>
+
+Package natbib Warning: Citation `cremer2018inference' on page 6 undefined on i
+nput line 237.
+
+<figs/fig2/fig2.png, id=190, 779.91376pt x 225.84375pt>
 File: figs/fig2/fig2.png Graphic file (type png)
 
 <use figs/fig2/fig2.png>
 Package pdftex.def Info: figs/fig2/fig2.png used on input line 260.
 (pdftex.def)             Requested size: 311.95998pt x 90.33589pt.
 
-<figs/fig3/fig3.png, id=188, 817.0525pt x 211.79124pt>
+<figs/fig3/fig3.png, id=193, 817.0525pt x 211.79124pt>
 File: figs/fig3/fig3.png Graphic file (type png)
 
 <use figs/fig3/fig3.png>
@@ -1397,7 +1398,7 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 39.
  [9
 
-]) [10]
+] [10]) [11]
 Overfull \hbox (38.15982pt too wide) in paragraph at lines 354--362
 \OML/cmm/m/it/10 p\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 X \OMS/cmsy/m/n/10 j []\OT1
 /cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
@@ -1414,7 +1415,7 @@ Overfull \hbox (80.76028pt too wide) in paragraph at lines 371--375
 OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 / [] [][] 
  []
 
-[11
+[12
 
 ]
 
@@ -1422,12 +1423,7 @@ Package natbib Warning: There were undefined citations.
 
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 401.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 401.
-(./BittnerNIPS2018.aux
-
-Package natbib Warning: Citation(s) may have changed.
-(natbib)                Rerun to get citations correct.
-
-)
+(./BittnerNIPS2018.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 401.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 401.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
@@ -1435,10 +1431,10 @@ Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 401.
  ) 
 Here is how much of TeX's memory you used:
- 23841 strings out of 493014
- 475487 string characters out of 6133351
- 599534 words of memory out of 5000000
- 26651 multiletter control sequences out of 15000+600000
+ 23851 strings out of 493014
+ 475701 string characters out of 6133351
+ 599539 words of memory out of 5000000
+ 26658 multiletter control sequences out of 15000+600000
  49576 words of font info for 177 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,12n,78p,3537b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1465,10 +1461,10 @@ nts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/typ
 e1/urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/tim
 es/utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a
 .pfb>
-Output written on BittnerNIPS2018.pdf (11 pages, 455017 bytes).
+Output written on BittnerNIPS2018.pdf (12 pages, 456079 bytes).
 PDF statistics:
- 326 PDF objects out of 1000 (max. 8388607)
- 271 compressed objects within 3 object streams
- 70 named destinations out of 1000 (max. 500000)
+ 338 PDF objects out of 1000 (max. 8388607)
+ 281 compressed objects within 3 object streams
+ 73 named destinations out of 1000 (max. 500000)
  22170 words of extra memory for PDF output out of 24883 (max. 10000000)
 

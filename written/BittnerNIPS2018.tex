@@ -234,7 +234,7 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
   
 Latest key distinctions:
 \begin{itemize}
-\item prior is in parameter network, unlike essentially all others, even if you take a narrow view that $\sum_i t(x_i)$ is a single data point.
+\item prior is in parameter network, unlike essentially all others, even if you take a narrow view that $\sum_i t(x_i)$ is a single data point.  Prior has been recognized for mattering in the ELBO, though this sentence is a dubious distinction \cite{hoffman2016elbo,cremer2018inference} (dubious need for these refs)
 \item data is given via an assumption of sufficiency, namely in natural form \cite{robert2007bayesian}, not in $x$ form.  Of course this is sensible as in some settings we don't know the natural form of the generative model, but that's a key difference with SVI; plenty of those models are not deep nets (and shouldn't be, if there is an intent of statistical inference rather than nonlinear dimensionality reduction / autoencoding ) and there we \emph{do} know the natural parameters.
 \end{itemize}
 
@@ -258,7 +258,7 @@ EFN1:  be literal to Figure 1C, give the sufficient statistics of that K=1 datas
  \begin{figure}
   \centering
 \includegraphics[scale=0.4]{figs/fig2/fig2.png}
-  \caption{25-dimensional Dirichlet exopnential family network.  A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta$ throughout optimization.  B.) Distribution of KL divergence across choices of $\eta$ throughout optimization.  C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization.}
+  \caption{25-dimensional Dirichlet exopnential family network.  A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta$ throughout optimization.  B.) Distribution of KL divergence across choices of $\eta$ throughout optimization.  C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization \cite{gretton2012kernel}.}
 \end{figure}
 
  \begin{figure}

@@ -181,6 +181,19 @@ George Papamakarios and Iain Murray.
 \newblock In {\em Probabilistic Integration Workshop at Neural Information
   Processing Systems}, 2015.
 
+\bibitem{hoffman2016elbo}
+Matthew~D Hoffman and Matthew~J Johnson.
+\newblock Elbo surgery: yet another way to carve up the variational evidence
+  lower bound.
+\newblock In {\em Workshop in Advances in Approximate Bayesian Inference,
+  NIPS}, 2016.
+
+\bibitem{gretton2012kernel}
+Arthur Gretton, Karsten~M Borgwardt, Malte~J Rasch, Bernhard Sch{\"o}lkopf, and
+  Alexander Smola.
+\newblock A kernel two-sample test.
+\newblock {\em Journal of Machine Learning Research}, 13(Mar):723--773, 2012.
+
 \bibitem{teh2006hdp}
 Yee~Whye Teh, Michael~I Jordan, Matthew~J Beal, and David~M Blei.
 \newblock Hierarchical dirichlet processes.
