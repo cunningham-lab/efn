@@ -6,10 +6,51 @@ Andrew Gelman, John~B Carlin, Hal~S Stern, David~B Dunson, Aki Vehtari, and
 \newblock {\em Bayesian data analysis}, volume~2.
 \newblock CRC press Boca Raton, FL, 2014.
 
+\bibitem{tenenbaum2006theory}
+Joshua~B Tenenbaum, Thomas~L Griffiths, and Charles Kemp.
+\newblock Theory-based bayesian models of inductive learning and reasoning.
+\newblock {\em Trends in cognitive sciences}, 10(7):309--318, 2006.
+
 \bibitem{mccullagh2002}
 Peter McCullagh.
 \newblock What is a statistical model?
 \newblock {\em The Annals of Statistics}, 30(5):1225--1267, 2002.
+
+\bibitem{dayan1995helmholtz}
+Peter Dayan, Geoffrey~E Hinton, Radford~M Neal, and Richard~S Zemel.
+\newblock The helmholtz machine.
+\newblock {\em Neural computation}, 7(5):889--904, 1995.
+
+\bibitem{mackay1997density}
+D.~J.~C. MacKay and M.~N. Gibbs.
+\newblock Density networks.
+\newblock In {\em Statistics and Neural Networks}, pages 129--146. Oxford,
+  1997.
+
+\bibitem{uria2013rnade}
+Benigno Uria, Iain Murray, and Hugo Larochelle.
+\newblock Rnade: The real-valued neural autoregressive density-estimator.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  2175--2183, 2013.
+
+\bibitem{rippel2013high}
+Oren Rippel and Ryan~Prescott Adams.
+\newblock High-dimensional probability estimation with deep density models.
+\newblock {\em arXiv preprint arXiv:1302.5125}, 2013.
+
+\bibitem{papamakarios2017masked}
+George Papamakarios, Iain Murray, and Theo Pavlakou.
+\newblock Masked autoregressive flow for density estimation.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  2335--2344, 2017.
+
+\bibitem{Goodfellow:2014aa}
+Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley,
+  Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
+\newblock Generative adversarial nets.
+\newblock In Z.~Ghahramani, M.~Welling, C.~Cortes, N.~D. Lawrence, and K.~Q.
+  Weinberger, editors, {\em Advances in Neural Information Processing Systems
+  27}, pages 2672--2680. Curran Associates, Inc., 2014.
 
 \bibitem{Kingma:2013aa}
 Diederik~P Kingma and Max Welling.
@@ -28,10 +69,15 @@ Michalis Titsias and Miguel L{\'a}zaro-Gredilla.
 \newblock In {\em International Conference on Machine Learning}, pages
   1971--1979, 2014.
 
-\bibitem{Devroye:1986aa}
-Luc Devroye.
-\newblock {\em Non-uniform random variate generation}.
-\newblock Springer-Verlag, New York, 1986.
+\bibitem{friedman2001elements}
+Trevor Hastie, Robert Tibshirani, and Jerome Friedman.
+\newblock {\em The elements of statistical learning}, volume~1.
+\newblock Springer series in statistics New York, 2001.
+
+\bibitem{zhou2018compressibility}
+Wenda Zhou, Victor Veitch, Morgane Austern, Ryan~P Adams, and Peter Orbanz.
+\newblock Compressibility and generalization in large-scale deep learning.
+\newblock {\em arXiv preprint arXiv:1804.05862}, 2018.
 
 \bibitem{wainwright2008graphical}
 Martin~J Wainwright, Michael~I Jordan, et~al.
@@ -39,51 +85,10 @@ Martin~J Wainwright, Michael~I Jordan, et~al.
 \newblock {\em Foundations and Trends{\textregistered} in Machine Learning},
   1(1--2):1--305, 2008.
 
-\bibitem{friedman2001elements}
-Trevor Hastie, Robert Tibshirani, and Jerome Friedman.
-\newblock {\em The elements of statistical learning}, volume~1.
-\newblock Springer series in statistics New York, 2001.
-
-\bibitem{gutmann2014statistical}
-Michael~U Gutmann, Ritabrata Dutta, Samuel Kaski, and Jukka Corander.
-\newblock Statistical inference of intractable generative models via
-  classification.
-\newblock {\em arXiv preprint arXiv:1407.4981}, 2014.
-
-\bibitem{Goodfellow:2014aa}
-Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley,
-  Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
-\newblock Generative adversarial nets.
-\newblock In Z.~Ghahramani, M.~Welling, C.~Cortes, N.~D. Lawrence, and K.~Q.
-  Weinberger, editors, {\em Advances in Neural Information Processing Systems
-  27}, pages 2672--2680. Curran Associates, Inc., 2014.
-
-\bibitem{papamakarios2017masked}
-George Papamakarios, Iain Murray, and Theo Pavlakou.
-\newblock Masked autoregressive flow for density estimation.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  2335--2344, 2017.
-
-\bibitem{Mohamed:2016aa}
-Shakir Mohamed and Balaji Lakshminarayanan.
-\newblock Learning in implicit generative models.
-\newblock {\em arXiv}, 10 2016.
-
-\bibitem{zhou2018compressibility}
-Wenda Zhou, Victor Veitch, Morgane Austern, Ryan~P Adams, and Peter Orbanz.
-\newblock Compressibility and generalization in large-scale deep learning.
-\newblock {\em arXiv preprint arXiv:1804.05862}, 2018.
-
-\bibitem{mackay1997density}
-D.~J.~C. MacKay and M.~N. Gibbs.
-\newblock Density networks.
-\newblock In {\em Statistics and Neural Networks}, pages 129--146. Oxford,
-  1997.
-
-\bibitem{dayan1995helmholtz}
-Peter Dayan, Geoffrey~E Hinton, Radford~M Neal, and Richard~S Zemel.
-\newblock The helmholtz machine.
-\newblock {\em Neural computation}, 7(5):889--904, 1995.
+\bibitem{Devroye:1986aa}
+Luc Devroye.
+\newblock {\em Non-uniform random variate generation}.
+\newblock Springer-Verlag, New York, 1986.
 
 \bibitem{hinton1995wake}
 Geoffrey~E Hinton, Peter Dayan, Brendan~J Frey, and Radford~M Neal.
@@ -100,17 +105,6 @@ Leemon Baird, David Smalenberger, and Shawn Ingkiriwang.
 \newblock One-step neural network inversion with pdf learning and emulation.
 \newblock In {\em Neural Networks, 2005. IJCNN'05. Proceedings. 2005 IEEE
   International Joint Conference on}, volume~2, pages 966--971. IEEE, 2005.
-
-\bibitem{rippel2013high}
-Oren Rippel and Ryan~Prescott Adams.
-\newblock High-dimensional probability estimation with deep density models.
-\newblock {\em arXiv preprint arXiv:1302.5125}, 2013.
-
-\bibitem{uria2013rnade}
-Benigno Uria, Iain Murray, and Hugo Larochelle.
-\newblock Rnade: The real-valued neural autoregressive density-estimator.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  2175--2183, 2013.
 
 \bibitem{dinh2016density}
 Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio.
@@ -187,6 +181,11 @@ Matthew~D Hoffman and Matthew~J Johnson.
   lower bound.
 \newblock In {\em Workshop in Advances in Approximate Bayesian Inference,
   NIPS}, 2016.
+
+\bibitem{cremer2018inference}
+Chris Cremer, Xuechen Li, and David Duvenaud.
+\newblock Inference suboptimality in variational autoencoders.
+\newblock {\em arXiv preprint arXiv:1801.03558}, 2018.
 
 \bibitem{gretton2012kernel}
 Arthur Gretton, Karsten~M Borgwardt, Malte~J Rasch, Bernhard Sch{\"o}lkopf, and
