@@ -32,8 +32,13 @@ lr_order = -4;
 max_iters = 50000;
 check_rate = 100;
 
+if (exp_fam == 'dir_dir'):
+	model_info = {'Ndrawtype':'1','subclass':'NF1', 'extrastr':''}
+else:
+	model_info = {'subclass':NF1, 'extrastr':''};
+
 np.random.seed(random_seed);
-eta, param_net_input, Tx_input, params = drawEtas(exp_fam, D, 1, give_inverse_hint);
+eta, param_net_input, Tx_input, params = drawEtas(exp_fam, D, 1, model_info, give_inverse_hint);
 
 log_p_zs, X, train_R2s, train_KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, M_eta, \
-	                         					lr_order, random_seed, max_iters, check_rate);
+	                         					 model_info, lr_order, random_seed, max_iters, check_rate);

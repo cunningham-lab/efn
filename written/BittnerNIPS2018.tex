@@ -95,32 +95,43 @@ Recently much attention has been paid to implicit probabilistic models -- models
 
 \section{Introduction}
 
-IPMs are used a lot; they matter but aren't perfect.  Set context:
+Probability models, the fundamental object of Bayesian machine learning, have long challenged researchers with the tradeoff between tractability and expressivity.
+Though well understood that a model should be chosen to instantiate a set of assumptions and capture existing domain knowledge \cite{gelman2014bayesian, tenenbaum2006theory, mccullagh2002}, for many years too-simple models were chosen for their practical advantanges (such as conditional conjugacy), which left much to be desired in terms of expressive performance and scalability of these models.  
+
+More recently the pendulum has swung in the other direction, via models which map a latent random variable $z\sim \mathbb{P}_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ \mathbb{P}(g_\theta \circ z) : \theta \in \Theta \right\}$.  
+Choosing $\mathcal{G}$ to be a parameter-indexed family of deep neural networks has both a rich history \cite[for example]{dayan1995helmholtz,mackay1997density}, and has recently been used to produce state-of-the-art results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  A noted advantage of these models is that in many cases they make minimal assumptions about the data generative (or posterior inference) process.  This blessing is of course also a curse: since these models have been chosen to be generic and flexible, they can lack the classic stipulation that a model instantiates existing domain knowledge.  The downsides of a too-flexible model with finite data (albeit large) -- and the corresponding bias-variance benefit of a restricted model -- are textbook knowledge \cite[\S 7.3]{friedman2001elements}, and work on generalization and compressibility in deep networks suggests that these function families $\mathcal{G}$ are indeed quite large, perhaps larger than needs be \cite{zhou2018compressibility}.  
+
+Need to get to the meat now.  Here we consider the problem of learning a model, not a distribution from within that model.  Specifically, noting that many of our most common problems in probabilistic inference in fact have the form of an intractable exponential famile  \cite{wainwright2008graphical}, we treat the problem of learning models of the form....  most fundamental problem in probabilistic inference inference of a latent parameter $z$ given some conditionally iid observations $x_i | z$. 
+
+
+Consider specifically the popular problem of variational inference with an approximate posterior model defined by a deep recognition (inference) network \cite{dayan1995helmholtz,hinton1995wake, Kingma:2013aa}.
+
+  with deep neural networks forming the , where implicit probability models are  as recognition inference for variational inference.  
+
 \begin{itemize}
-\item generative probabilistic models are the fundamental object of bayesian modeling \cite{gelman2014bayesian}.  
-\item classic issue has been tractability-expressivity tradeoff.  choosing and even defining a statistical model is hard \cite{mccullagh2002, gelman2014bayesian}
-\item  However, these models are chosen to be generic and flexible, rather than in the classic sense of instantiating a set of statistical assumptions concerning the process of generating some data.  somehow offering an explanation or a structured assumption about data.  This is not bad per se, but leaves much to be desired in terms of modeling.
-\item recently implicit probabilistic models have been used a lot, and for VI in particular \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}  (more blei stuff here)
 \item while offering many advantages, two shortcomings: represent a potentially too-flexible model, and are used to find single posterior distributions (often on local variables).
 \item VI has to re-learn on every dataset; yes it can amortize across points from the same dataset, but not across datasets in the same model.  Given the frequency of certain non-conjugate models appearing -- hierarchies of Dirichlet distributions, log Gaussian Poisson models, etc -- this seems needless to continue considering this as an ``intractable'' exp fam. 
-\item recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.  
-\item Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
 \end{itemize}
 
 
 Here we learn an exp fam \emph{model}:
 \begin{itemize}
-
 \item We investigate the problem of learning exp fams, not individual distributions.  Inherent in all the above approaches is an algorithmic procedure to select a \emph{single} distribution $q_\theta(z)$ from among the \emph{model} $\mathcal{Q}$.  Implicit in this effort is the belief that $\mathcal{Q}$ is suitably general to contain the true distribution of interest, or at least an adequately close approximation.
-
-\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because hard work has not yet been put into deriving transformation samplers Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions.
+\item Many models are exp fams, though intractable.  \cite{wainwright2008graphical}.   It is worth revisiting whence that intractability arises, often just because hard work has not yet been put into deriving transformation samplers Many intractable distributions encountered in machine learning belong to exponential families.  In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions. Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
+\item We leverage old and new work recently much attention has been paid to bijective neural networks, networks that admit tractable density calculations.  An old idea with new options.  
 \item EFNs allow the embodiment of modeling assumptions without sacrificing expressivity
-\item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
 \item concept here is to learn something we care about already and get the usual benefits of learning a restricted model space \cite[\S7, for example]{friedman2001elements}
+\item EFNs include neural net observation models in many cases, so don't despair. (like a VAE generator)
+\end{itemize}
+
+
+Mechanically: 
+\begin{itemize}
 \item we parameterize a network whose input is the natural parameters of the exponential family being learned
 \item the output of this \emph{parameter} network is the parameters $\phi$ of a bijective neural network that allows density to be calculated.  
 \item Can use this as an initializer if more specific training is required.
 \end{itemize}
+
 
 Our contributions include:
 \begin{itemize}
@@ -131,22 +142,20 @@ Our contributions include:
 \item empirical results confirming against ground truth in known ``tractable'' families like the Dirichlet, inverse Wishart, and Gaussian.
 \item empirical results demonstrating inference performance in common ``intractable'' families including the hierarchical dirichlet, the log Gaussian Poisson.
 \item Demonstration that there is surprisingly little performance loss training a single posterior vs an entire model, advocating its broader use, at least as an initializer if not as an amortizer. 
+Here we offer what can be seen as a different sort of amortization, over datasets themselves.   The exp fam may be challenging to learn, but then it can be used at trivial cost.  We will focus more on the distinction with variational inference later.    We use IPM vs generative to clarify that we are not simply dealing in the inference case, but the more general problem of learning probabilistic models (nor just single members of these models).
+\item offer insights into parameterizing existing VI and similar to increase performance (Fig 4)
+\item careful treatment distinguishing this from VI.  The similarities to VI are clear.s
 \end{itemize}
 
 
   
 
-  \emph{People use lots of implicit probability models}:
-  
-  Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, density estimation \cite{papamakarios2017masked}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  Such implicit probability models have a rich history and newer contributions (density networks all the way through \cite{Mohamed:2016aa}).  Some equations:
-
-   $$  q_\theta (z) $$
-   
- Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.   The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
- Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
- 
-VI in this style can be seen and is often referred to as amortized inference, in the sense that it is in fact less expressive than full mean field (eg the VAE), but (1) it offers the usual benefits of a restricted model space in terms of bias-variance tradeoff \cite{friedman2001elements} (Fig 7.2), and (2) it offers test time speed up by pretraining (hence the term amortization).  Here we offer what can be seen as a different sort of amortization, over datasets themselves.   The exp fam may be challenging to learn, but then it can be used at trivial cost.  We will focus more on the distinction with variational inference later.    We use IPM vs generative to clarify that we are not simply dealing in the inference case, but the more general problem of learning probabilistic models (nor just single members of these models).
-
+%  \emph{People use lots of implicit probability models}:
+%    Across machine learning, including ABC \cite{gutmann2014statistical} , GANs \cite{Goodfellow:2014aa}, VAEs \cite{Kingma:2013aa, rezende2014stochastic}, density estimation \cite{papamakarios2017masked}, and their many follow-ons (too numerous to cite in any detail), models that specify a distribution via the nonlinear transformation of latent random variable.  Such implicit probability models have a rich history and newer contributions (density networks all the way through \cite{Mohamed:2016aa}).  Some equations:
+% Also use the proper notation of the density implied by the pushforward measure of the function $f_{\theta\sharp}$ if useful.   The two central uses are at present generative distributions of interesting data types (as in GANs), and for variational inference
+% Regardless, all of these use cases specify a \emph{model} (or variational family) $\mathcal{Q} = \left\{ q_\theta : \theta \in \Theta\right\}$, and then minimize a suitable loss $\mathcal{L}( q , p)$ over $q \in \mathcal{Q}$.   In the case of VI $p$ is the posterior (or the unnormalized log joint ) and $\mathcal{L}$is the $KL$ divergence (or so called ELBO), in GAN $p$ is the sample density of a (large) dataset and $\mathcal{L}$ is the adversarial objective whose details do not matter here.
+% VI in this style can be seen and is often referred to as amortized inference, in the sense that it is in fact less expressive than full mean field (eg the VAE), but (1) it offers the usual benefits of a restricted model space in terms of bias-variance tradeoff \cite{friedman2001elements} (Fig 7.2), and (2) it offers test time speed up by pretraining (hence the term amortization).  
+% 
 
   
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,6 +241,11 @@ In a restricted technical sense, rather close: VAE and other black box VI that u
   \item we lack a finite data set $X$, so the objective is technically different.  We stipulate a distribution and then this is expectation over that model space, a KL or a KL to the broader joint with $\eta$.  This is concretely different, as we typically use a fixed size dataset $X$ so we can calculate the ELBO over the 
   \end{itemize}
   
+Latest key distinctions:
+\begin{itemize}
+\item prior is in parameter network, unlike essentially all others, even if you take a narrow view that $\sum_i t(x_i)$ is a single data point.  Prior has been recognized for mattering in the ELBO, though this sentence is a dubious distinction \cite{hoffman2016elbo,cremer2018inference} (dubious need for these refs)
+\item data is given via an assumption of sufficiency, namely in natural form \cite{robert2007bayesian}, not in $x$ form.  Of course this is sensible as in some settings we don't know the natural form of the generative model, but that's a key difference with SVI; plenty of those models are not deep nets (and shouldn't be, if there is an intent of statistical inference rather than nonlinear dimensionality reduction / autoencoding ) and there we \emph{do} know the natural parameters.
+\end{itemize}
 
  
  
@@ -253,7 +267,7 @@ EFN1:  be literal to Figure 1C, give the sufficient statistics of that K=1 datas
  \begin{figure}
   \centering
 \includegraphics[scale=0.4]{figs/fig2/fig2.png}
-  \caption{25-dimensional Dirichlet exopnential family network.  A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta$ throughout optimization.  B.) Distribution of KL divergence across choices of $\eta$ throughout optimization.  C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization.}
+  \caption{25-dimensional Dirichlet exopnential family network.  A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta$ throughout optimization.  B.) Distribution of KL divergence across choices of $\eta$ throughout optimization.  C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization \cite{gretton2012kernel}.}
 \end{figure}
 
  \begin{figure}
@@ -277,19 +291,31 @@ used a lot \cite{gao2016linear}\cite{adams2009tractable}\cite{cunningham2008fast
 Figure 4: \\
 EFN in intractable exp fams (connecting to above, but with hard distribs and the ELBO) \\
 Panel A: Dir-Dir ELBO by dimensionality for NF1 and EFN and EFN1\\
-Panel B TNP picture example of prior and posterior with a few samples, just for feel good  \\
-Panel C: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
-Panel D (as time allows): Log-normal Poisson example of prior (or perhaps exp prior) and posterior with a few samples, just for feel good  \\
+Panel B: Dir-Dir ELBO by dimensionality for EFN1 vs EFN1a vs 1b vs 1c vs NF1 (with $N=1$ data point)\\
+
 
 \subsection{Neural spike train analysis}
 
 Figure 5: \\
+Panel A TNP picture example of prior and posterior with a few samples, just for feel good  \\
+PANEL B: ELBO on held out data as a function of $R$, for a middle choice of training dataset size $N$ and $D$. \\ 
+PANEL C: ELBO on held out data as a function of $N$, for a middle choice of number of samples in the posterior $R$. \\
+
+
+PANEL D (optional): (ELBO EFN - ELBO NF1) as a surface plot as a function of $R,N$.  That is, positive places is where EFN outperforms, negative NF1. \\  
+The key point with these is that, while you have the \emph{same exact} flow network architecture, now you have to optimize over $\phi$ with a limited single dataset.  Learning a restricted model space is good for the bias-variance tradeoff!  Do this many times so that variance will become clear.  
+
+
+---other thoughts---
 Real data analysis and posterior inference.  {\bf Key real data result on TNP}.  \\
 Get some data from CRCNS that has many spike trains $x_i$ for $i=1,...,N$ (ask Gabriel, as he has done some poking around recently; or look at some of the above TNP/LNP refs). \\
 Those spike trains should be conditionally independent draws from the same underlying intensity function $z$.  (for example, trials under the same stimulus)\\
 Bin the length of time $T$ into $\approx 20-30$ equally spaced time bins.  Thus $z$ is now a vector in $\mathbb{R}^20$. \\
 Now each spike train $x_i$ is a conditionally independent Poisson vector observation, with rate vector $z$.\\
 Learn the 20 dimensional TNP exp fam, without any regard to this dataset $X$. \\
+No: Panel No: TNP ELBO by dimensionality for NF1 and EFN and EFN1 \\
+Panel A TNP picture example of prior and posterior with a few samples, just for feel good  \\
+
 {\bf Now we want to learn the posterior $p(z | \textrm{ some fixed number $R$ of data points})$}.  \\
 To do this for an EFN, just plug in those $R$ points $x_{i_1},...,x_{i_R}$ and the prior as a natural parameter, and job done. \\
 To do this for an NF1, train a VI model by taking the log joint with $R$ data points, then go through and resample $R$ points every time from your training dataset with $N$ data points. \\

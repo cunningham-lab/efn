@@ -16,7 +16,7 @@ from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params, get_ef_dimensionalities
 
-def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
+def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
                lr_order=-3, random_seed=0, max_iters=10000, check_rate=1000):
 
     T = 1; # let's generalize to processes later :P (not within scope of NIPS submission)
@@ -26,7 +26,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
  
     D = params['D'];
 
-    D_Z, ncons, _, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, False);
+    D_Z, ncons, _, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, False);
 
     # good practice
     tf.reset_default_graph();
@@ -51,7 +51,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, False, False, random_seed);
+    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, {}, model_info, False, False, random_seed);
     eta = tf.placeholder(tf.float64, shape=(None, ncons));
     Tx_input = tf.placeholder(tf.float64, shape=(None, num_Tx_inputs));
 
@@ -82,7 +82,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, \
         xs = params['xs'];
         zs = params['zs'];
         Ns = params['Ns'];
-        _eta, _ = dir_dir_eta(alpha_0s[0], xs[0], Ns[0], False);
+        _eta, _ = dir_dir_eta(alpha_0s[0], xs[0], Ns[0], model_info, False);
         _Tx_input = np.array([[betas[0]]]);
 
     _eta_test = _eta;

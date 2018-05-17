@@ -3,44 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: BittnerNIPS2018.aux
 The style file: unsrt.bst
 Database file #1: BittnerNIPS2018.bib
-You've used 39 entries,
+You've used 42 entries,
             1791 wiz_defined-function locations,
-            669 strings with 10285 characters,
-and the built_in function-call counts, 10715 in all, are:
-= -- 982
-> -- 449
-< -- 18
-+ -- 163
-- -- 124
-* -- 649
-:= -- 1566
-add.period$ -- 122
-call.type$ -- 39
-change.case$ -- 35
+            687 strings with 10845 characters,
+and the built_in function-call counts, 11673 in all, are:
+= -- 1071
+> -- 485
+< -- 19
++ -- 176
+- -- 134
+* -- 716
+:= -- 1698
+add.period$ -- 131
+call.type$ -- 42
+change.case$ -- 38
 chr.to.int$ -- 0
-cite$ -- 39
-duplicate$ -- 536
-empty$ -- 1044
-format.name$ -- 124
-if$ -- 2501
+cite$ -- 42
+duplicate$ -- 581
+empty$ -- 1144
+format.name$ -- 134
+if$ -- 2724
 int.to.chr$ -- 0
-int.to.str$ -- 39
-missing$ -- 43
-newline$ -- 198
-num.names$ -- 41
-pop$ -- 160
+int.to.str$ -- 42
+missing$ -- 46
+newline$ -- 213
+num.names$ -- 44
+pop$ -- 172
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 321
+skip$ -- 346
 stack$ -- 0
-substring$ -- 739
-swap$ -- 197
-text.length$ -- 18
+substring$ -- 829
+swap$ -- 213
+text.length$ -- 19
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 101
-width$ -- 41
-write$ -- 425
+while$ -- 111
+width$ -- 44
+write$ -- 458
