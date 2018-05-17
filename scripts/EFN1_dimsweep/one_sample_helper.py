@@ -43,7 +43,7 @@ K_eta = 100;
 M_eta = 100;
 stochastic_eta = False;
 lr_order = -4;
-max_iters = 50000;
+max_iters = 20000;
 check_rate = 100;
 
 if (subclass[:3] == 'EFN'):
