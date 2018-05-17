@@ -90,11 +90,6 @@ Geoffrey~E Hinton, Peter Dayan, Brendan~J Frey, and Radford~M Neal.
 \newblock The" wake-sleep" algorithm for unsupervised neural networks.
 \newblock {\em Science}, 268(5214):1158--1161, 1995.
 
-\bibitem{Devroye:1986aa}
-Luc Devroye.
-\newblock {\em Non-uniform random variate generation}.
-\newblock Springer-Verlag, New York, 1986.
-
 \bibitem{rezende2015variational}
 Danilo~Jimenez Rezende and Shakir Mohamed.
 \newblock Variational inference with normalizing flows.
