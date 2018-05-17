@@ -41,7 +41,7 @@ else:
 cost_type = 'KL';
 K_eta = 100;
 M_eta = 100;
-stochastic_eta = True;
+stochastic_eta = False;
 lr_order = -4;
 max_iters = 50000;
 check_rate = 100;
