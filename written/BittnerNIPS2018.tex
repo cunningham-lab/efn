@@ -349,22 +349,21 @@ All code was implemented in tensorflow, and will be available at {\tt www.github
 \subsection{Tractable exponential families}
 
 Here we study the Dirichlet, Gaussian, and inverse-Wishart families, which offer a known ground truth and intuition about the range of performance that EFN -- learning a model -- can see with respect to its single-distribution counterparts (NF1 and EFN1).  
-
-
- \begin{figure}
+%
+\begin{figure}
   \centering
 \includegraphics[scale=0.46]{figs/fig2/fig2.pdf}
   \caption{25-dimensional Dirichlet exopnential family network.  (A) Distribution of $r^2$ between log density of EFN samples and ground truth across choices of $\eta$ throughout optimization.  (B) Distribution of KL divergence throughout optimization.  (C) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization.}
 \end{figure}
-
+%
 First, to validate the basic EFN approach, we train the $D=25$-dimensional Dirichlet family.  We chose $p(\eta)$, the prior on the $\alpha$ parameter vector of the Dirichlet, as $\alpha_i \sim U\left[.5, 5.0\right]$. The number of $\eta$ samples $K$ at each iteration was $100$, and the minibatch size in $z$ was $M=1000$.   Figure 2 shows a high accuracy fit to this Dirichlet model: Figures 2A and 2B shows rapid convergence to high $r^2$ and low Kullback-Leibler divergence.  $r^2$ is a convenient metric in so much as we are here doing distribution regression, so we calculate the coefficient of determination between the model predictions $q_\phi(z_i; \eta_k)$ and their known targets $\eta_k^\top t(z_i)$.  We can then perform a standard MMD-based kernel two-sample test \cite{gretton2012kernel} between distributions chosen from $\mathcal{P}$ and $\mathcal{Q}_{\phi^*}$: the unstructured distribution of $p$ values clarifies that the EFN model $\mathcal{Q}_{\phi^*}$  is not statistically significantly different than the true target Dirichlet family $\mathcal{P}$ (using a test with 50 samples).
-
+%
  \begin{figure}
   \centering
 \includegraphics[scale=0.46]{figs/fig3/fig3.pdf}
   \caption{Scaling exponential family networks: $D$ denotes the dimensionality of the family being learned, and comparisons are between EFN and its $K=1$ alternatives NF1 and EFN1 (see text).  (A) Dirichlet family (B) Gaussian family  (C) Inverse-Wishart family.}
 \end{figure}
-
+%
 Second, in Figure 3 we consider how this performance scales across dimensionality.  Consider EFN vs EFN1, where again the only difference is that EFN attempts to learn the entire model (as in $\eta \in H$), whereas EFN1 chooses a single $\eta$ and thus learns a single distribution.  In both the Dirichlet and the Gaussian (Figure 3A and 3B), there is very minor (but statistically significant) loss from the EFN1 to EFN (but note the zoomed axis in Figure 3B; this difference is less than it may appear).  This is quite encouraging: though training an entire model as opposed to a single distribution, performance holds up adequately.  If this performance level is adequate, using such a model is immediate; of course, failing that, the EFN could be used on a case by case basis to initialize the parameters $\theta_0 = f_\phi(\eta)$ for further optimization in $\theta$.  Performance in the inverse-Wishart is considerably less impressive when comparing the EFN to the EFN1, though we have found no satisfactory explanation for the shortcoming.  It is also important to note that the distribution $p(\eta)$ can have material consequence on performance: the less entropic that distribution, the closer EFN gets to EFN1 by definition.  The Dirichlet family has in our experience been robust to that choice, though perhaps surprisingly the Gaussian family has been less so (we swept the degrees of freedom of a Wishart prior on the covariance of the Gaussian $\nu=5D, 100D, 1000D$; the middle choice is shown here, the other two having very strong and very poor performance).  Quite surprising is the performance of NF1.  As a reminder the NF1 trains the density network directly over $\theta$.  One would think that the NF1 would fit more easily; this expectation was only found in Figure 3B, though in Figure 3A and 3C EFN1 and EFN tended to outperform and scale better than NF1.  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -409,7 +408,7 @@ We here consider the hierchical Dirichlet family (as introduced in \S2.1 and Fig
 %\end{figure}
 
 The normal family is the ubiquitous prior for real valued parameters, but it does not match well with the nonnegativity requirements of the intensity measure required of certain distributions, most notably the Poisson.  Truncated normal and log Gaussian Cox Processes have been used numerous times in machine learning, and all have required attention to approximate inference in this fundamentally nonconjugate model; furthermore, very many of these examples have been used to analyze the latent firing intensity of neural spike train data \cite{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}.
-Here, we trained an EFN to learn the 20-dimensional truncated-normal Poisson posterior inference family.  This gives us a model of the posterior distribution for a given prior covariance, and some chosen spiking responses (visualized in 2-dimensions Figure 4A and 4B).  We demonstrate the utility of such a model on responses of neurons in primary visual cortex of anesthetized macaques to drifting grating stimuli.  We compare the accuracy of EFN with standard variational inference in their ability model the posterior firing rate distribution of a neuron responding to 6.25 Hz drift grating stimuli.  We consider 200 trials of a single neuron from \cite{smith2008spatial}, with 20ms binned spike counts: 100 training, 100 test. The data suggest a prior with average firing rate of $10$ spikes per second and a squared exponential gaussian process covariance with a timescale of 25ms.  Results in Figure 5 show the outperformance of EFN across a range of problem settings.  In panel B we sweep $R$, the number of trials on which we condition the posterior $p(z|x_1,...,x_R)$, and in panel C we sweep the number of available trials $N$.  Both of these pay off the value of using an EFN, in that they demonstrate the benefits of using a restricted model (and with free test-time inference as well).  
+Here, we trained an EFN to learn the 20-dimensional truncated-normal Poisson posterior inference family.  This gives us a model of the posterior distribution for a given prior covariance, and some chosen spiking responses (visualized in 2-dimensions Figure 4A and 4B).  We demonstrate the utility of such a model on responses of neurons in primary visual cortex of anesthetized macaques to drifting grating stimuli.  We compare the accuracy of EFN with standard variational inference in their ability model the posterior firing rate distribution of a neuron responding to 6.25 Hz drift grating stimuli.  We consider 200 trials of a single neuron from \cite{smith2008spatial}, with 20ms binned spike counts: 100 training, 100 test. The data suggest a prior with average firing rate of $10$ spikes per second and a squared exponential gaussian process covariance with a timescale of 25ms.  Results in Figure 5 show the outperformance of EFN across a range of problem settings.  In panel B we sweep $R$, the number of trials on which we condition the posterior $p(z|x_1,...,x_R)$, and in panel C we sweep the number of available trials $N$.  Both of these pay off the value of using an EFN, in that they demonstrate the benefits of using a restricted model.% (and with free test-time inference as well).  
 
 
 %
@@ -463,9 +462,10 @@ Here, we trained an EFN to learn the 20-dimensional truncated-normal Poisson pos
 \section{Conclusion}
 
 We have approached the problem of learning an exponential family, using a deep density network as an implicit probability model, the parameters of which are the image of the natural parameters of the target exponential family under another deep neural network.  
-We demonstrated high quality empirical performance across a range of dimensionalities, making a number of previously intractable distributions, including posterior distributions, \emph{approximately tractable}.  
-We have scrutinized the connections between our exponential family networks and variational inference, producing surprising and at times puzzling results that are worthy of meaningful follow up study.  
-In all, we have demonstrated the ability to capture performance gains and massive test-time advantage by sensibly restricting the space of an implicit probability model. 
+We demonstrated high quality empirical performance across a range of dimensionalities, making a number of previously intractable distributions, including posterior distributions, approximately tractable.
+  %
+%We have scrutinized the connections between our exponential family networks and variational inference, producing surprising and at times puzzling results that are worthy of meaningful follow up study.  
+%In all, we have demonstrated the ability to capture performance gains and massive test-time advantage by sensibly restricting the space of an implicit probability model. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %\subsubsection*{Acknowledgments}
