@@ -41,7 +41,7 @@ def train_vi(exp_fam, D, flow_dict, cost_type, M_eta=1000, model_info={}, \
     # optimization hyperparameters
     lr = 10**lr_order
     # save tensorboard summary in intervals
-    model_save_every = 49999;
+    model_save_every = max_iters-1;
     tb_save_every = 50;
     tb_save_params = False;
 
@@ -223,13 +223,6 @@ def train_vi(exp_fam, D, flow_dict, cost_type, M_eta=1000, model_info={}, \
                 print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
                 print('test elbo %.3f, test R2: %.3f, test KL %.3f' % (mean_test_elbo, mean_test_R2, mean_test_KL));
 
-                """print('eta');
-                print(_eta);
-                print('Z 1');
-                print(_X[0,0,:,0]);
-                print('Tx 1');
-                print(_Tx[0,0,:]);
-                exit();"""
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, eta=_eta, Tx_input=_Tx_input, eta_draw_params=eta_draw_params, \

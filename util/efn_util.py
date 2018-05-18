@@ -80,6 +80,21 @@ def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
 
         num_Tx_inputs = 1;
 
+    elif (exp_fam == 'dir_mult'):
+        D_Z = D-1;
+        ncons = D
+        subclass = model_info['subclass'];
+        if (subclass == 'EFN' or subclass == 'NF1' or subclass == 'EFN1'): # everything
+            num_param_net_inputs = D;
+        elif (subclass == 'EFN1a'): #just the prior
+            num_param_net_inputs = D;
+        elif (subclass == 'EFN1b'): # just the likelihood
+            num_param_net_inputs = D;
+        #elif (subclass == 'EFN1c'):
+        #    num_param_net_inputs = D;
+
+        num_Tx_inputs = 1;
+
     return D_Z, ncons, num_param_net_inputs, num_Tx_inputs;
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
@@ -186,7 +201,7 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
                 layers.append(TanhLayer('Tanh_Layer%d' % layer_ind));
             layer_ind += 1;
     # take care of the T-exp family-specific support transformations
-    if ((exp_fam == 'dirichlet') or exp_fam == ('dir_dir')):
+    if ((exp_fam == 'dirichlet') or (exp_fam == 'dir_dir') or (exp_fam == 'dir_mult')):
         layers.append(SimplexBijectionLayer());
     elif (exp_fam == 'inv_wishart'):
         layers.append(CholProdLayer());
@@ -401,6 +416,9 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input):
             betaz = tf.multiply(beta, X[:,:,:,0]);
             log_gamma_beta_z = tf.lgamma(betaz);
             Tx = tf.concat((logz, betaz, log_gamma_beta_z), 2);
+        elif (exp_fam == 'dir_mult'):
+            logz = tf.log(X[:,:,:,0]);
+            Tx = logz
         else:
             raise NotImplementedError;
     else:
@@ -422,6 +440,8 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         elif (exp_fam == 'prp_tn'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         elif (exp_fam == 'dir_dir'):
+            Bx = tf.zeros((K,M), dtype=tf.float64);
+        elif (exp_fam == 'dir_mult'):
             Bx = tf.zeros((K,M), dtype=tf.float64);
         else:
             raise NotImplementedError;
@@ -525,6 +545,21 @@ def dir_dir_eta(alpha_0, x, N, model_info, give_inverse_hint):
         param_net_input = x.T;
     return eta, param_net_input;
     
+def dir_mult_eta(alpha_0, x, N, model_info, give_inverse_hint):
+    subclass = model_info['subclass'];
+    D = alpha_0.shape[0];
+    eta = np.expand_dims(alpha_0 - 1.0 + x, 0);
+
+    if (subclass == 'EFN' or subclass == 'NF1' or subclass == 'EFN1'):
+        param_net_input = eta;
+    elif (subclass == 'EFN1a'):
+        param_net_input = np.expand_dims(alpha_0 - 1.0, 0);
+    elif (subclass == 'EFN1b'):
+        param_net_input = np.expand_dims(x, 0);
+    #elif (subclass == 'EFN1c'):
+    #    assert(x.shape[1] == 1 and N == 1);
+    #    param_net_input = x.T;
+    return eta, param_net_input;
 
 def drawPoissonRates(D, ratelim):
     return np.random.uniform(0.1, ratelim, (D,));
@@ -680,6 +715,36 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
             zs[k] = z;
             Ns[k] = N;
         params = {'alpha_0s':alpha_0s, 'betas':betas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
+    elif (exp_fam == 'dir_mult'):
+        Ndrawtype = model_info['Ndrawtype'];
+        subclass = model_info['subclass'];
+        Nmax = 15;
+        Nmean = 5;
+        x_eps = 1e-16;
+        alpha_0s = np.zeros((K_eta, D));
+        xs = np.zeros((K_eta, D));
+        Ns = np.zeros((K_eta,));
+        for k in range(K_eta):
+            alpha_0_k = np.random.uniform(1.0, 10.0, (D,));
+            beta_k = np.random.uniform(D, 2*D);
+            if (Ndrawtype == '1'):
+                N = 1;
+            else:
+                N = int(min(np.random.poisson(Nmean), Nmax));
+            dist1 = dirichlet(alpha_0_k);
+            z = dist1.rvs(1);
+            print(N);
+            print(z);
+            x = np.random.multinomial(N, z[0]);
+            #x = (x+x_eps);
+            #x = x / np.expand_dims(np.sum(x, 0), 0);
+            eta_k, param_net_inputs_k = dir_mult_eta(alpha_0_k, x, N, model_info, False);
+            eta[k,:] = eta_k;
+            param_net_inputs[k,:] = param_net_inputs_k;
+            alpha_0s[k,:] = alpha_0_k;
+            xs[k,:] = x;
+            Ns[k] = N;
+        params = {'alpha_0s':alpha_0s,'xs':xs, 'Ns':Ns, 'D':D};
     else:
         raise NotImplementedError;
     return eta, param_net_inputs, Tx_input, params;
