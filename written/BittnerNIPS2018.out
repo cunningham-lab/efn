@@ -1,7 +1,7 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Exponential family networks}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{Implicit probability models via density networks}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Exponential families}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Exponential families as target models}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Density networks as approximating family}{section.2}% 4
 \BOOKMARK [2][-]{subsection.2.3}{Exponential family networks}{section.2}% 5
 \BOOKMARK [2][-]{subsection.2.4}{Relation to variational inference}{section.2}% 6
 \BOOKMARK [1][-]{section.3}{Results}{}% 7
@@ -9,4 +9,3 @@
 \BOOKMARK [2][-]{subsection.3.2}{Intractable exponential families}{section.3}% 9
 \BOOKMARK [2][-]{subsection.3.3}{Neural spike train analysis}{section.3}% 10
 \BOOKMARK [1][-]{section.4}{Conclusion}{}% 11
-\BOOKMARK [1][-]{section.5}{Appendix}{}% 12

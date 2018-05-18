@@ -85,21 +85,32 @@ Martin~J Wainwright, Michael~I Jordan, et~al.
 \newblock {\em Foundations and Trends{\textregistered} in Machine Learning},
   1(1--2):1--305, 2008.
 
-\bibitem{hinton1995wake}
-Geoffrey~E Hinton, Peter Dayan, Brendan~J Frey, and Radford~M Neal.
-\newblock The" wake-sleep" algorithm for unsupervised neural networks.
-\newblock {\em Science}, 268(5214):1158--1161, 1995.
+\bibitem{Devroye:1986aa}
+Luc Devroye.
+\newblock {\em Non-uniform random variate generation}.
+\newblock Springer-Verlag, New York, 1986.
 
-\bibitem{rezende2015variational}
-Danilo~Jimenez Rezende and Shakir Mohamed.
-\newblock Variational inference with normalizing flows.
-\newblock {\em arXiv preprint arXiv:1505.05770}, 2015.
+\bibitem{robert2007bayesian}
+Christian Robert.
+\newblock {\em The Bayesian choice: from decision-theoretic foundations to
+  computational implementation}.
+\newblock Springer Science \& Business Media, 2007.
 
 \bibitem{baird2005one}
 Leemon Baird, David Smalenberger, and Shawn Ingkiriwang.
 \newblock One-step neural network inversion with pdf learning and emulation.
 \newblock In {\em Neural Networks, 2005. IJCNN'05. Proceedings. 2005 IEEE
   International Joint Conference on}, volume~2, pages 966--971. IEEE, 2005.
+
+\bibitem{tabak2010density}
+Esteban~G Tabak, Eric Vanden-Eijnden, et~al.
+\newblock Density estimation by dual ascent of the log-likelihood.
+\newblock {\em Communications in Mathematical Sciences}, 8(1):217--233, 2010.
+
+\bibitem{rezende2015variational}
+Danilo~Jimenez Rezende and Shakir Mohamed.
+\newblock Variational inference with normalizing flows.
+\newblock {\em arXiv preprint arXiv:1505.05770}, 2015.
 
 \bibitem{dinh2016density}
 Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio.
@@ -110,47 +121,6 @@ Laurent Dinh, Jascha Sohl-Dickstein, and Samy Bengio.
 J{\"o}rn-Henrik Jacobsen, Arnold Smeulders, and Edouard Oyallon.
 \newblock i-revnet: Deep invertible networks.
 \newblock {\em arXiv preprint arXiv:1802.07088}, 2018.
-
-\bibitem{chen2001gaussianization}
-Scott~Saobing Chen and Ramesh~A Gopinath.
-\newblock Gaussianization.
-\newblock In {\em Advances in neural information processing systems}, pages
-  423--429, 2001.
-
-\bibitem{tabak2010density}
-Esteban~G Tabak, Eric Vanden-Eijnden, et~al.
-\newblock Density estimation by dual ascent of the log-likelihood.
-\newblock {\em Communications in Mathematical Sciences}, 8(1):217--233, 2010.
-
-\bibitem{saul1996exploiting}
-Lawrence~K Saul and Michael~I Jordan.
-\newblock Exploiting tractable substructures in intractable networks.
-\newblock In {\em Advances in neural information processing systems}, pages
-  486--492, 1996.
-
-\bibitem{barber1999tractable}
-David Barber and Wim Wiegerinck.
-\newblock Tractable variational structures for approximating graphical models.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  183--189, 1999.
-
-\bibitem{hoffman2015stochastic}
-Matthew Hoffman and David Blei.
-\newblock Stochastic structured variational inference.
-\newblock In {\em Artificial Intelligence and Statistics}, pages 361--369,
-  2015.
-
-\bibitem{tran2015copula}
-Dustin Tran, David Blei, and Edo~M Airoldi.
-\newblock Copula variational inference.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  3564--3572, 2015.
-
-\bibitem{robert2007bayesian}
-Christian Robert.
-\newblock {\em The Bayesian choice: from decision-theoretic foundations to
-  computational implementation}.
-\newblock Springer Science \& Business Media, 2007.
 
 \bibitem{andrychowicz2016learning}
 Marcin Andrychowicz, Misha Denil, Sergio Gomez, Matthew~W Hoffman, David Pfau,
@@ -181,6 +151,30 @@ Matthew~D Hoffman and Matthew~J Johnson.
 Chris Cremer, Xuechen Li, and David Duvenaud.
 \newblock Inference suboptimality in variational autoencoders.
 \newblock {\em arXiv preprint arXiv:1801.03558}, 2018.
+
+\bibitem{saul1996exploiting}
+Lawrence~K Saul and Michael~I Jordan.
+\newblock Exploiting tractable substructures in intractable networks.
+\newblock In {\em Advances in neural information processing systems}, pages
+  486--492, 1996.
+
+\bibitem{barber1999tractable}
+David Barber and Wim Wiegerinck.
+\newblock Tractable variational structures for approximating graphical models.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  183--189, 1999.
+
+\bibitem{hoffman2015stochastic}
+Matthew Hoffman and David Blei.
+\newblock Stochastic structured variational inference.
+\newblock In {\em Artificial Intelligence and Statistics}, pages 361--369,
+  2015.
+
+\bibitem{tran2015copula}
+Dustin Tran, David Blei, and Edo~M Airoldi.
+\newblock Copula variational inference.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  3564--3572, 2015.
 
 \bibitem{gretton2012kernel}
 Arthur Gretton, Karsten~M Borgwardt, Malte~J Rasch, Bernhard Sch{\"o}lkopf, and
