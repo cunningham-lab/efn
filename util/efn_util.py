@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from flows import LinearFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
                   CholProdLayer, StructuredSpinnerLayer, TanhLayer, ExpLayer, \
                   SoftPlusLayer
+import scipy.io as sio
 import os
 import re
 
@@ -557,7 +558,7 @@ def get_GP_Sigma(tau, T, Ts):
                 K[j,i] = K[i,j];
     return K;
 
-def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
+def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
     D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint);
     eta = np.zeros((K_eta, ncons));
     param_net_inputs = np.zeros((K_eta, num_param_net_inputs));
@@ -607,7 +608,9 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        Nmax = 10;
+        subclass = model_info['subclass'];
+        N = model_info['R'];
+        Nmax = 50;
         Ts = .02;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
@@ -622,16 +625,29 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
                 mus[k,i] = 0.2; #np.random.uniform(0,ratelim);
             tau = .025;
             Sigmas[k,:,:] = 0.26*get_GP_Sigma(tau, D_Z, Ts)
-            N = np.random.randint(1,Nmax+1)  #int(min(np.random.poisson(Nmean), Nmax));
-            z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
-            x = drawPoissonCounts(z, N);
+            if (subclass == 'VI'):
+                z = np.zeros((D,));
+                data = model_info['data'];
+                datax = data['x'];
+                if (test):
+                    testx = datax[100:,:];
+                    samp_inds = np.random.choice(100, N, False);
+                    x = testx[samp_inds,:D].T;
+                else:
+                    trainx = datax[:100,:];
+                    samp_inds = np.random.choice(100, N, False);
+                    x = trainx[samp_inds,:D].T;
+            else:
+                N = np.random.randint(1,Nmax+1)  #int(min(np.random.poisson(Nmean), Nmax));
+                z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
+                x = drawPoissonCounts(z, N);
             xs[k,:,:N] = x;
             zs[k] = z;
             Ns[k] = N;
             eta_k, param_net_input_k = prp_tn_eta(mus[k], Sigmas[k], x, N, give_inverse_hint);
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = param_net_input_k;
-        params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
+            params = {'mus':mus, 'Sigmas':Sigmas, 'xs':xs, 'zs':zs, 'Ns':Ns, 'D':D};
 
     elif (exp_fam == 'dir_dir'):
         Ndrawtype = model_info['Ndrawtype'];
