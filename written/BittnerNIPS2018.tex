@@ -261,9 +261,11 @@ Given the connections between the exponential family and Shannon entropy, we wil
 
 where again we note that $\theta = f_\phi(\eta)$, and thus for a fixed eta, this objective depends only on $\phi$.  Indeed, the target $\eta^\top t(z)$ is linear in $\eta$ (an obvious restatement of the log-linear exponential family form), giving us some hope that we may be able to learn this model.  As a side note, this objective can also produce approximations of the log partition (as the intercept term implied by this linear target), which we have found to be reasonably accurate, though nuanced schemes are likely appropriate \cite{papamakarios2015distilling}; we do not explore that further here.
 
-Of course we seek not 
+Of course we seek to approximate not just a single target exponential family member ($p(z;\eta)$ for a fixed $\eta$), but rather the entire model $\mathcal{P} = \left\{p(z;\eta): \eta \in H\right\}$.   For optimization we thus need to introduce a distribution $p(\eta)$ (for sampling), leading to the objective: 
 
-Of course we don't just want to learn a single eta, but the whole model.  As a practical necessity we introduce a sampling distribution... and we are interested in the $E(KL)$, or equiv KL(...)
+$$\arg\min_\phi \mathbb{E}_{p(\eta)} \left( D\left( q_\phi(z;\eta) || p(z;\eta) \right)\right) =  \arg\min_\phi D\left( q_\phi(z;\eta)p(\eta) || p(z;\eta)p(\eta) \right).$$
+
+
 
 This is amenable to sampling, and note that since we have no data (we are fitting a model, not a conditional based on finite data), we can sample forever.  Here is an unbiased objective for stochastic optimization.
 
