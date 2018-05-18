@@ -231,9 +231,9 @@ The critical observation here is that, if we can approximately learn an intracta
 Implicit probability models, which we will use for our approximating model family $\mathcal{M}$, can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
 Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
 This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
-Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
+Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J^\ell_\theta(z)$ as the Jacobian of the function $g_\ell$ at the layer activation corresponding to $z$.  Then we have:
 %
-$$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\ell=1}^L | J_\ell^{-1} |.$$
+$$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\ell=1}^L \frac{1}{| J^\ell_\theta(z) |}.$$
 %
 The specific form of the layers $g_\ell$ can be chosen based on empirical considerations; we clarify our choice in \S3.  For the remainder (and to avoid confusion when we introduce a second network) we call this deep bijective neural architecture the \emph{density network}; this network is shown vertically oriented (flowing from $w$ down to $z$) in Figure 1C.
 
@@ -253,9 +253,15 @@ Using a second meta-network to aid or restrict network learning has been used in
 Any choice of parameter network parameters $\phi$ induces a $|H|$-dimensional submanifold (the image $f_\phi(H)$) of the density network parameter space $\Theta$, and as such defines a restricted model $\mathcal{Q}_\phi = \left\{ q_{f_{\phi}}(z; \eta): \eta \in H\right\} \subset \mathcal{M}$; by our choice of $H$ as the natural parameter space of the exponential family target $\mathcal{P}$, this model restriction is at least of the correct dimensionality.
 Our goal then is to search over the implied set of models $\mathbb{Q} = \left\{ \mathcal{Q}_\phi : \phi \in \Phi \right\}$ to find an optimal $\phi^*$ such that $\mathcal{Q}_{\phi^*} \approx \mathcal{P}$. 
 
-KL p q for a fixed eta
+Given the connections between the exponential family and Shannon entropy, we will measure the error between $\mathcal{Q}_{\phi}$ and $\mathcal{P}$ with Kullback-Leibler divergence.  Consider for the moment a fixed choice of natural parameter $\eta$; we seek to minimize, over $\phi$:
+%
+%$$ KL\left( q_\phi(z;\eta) || p(z;\eta) \right) \propto \mathbb{E}_q \left( \log q_\phi(z;\eta) \right) - \mathbb{E}_q \left( \eta^\top t(z) \right) = \mathbb{E}_q \left( q_0\left( g_\theta^{-1}(z)\right) \right) - \sum_{\ell=1}^L\mathbb{E}_q \left(  \log | J_\ell^{-1}(z) | \right) - \mathbb{E}_q \left( \eta^\top t(z) \right).$$
+{\small $$ D\left( q_\phi(z;\eta) || p(z;\eta) \right) \propto \mathbb{E}_{q_\phi} \Bigg( \log q_\phi(z;\eta) - \eta^\top t(z) \Bigg) = \mathbb{E}_{q_\phi} \left( q_0\left( g_\theta^{-1}(z)\right) + \sum_{\ell=1}^L  \log | J^\ell_\theta(z) | - \eta^\top t(z) \right),$$}
+%
 
-Note that this objective can also produce approximations of the log partition, via essentially linear regression; more nuanced schemes are likely appropriate \cite{papamakarios2015distilling}.  We don't explore that here.
+where again we note that $\theta = f_\phi(\eta)$, and thus for a fixed eta, this objective depends only on $\phi$.  Indeed, the target $\eta^\top t(z)$ is linear in $\eta$ (an obvious restatement of the log-linear exponential family form), giving us some hope that we may be able to learn this model.  As a side note, this objective can also produce approximations of the log partition (as the intercept term implied by this linear target), which we have found to be reasonably accurate, though nuanced schemes are likely appropriate \cite{papamakarios2015distilling}; we do not explore that further here.
+
+Of course we seek not 
 
 Of course we don't just want to learn a single eta, but the whole model.  As a practical necessity we introduce a sampling distribution... and we are interested in the $E(KL)$, or equiv KL(...)
 
