@@ -209,20 +209,6 @@ Arthur Gretton, Karsten~M Borgwardt, Malte~J Rasch, Bernhard Sch{\"o}lkopf, and
 \newblock A kernel two-sample test.
 \newblock {\em Journal of Machine Learning Research}, 13(Mar):723--773, 2012.
 
-\bibitem{gao2016linear}
-Yuanjun Gao, Evan~W Archer, Liam Paninski, and John~P Cunningham.
-\newblock Linear dynamical neural population models through nonlinear
-  embeddings.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  163--171, 2016.
-
-\bibitem{adams2009tractable}
-Ryan~Prescott Adams, Iain Murray, and David~JC MacKay.
-\newblock Tractable nonparametric bayesian inference in poisson processes with
-  gaussian process intensities.
-\newblock In {\em Proceedings of the 26th Annual International Conference on
-  Machine Learning}, pages 9--16. ACM, 2009.
-
 \bibitem{cunningham2008fast}
 John~P Cunningham, Krishna~V Shenoy, and Maneesh Sahani.
 \newblock Fast gaussian process methods for point process intensity estimation.
@@ -235,5 +221,19 @@ John~P Cunningham, M~Yu Byron, Krishna~V Shenoy, and Maneesh Sahani.
   processes.
 \newblock In {\em Advances in neural information processing systems}, pages
   329--336, 2008.
+
+\bibitem{adams2009tractable}
+Ryan~Prescott Adams, Iain Murray, and David~JC MacKay.
+\newblock Tractable nonparametric bayesian inference in poisson processes with
+  gaussian process intensities.
+\newblock In {\em Proceedings of the 26th Annual International Conference on
+  Machine Learning}, pages 9--16. ACM, 2009.
+
+\bibitem{gao2016linear}
+Yuanjun Gao, Evan~W Archer, Liam Paninski, and John~P Cunningham.
+\newblock Linear dynamical neural population models through nonlinear
+  embeddings.
+\newblock In {\em Advances in Neural Information Processing Systems}, pages
+  163--171, 2016.
 
 \end{thebibliography}
