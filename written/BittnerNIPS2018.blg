@@ -6,43 +6,43 @@ Database file #1: BittnerNIPS2018.bib
 Warning--can't use both volume and number fields in gershman2014amortized
 You've used 41 entries,
             1791 wiz_defined-function locations,
-            683 strings with 10633 characters,
-and the built_in function-call counts, 11549 in all, are:
-= -- 1063
-> -- 474
+            683 strings with 10568 characters,
+and the built_in function-call counts, 11675 in all, are:
+= -- 1078
+> -- 478
 < -- 20
-+ -- 172
-- -- 131
-* -- 715
-:= -- 1670
++ -- 173
+- -- 132
+* -- 734
+:= -- 1687
 add.period$ -- 128
 call.type$ -- 41
-change.case$ -- 37
+change.case$ -- 38
 chr.to.int$ -- 0
 cite$ -- 42
-duplicate$ -- 575
-empty$ -- 1131
-format.name$ -- 131
-if$ -- 2698
+duplicate$ -- 574
+empty$ -- 1140
+format.name$ -- 132
+if$ -- 2722
 int.to.chr$ -- 0
 int.to.str$ -- 41
-missing$ -- 45
+missing$ -- 44
 newline$ -- 208
 num.names$ -- 43
-pop$ -- 167
+pop$ -- 162
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 346
+skip$ -- 348
 stack$ -- 0
-substring$ -- 831
+substring$ -- 868
 swap$ -- 216
 text.length$ -- 20
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 1
-while$ -- 110
+while$ -- 112
 width$ -- 43
 write$ -- 449
 (There was 1 warning)

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  18 MAY 2018 15:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  18 MAY 2018 15:43
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1367,86 +1367,82 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 198.
 
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 5091) has occurred while \output is active []
 
  [2]
 [3 <./figs/fig1/t0.png> <./figs/fig1/t11a.png> <./figs/fig1/t12.png> <./figs/fi
 g1/t13.png> <./figs/fig1/t21.png> <./figs/fig1/t22.png> <./figs/fig1/t23.png>]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 231.
+(hyperref)                removing `math shift' on input line 232.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 231.
+(hyperref)                removing `math shift' on input line 232.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 248.
+(hyperref)                removing `math shift' on input line 249.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 248.
+(hyperref)                removing `math shift' on input line 249.
 
-[4] [5] <figs/fig2/fig2.pdf, id=208, 830.45155pt x 211.84746pt>
+[4] [5] <figs/fig2/fig2.pdf, id=206, 830.45155pt x 211.84746pt>
 File: figs/fig2/fig2.pdf Graphic file (type pdf)
 
 <use figs/fig2/fig2.pdf>
-Package pdftex.def Info: figs/fig2/fig2.pdf used on input line 353.
+Package pdftex.def Info: figs/fig2/fig2.pdf used on input line 354.
 (pdftex.def)             Requested size: 382.01234pt x 97.451pt.
- <figs/fig3/fig3.pdf, id=210, 855.195pt x 403.55467pt>
+ [6 <./figs/fig2/fig2.pdf>]
+<figs/fig3/fig3.pdf, id=233, 855.195pt x 403.55467pt>
 File: figs/fig3/fig3.pdf Graphic file (type pdf)
-
-<use figs/fig3/fig3.pdf>
-Package pdftex.def Info: figs/fig3/fig3.pdf used on input line 361.
+ <use figs/fig3/fig3.pdf>
+Package pdftex.def Info: figs/fig3/fig3.pdf used on input line 362.
 (pdftex.def)             Requested size: 393.39449pt x 185.63739pt.
- [6]
-<figs/fig4/fig4.pdf, id=216, 497.86pt x 277.035pt>
+
+<figs/fig4/fig4.pdf, id=234, 497.86pt x 277.035pt>
 File: figs/fig4/fig4.pdf Graphic file (type pdf)
  <use figs/fig4/fig4.pdf>
-Package pdftex.def Info: figs/fig4/fig4.pdf used on input line 383.
+Package pdftex.def Info: figs/fig4/fig4.pdf used on input line 384.
 (pdftex.def)             Requested size: 189.18877pt x 105.27438pt.
 
-<figs/fig5/fig5a.pdf, id=217, 500.63939pt x 375.4025pt>
+<figs/fig5/fig5a.pdf, id=235, 500.63939pt x 375.4025pt>
 File: figs/fig5/fig5a.pdf Graphic file (type pdf)
 
 <use figs/fig5/fig5a.pdf>
-Package pdftex.def Info: figs/fig5/fig5a.pdf used on input line 389.
+Package pdftex.def Info: figs/fig5/fig5a.pdf used on input line 390.
 (pdftex.def)             Requested size: 190.24493pt x 142.65442pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [7 <./figs/fig2/fig2.pdf> <./figs/fig3/fig3.pdf>] [8 <./figs/fig4/fig4.pdf> <.
-/figs/fig5/fig5a.pdf
+ [7 <./figs/fig3/fig3.pdf>] [8 <./figs/fig4/fig4.pdf> <./figs/fig5/fig5a.pdf
 
 pdfTeX warning: /Library/TeX/texbin/pdflatex (file ./figs/fig5/fig5a.pdf): PDF 
 inclusion: multiple pdfs with page group included in a single page
 >] (./BittnerNIPS2018.bbl
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 85.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 83.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 85.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 83.
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 85.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 83.
  [9
 
 ]) [10]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 536.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 536.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 537.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 537.
 
 (./BittnerNIPS2018.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 536.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 536.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 537.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 537.
 Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 (rerunfilecheck)             Checksum: 3C6099212B6D4FF65498F155D9B1C2CD;845.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 536.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 537.
  ) 
 Here is how much of TeX's memory you used:
  24874 strings out of 493014
- 494529 string characters out of 6133351
+ 494537 string characters out of 6133351
  624364 words of memory out of 5000000
  27677 multiletter control sequences out of 15000+600000
  46622 words of font info for 172 fonts, out of 8000000 for 9000
@@ -1476,7 +1472,7 @@ s/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
 /urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times
 /utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a.p
 fb>
-Output written on BittnerNIPS2018.pdf (10 pages, 1998592 bytes).
+Output written on BittnerNIPS2018.pdf (10 pages, 1999474 bytes).
 PDF statistics:
  490 PDF objects out of 1000 (max. 8388607)
  342 compressed objects within 4 object streams

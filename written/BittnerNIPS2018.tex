@@ -197,7 +197,8 @@ Finally we demonstrate the utility of this approach in an example inferring the 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \subsection{Exponential families as target model $\mathcal{P}$}
 
-We will focus on a fundamental problem setup in probabilistic inference, that of a latent variable $z \in \mathcal{Z}$ with prior belief $p_0(z)$, and where we observe a dataset $X = \left\{x_1,...,x_N\right\} \subset \mathcal{X}$ as conditionally independent draws given $z$.   Updating our belief with data produces the posterior $p(z | X) \propto p_0(z) \prod_{i=1}^N p(x_i | z)$.  This setup is shown as a graphical model in Figure 1A and produces an intractable $p(z|X)$ in all but the rare cases of  known conjugacy or careful historical work (often an inversion, transformation-rejection, or similar custom numerical strategy) that has made these distributions computationally indistinguishable from tractable \cite{Devroye:1986aa}. % It is intriguing then to reflect upon the success that deep networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable distributions.
+We will focus on a fundamental problem setup in probabilistic inference, that of a latent variable $z \in \mathcal{Z}$ with prior belief $p_0(z)$, and where we observe a dataset $X = \left\{x_1,...,x_N\right\} \subset \mathcal{X}$ as conditionally independent draws given $z$.   Updating our belief with data produces the posterior $p(z | X) \propto p_0(z) \prod_{i=1}^N p(x_i | z)$.  This setup is shown as a graphical model in Figure 1A.
+% and produces an intractable $p(z|X)$ in all but the rare cases of  known conjugacy or careful historical work (often an inversion, transformation-rejection, or similar custom numerical strategy) that has made these distributions computationally indistinguishable from tractable \cite{Devroye:1986aa}. % It is intriguing then to reflect upon the success that deep networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable distributions.
 
 If we restrict our attention to priors and likelihoods that belong to exponential families $\mathcal{P} = \left\{ \frac{h(\cdot)}{A(\eta)} \exp\left\{ \eta^\top t(\cdot) \right \} : \eta \in H \right\}$, the posterior can be also viewed as an exponential family, albeit intractable \cite{wainwright2008graphical}.  For simplicity we will hereafter suppress the base measure $h(\cdot)$.  Consider:
 
@@ -407,7 +408,7 @@ We here consider the hierchical Dirichlet family (as introduced in \S2.1 and Fig
 
 The normal family is the ubiquitous prior for real valued parameters, but it does not match well with the nonnegativity requirements of the intensity measure required of certain distributions, most notably the Poisson.  Truncated normal and log Gaussian Cox Processes have been used numerous times in machine learning, and all have required attention to approximate inference in this fundamentally nonconjugate model; furthermore, very many of these examples have been used to analyze the latent firing intensity of neural spike train data \cite{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}.
 
-
+\cite{smith2008spatial}
 
 %
 %

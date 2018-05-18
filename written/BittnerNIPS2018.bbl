@@ -30,8 +30,7 @@ D.~J.~C. MacKay and M.~N. Gibbs.
 \bibitem{uria2013rnade}
 Benigno Uria, Iain Murray, and Hugo Larochelle.
 \newblock Rnade: The real-valued neural autoregressive density-estimator.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  2175--2183, 2013.
+\newblock In {\em NIPS}, pages 2175--2183, 2013.
 
 \bibitem{rippel2013high}
 Oren Rippel and Ryan~Prescott Adams.
@@ -41,16 +40,15 @@ Oren Rippel and Ryan~Prescott Adams.
 \bibitem{papamakarios2017masked}
 George Papamakarios, Iain Murray, and Theo Pavlakou.
 \newblock Masked autoregressive flow for density estimation.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  2335--2344, 2017.
+\newblock In {\em NIPS}, pages 2335--2344, 2017.
 
 \bibitem{Goodfellow:2014aa}
 Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley,
   Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
 \newblock Generative adversarial nets.
 \newblock In Z.~Ghahramani, M.~Welling, C.~Cortes, N.~D. Lawrence, and K.~Q.
-  Weinberger, editors, {\em Advances in Neural Information Processing Systems
-  27}, pages 2672--2680. Curran Associates, Inc., 2014.
+  Weinberger, editors, {\em NIPS 27}, pages 2672--2680. Curran Associates,
+  Inc., 2014.
 
 \bibitem{Kingma:2013aa}
 Diederik~P Kingma and Max Welling.
@@ -99,13 +97,7 @@ Samuel Gershman and Noah Goodman.
 \bibitem{stuhlmuller2013learning}
 Andreas Stuhlm{\"u}ller, Jacob Taylor, and Noah Goodman.
 \newblock Learning stochastic inverses.
-\newblock In {\em Advances in neural information processing systems}, pages
-  3048--3056, 2013.
-
-\bibitem{Devroye:1986aa}
-Luc Devroye.
-\newblock {\em Non-uniform random variate generation}.
-\newblock Springer-Verlag, New York, 1986.
+\newblock In {\em NIPS}, pages 3048--3056, 2013.
 
 \bibitem{robert2007bayesian}
 Christian Robert.
@@ -164,8 +156,7 @@ J{\"o}rn-Henrik Jacobsen, Arnold Smeulders, and Edouard Oyallon.
 Marcin Andrychowicz, Misha Denil, Sergio Gomez, Matthew~W Hoffman, David Pfau,
   Tom Schaul, and Nando de~Freitas.
 \newblock Learning to learn by gradient descent by gradient descent.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  3981--3989, 2016.
+\newblock In {\em NIPS}, pages 3981--3989, 2016.
 
 \bibitem{papamakarios2015distilling}
 George Papamakarios and Iain Murray.
@@ -182,14 +173,12 @@ David~M Blei, Alp Kucukelbir, and Jon~D McAuliffe.
 \bibitem{saul1996exploiting}
 Lawrence~K Saul and Michael~I Jordan.
 \newblock Exploiting tractable substructures in intractable networks.
-\newblock In {\em Advances in neural information processing systems}, pages
-  486--492, 1996.
+\newblock In {\em NIPS}, pages 486--492, 1996.
 
 \bibitem{barber1999tractable}
 David Barber and Wim Wiegerinck.
 \newblock Tractable variational structures for approximating graphical models.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  183--189, 1999.
+\newblock In {\em NIPS}, pages 183--189, 1999.
 
 \bibitem{hoffman2015stochastic}
 Matthew Hoffman and David Blei.
@@ -200,8 +189,7 @@ Matthew Hoffman and David Blei.
 \bibitem{tran2015copula}
 Dustin Tran, David Blei, and Edo~M Airoldi.
 \newblock Copula variational inference.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  3564--3572, 2015.
+\newblock In {\em NIPS}, pages 3564--3572, 2015.
 
 \bibitem{gretton2012kernel}
 Arthur Gretton, Karsten~M Borgwardt, Malte~J Rasch, Bernhard Sch{\"o}lkopf, and
@@ -219,8 +207,7 @@ John~P Cunningham, Krishna~V Shenoy, and Maneesh Sahani.
 John~P Cunningham, M~Yu Byron, Krishna~V Shenoy, and Maneesh Sahani.
 \newblock Inferring neural firing rates from spike trains using gaussian
   processes.
-\newblock In {\em Advances in neural information processing systems}, pages
-  329--336, 2008.
+\newblock In {\em NIPS}, pages 329--336, 2008.
 
 \bibitem{adams2009tractable}
 Ryan~Prescott Adams, Iain Murray, and David~JC MacKay.
@@ -233,7 +220,12 @@ Ryan~Prescott Adams, Iain Murray, and David~JC MacKay.
 Yuanjun Gao, Evan~W Archer, Liam Paninski, and John~P Cunningham.
 \newblock Linear dynamical neural population models through nonlinear
   embeddings.
-\newblock In {\em Advances in Neural Information Processing Systems}, pages
-  163--171, 2016.
+\newblock In {\em NIPS}, pages 163--171, 2016.
+
+\bibitem{smith2008spatial}
+Matthew~A Smith and Adam Kohn.
+\newblock Spatial and temporal scales of neuronal correlation in primary visual
+  cortex.
+\newblock {\em Journal of Neuroscience}, 28(48):12591--12603, 2008.
 
 \end{thebibliography}
