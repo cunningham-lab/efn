@@ -627,16 +627,12 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
             Sigmas[k,:,:] = 0.26*get_GP_Sigma(tau, D_Z, Ts)
             if (subclass == 'VI'):
                 z = np.zeros((D,));
-                data = model_info['data'];
-                datax = data['x'];
                 if (test):
-                    testx = datax[100:,:];
-                    samp_inds = np.random.choice(100, N, False);
-                    x = testx[samp_inds,:D].T;
+                    x = model_info['testx'];
                 else:
-                    trainx = datax[:100,:];
-                    samp_inds = np.random.choice(100, N, False);
-                    x = trainx[samp_inds,:D].T;
+                    x = model_info['trainx'];
+                samp_inds = np.random.choice(100, x.shape[0], False);
+                x = x[samp_inds,:D].T;
             else:
                 N = np.random.randint(1,Nmax+1)  #int(min(np.random.poisson(Nmean), Nmax));
                 z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
