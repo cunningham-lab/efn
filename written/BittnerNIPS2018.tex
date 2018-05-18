@@ -185,24 +185,26 @@ In all, our contributions include:
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \section{Exponential family networks}
  
- To define exponential family networks (EFN), we begin with the primary network architectural constraint and the background we leverage to satisfy that constraint (\S2.1).  We then give relevant context for our modeling choice of exponential families (\S2.2). We then introduce EFN in detail, including the optimization algorithm used for learning (\S2.3).  The similarities with variational inference are then explored in depth in \S2.4.
+ To define exponential family networks (EFN), we begin with relevant context for our modeling choice of exponential families (\S2.1).  We then describe the primary network architectural constraint and the background we leverage to satisfy that constraint (\S2.2). We then introduce EFN in detail, including the optimization algorithm used for learning (\S2.3).  The similarities with variational inference are then explored in depth in \S2.4.
   
- \subsection{Implicit probability models via density networks}
 
-Implicit probability models can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
-Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
-This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
-Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
-%
-$$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\ell=1}^L | J_\ell^{-1} |.$$
-%
-The specific form of the layers $g_\ell$ can be chosen based on empirical considerations; we clarify our choice in \S3.  For the remainder (and to avoid confusion when we introduce a second network) we call this deep bijective neural architecture the \emph{density network}.
-
-%Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    
- 
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \subsection{Exponential families}
+ \subsection{Exponential families as target models}
+
+We will focus on perhaps the most fundamental problem setup in probabilistic inference, that of a latent variable $z \in \mathcal{Z}$ with prior belief $p(z)$, and where we observe a dataset $X = \left\{x_1,...,x_N\right\} \subset \mathcal{X}$ as conditionally independent draws given $z$.   Updating our belief with data produces the posterior $p(z | X) \propto p(z) \prod_{i=1}^N p(x_i | z)$.  This setup is shown as a graphical model in Figure 1A.
+
+\begin{figure}
+\centering
+\input{figs/fig1/efn1b.tex}
+  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
+\end{figure}
+
+Of course, in all but the most simple cases, this posterior is intractable.  Here it is important to be explicit in our definition of intractability: typically due to a lack of known conjugacy, this posterior falls outside the class of models that can be readily sampled or evaluated given existing numerical techniques (for example.  However, 
+
+In rare cases these distributions are tractable due to either known conjugacy in the problem setup (such as the normal-inverse-Wishart), or due to careful numerical work historically that has made these distributions computationally indistinguishable from tractable (eg the Dirichlet). \cite{Devroye:1986aa}.  not a known mapping from other simpler distributions (eg the Wishart via the Bartlett decomposition), an inversion, transformation-rejection algorithm, or similar custom numerical solution \cite{Devroye:1986aa}.  It is intriguing then to reflect upon the success that deep neural networks have offered to function approximation, and ask to what extent we can automate this numerical process, widening the class of effectively tractable exponential family distributions. Also we always sample from intractable families via some transformations \cite{Devroye:1986aa}; the fact that some have known constructions (ratio of gammas, Bartlett decomposition, etc) should not distract from the fundamental nature of this process. 
+
+define $\mathcal{P}$.  Lay down notation.  Ref Fig 1a and Fig 1b.
 
 bants.  Pitman-Koopman Lemma \cite[\S 3.3.3]{robert2007bayesian}  Defines an M.  
 
@@ -216,17 +218,26 @@ Note briefly that one common model that this does not conveniently include is lo
  Note somewhere that the natural parameter space needs to be considered in general.  That is, not all $\eta$ lead to a valid distribution (standard fact, see for example \cite{wainwright2008graphical}).  In practice that's not often a problem, as the space is known for most distributions one uses, and when one composes them in a posterior scheme (for example), this is inherited (eg the normal covariance...).  So we skip that here.  But yes in general that needs to be considered.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \subsection{Density networks as approximating family}
+
+Implicit probability models can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
+Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
+This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
+Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
+%
+$$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\ell=1}^L | J_\ell^{-1} |.$$
+%
+The specific form of the layers $g_\ell$ can be chosen based on empirical considerations; we clarify our choice in \S3.  For the remainder (and to avoid confusion when we introduce a second network) we call this deep bijective neural architecture the \emph{density network}; this network is shown vertically oriented (flowing from $w$ down to $z$) in Figure 1C.
+
+%Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    
+ 
+
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \subsection{Exponential family networks}
 
 includes the network definition of Fig 1c, the objective, and the optimization algorithm.
  
- \begin{figure}
-  \centering
-\input{figs/fig1/efn1b.tex}
-  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
-\end{figure}
-
 This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
 
 Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
