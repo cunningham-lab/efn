@@ -210,17 +210,15 @@ $$  p(z | x_1,...,x_N)  \propto  \exp\left\{ \begin{bmatrix} \alpha \\ \sum_i t(
 
 which again is an exponential family, albeit intractable.
 
-To give a concrete example, consider the hierarchical Dirichlet -- a Dirichlet prior $z\sim Dir(\alpha)$ with conditionally iid Dirichlet draws $x_i | z \sim Dir(\beta z)$, which has been considered historically \cite{mackay1995hierarchical}, has relevance for multi-corpus topic models \cite{blei2003latent, pritchard2000inference}, and is perhaps most notable for its nonparametric extension \cite{teh2006hdp} (and has relevance for .  Figure 1B shows the prior for a given $\alpha$ (top), and three examples of datasets that could arise via this generative model (middle).  A set of basic manipulations shows the hierarchical Dirichlet posterior $p(z|X)$ to be itself an exponential family with natural parameter $\eta = \left[ \alpha -1 , \sum_i \log(x_i) , -N \right]^\top$ and sufficient statistic $t(z) = \left[ \log(z), \beta z , \log(B(\beta z)) \right]$.  The corresponding posteriors are shown in Figure 1B (bottom).  
+To give a concrete example, consider the hierarchical Dirichlet -- a Dirichlet prior $z\sim Dir(\alpha)$ (of dimension $|\mathcal{Z}|$) with conditionally iid Dirichlet draws $x_i | z \sim Dir(\beta z)$, which has been considered historically \cite{mackay1995hierarchical}, and is perhaps most notable for its nonparametric extension \cite{teh2006hdp} (and has relevance for multi-corpus extensions of topic models \cite{blei2003latent, pritchard2000inference}).  
+Figure 1B shows the prior for a given $\alpha$ (top), and three examples of datasets that could arise via this generative model (middle).  
+A set of basic manipulations shows the hierarchical Dirichlet posterior $p(z|X)$ to be itself an exponential family with natural parameter $\eta = \left[ \alpha -1 , \sum_i \log(x_i) , -N \right]^\top$ and sufficient statistic $t(z) = \left[ \log(z), \beta z , \log(B(\beta z)) \right]^\top$ (where $B$ is the Beta function).\footnote{To be clear this model is an exponential family if $\beta$ is fixed or treated as a latent variable; this fact however will not be important for the development of this paper.}
+The corresponding posteriors are shown in Figure 1B (bottom).  
 
-The point is that this example, and intractable exponential families generally, form a probability model that we would like to learn.  Should we be able to learn this family (in the sense of making it tractable)
+Note importantly that, because the likelihood was chosen to be an exponential family (which is closed under sampling), this form will not change for any choice of $|Z|$-dimensional hiearchical Dirichlet -- any draw from the prior, any $N$, or any particular realization of observed data $X$ (technically the prior need not be exponential family, but we leave it as such for simplicity).  
+The exponential family is clearly sufficient for this property, and the Pitman-Koopman Lemma further clarifies that it is also necessary (under reasonable conditions) \cite[\S3.3.3]{robert2007bayesian}.
 
-
-
-
-define $\mathcal{P}$.  Lay down notation.  Ref Fig 1a and Fig 1b.
-
-bants.  Pitman-Koopman Lemma \cite[\S 3.3.3]{robert2007bayesian}  Defines an M.  
-
+The critical observation here is that, if we can approximately learn an intractable exponential family (the model itself), then it becomes trivial to perform posterior inference: we simply use the dataset to index into the natural parameter $\eta$ of the intractable family, and the posterior distribution is produced.  This is the goal of EFN.
 
 %Note briefly that one common model that this does not conveniently include is local latent variable models like LDA and logistic regression, as they define larger and larger exp fams as they go (yes they are exp fams, but not of a fixed parameterization under sampling).
 %
