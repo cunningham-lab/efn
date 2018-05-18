@@ -609,7 +609,8 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
 
     elif (exp_fam == 'prp_tn'):
         subclass = model_info['subclass'];
-        N = model_info['R'];
+        if (subclass == 'VI'):
+            N = model_info['R'];
         Nmax = 50;
         Ts = .02;
         mus = np.zeros((K_eta, D_Z));
@@ -631,7 +632,7 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
                     x = model_info['testx'];
                 else:
                     x = model_info['trainx'];
-                samp_inds = np.random.choice(100, x.shape[0], False);
+                samp_inds = np.random.choice(x.shape[0], N, False);
                 x = x[samp_inds,:D].T;
             else:
                 N = np.random.randint(1,Nmax+1)  #int(min(np.random.poisson(Nmean), Nmax));
