@@ -11,7 +11,7 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
                       latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, normal_eta, log_grads, inv_wishart_eta, prp_tn_eta, dir_dir_eta, \
+                      setup_IO, normal_eta, log_grads, inv_wishart_eta, prp_tn_eta, dir_dir_eta, dir_mult_eta, \
                       approxKL, drawEtas, checkH, declare_theta, cost_fn, \
                       computeLogBaseMeasure, check_convergence, batch_diagnostics, \
                       memory_extension, setup_param_logging, count_params, get_ef_dimensionalities
@@ -43,7 +43,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
     # optimization hyperparameters
     lr = 10**lr_order
     # save tensorboard summary in intervals
-    model_save_every = 49999;
+    model_save_every = max_iters-1;
     tb_save_every = 50;
     tb_save_params = False;
 
@@ -84,6 +84,12 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
         Ns = params['Ns'];
         _eta, _ = dir_dir_eta(alpha_0s[0], xs[0], Ns[0], model_info, False);
         _Tx_input = np.array([[betas[0]]]);
+    elif (exp_fam == 'dir_mult'):
+        alpha_0s = params['alpha_0s'];
+        xs = params['xs'];
+        Ns = params['Ns'];
+        _eta, _ = dir_mult_eta(alpha_0s[0], xs[0], Ns[0], model_info, False);
+        _Tx_input = np.zeros((K_eta,num_Tx_inputs));
 
     _eta_test = _eta;
     _Tx_input_test = _Tx_input;
@@ -160,8 +166,19 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
         z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
         feed_dict = {Z0:z_i, eta:_eta, Tx_input:_Tx_input};
 
-        cost_i, _cost_grads, _X, _y, _base_log_p_z, _Tx, summary = \
-            sess.run([cost, cost_grad, X, log_p_zs, base_log_p_z, Tx, summary_op], feed_dict);
+        cost_i, _cost_grads, _X, _y, _base_log_p_z, _Tx, _R2s, summary = \
+            sess.run([cost, cost_grad, X, log_p_zs, base_log_p_z, Tx, R2s, summary_op], feed_dict);
+
+
+        print('before training');
+        print('cost = %f ' % cost_i);
+        print('train R2: %.3f' % np.mean(_R2s));
+        print('eta');
+        print(_eta);
+        print('Z 1');
+        print(_X[0,0,:,0]);
+        print('Tx 1');
+        print(_Tx[0,0,:]);
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
@@ -220,7 +237,7 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
                 print('saving model at iter', i);
                 saver.save(sess, savedir + 'model');
 
-            if (np.mod(i+1, check_rate)==0 and i > 0):
+            if (np.mod(i+1, check_rate)==0):
                 if (stop_early):
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
@@ -245,6 +262,13 @@ def train_nf(exp_fam, params, flow_dict, cost_type, M_eta=100, model_info={}, \
                 print('it = %d ' % (i+1));
                 print('cost = %f ' % cost_i);
                 print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
+                """print('eta');
+                print(_eta);
+                print('Z 1');
+                print(_X[0,0,:,0]);
+                print('Tx 1');
+                print(_Tx[0,0,:]);
+                exit();"""
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, eta=_eta, Tx_input=_Tx_input, params=params, check_rate=check_rate, \

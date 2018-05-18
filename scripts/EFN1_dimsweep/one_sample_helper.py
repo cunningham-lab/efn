@@ -33,7 +33,7 @@ flow_ids = flow_dict['flow_ids'];
 flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
-if (exp_fam == 'dir_dir'):
+if (exp_fam == 'dir_dir' or exp_fam == 'dir_mult'):
 	model_info = {'Ndrawtype':'1', 'subclass':subclass, 'extrastr':'1samp_'};
 else:
 	model_info = {'subclass':subclass, 'extrastr':'1samp_'};
@@ -52,6 +52,6 @@ if (subclass[:3] == 'EFN'):
 elif (subclass == 'NF1'):
 	np.random.seed(random_seed);
 	eta, param_net_input, Tx_input, params = drawEtas(exp_fam, D, 1, model_info, give_inverse_hint);
-
+	print(params['xs'].shape);
 	log_p_zs, X, train_R2s, train_KLs, it = train_nf(exp_fam, params, flow_dict, cost_type, M_eta, model_info, \
 		                         					 lr_order, random_seed, max_iters, check_rate);
