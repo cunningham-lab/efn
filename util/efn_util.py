@@ -607,9 +607,8 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
         params = {'Psi':Psi_targs, 'm':m_targs, 'D':D};
 
     elif (exp_fam == 'prp_tn'):
-        ratelim = 5;
-        Nmean = 8;
-        Nmax = 15;
+        ratelim = 3;
+        Nmax = 40;
         Ts = .05;
         mus = np.zeros((K_eta, D_Z));
         Sigmas = np.zeros((K_eta, D_Z, D_Z));
@@ -621,15 +620,10 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint):
         Ns = np.zeros((K_eta,));
         for k in range(K_eta):
             for i in range(D_Z):
-                mus[k,i] = np.random.uniform(0,ratelim);
-            tau = np.random.uniform(.05, .15);
+                mus[k,i] = 1.0; #np.random.uniform(0,ratelim);
+            tau = .15;
             Sigmas[k,:,:] = get_GP_Sigma(tau, D_Z, Ts)
-            plt.figure();
-            plt.imshow(Sigmas[k]);
-            plt.colorbar();
-            plt.show();
-            #Sigmas[k,:,:] = Sigma_dist.rvs(1);
-            N = int(min(np.random.poisson(Nmean), Nmax));
+            N = np.random.randint(1,Nmax+1)  #int(min(np.random.poisson(Nmean), Nmax));
             z = truncated_multivariate_normal_rvs(mus[k], Sigmas[k]);
             x = drawPoissonCounts(z, N);
             xs[k,:,:N] = x;
