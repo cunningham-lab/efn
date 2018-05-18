@@ -98,8 +98,8 @@ Recently much attention has been paid to implicit probabilistic models -- models
 Probability models, the fundamental object of Bayesian machine learning, have long challenged researchers with the tradeoff between tractability and expressivity.
 Though well understood that a model should be chosen to instantiate a set of assumptions and capture existing domain knowledge \cite{gelman2014bayesian, tenenbaum2006theory, mccullagh2002}, for many years too-simple models were chosen for their practical advantanges (such as conditional conjugacy), which left much to be desired in terms of expressive performance and scalability of these models.  
 
-More recently the pendulum has swung, via a resurgence in models which map a latent random variable $z\sim \mathbb{P}_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ \mathbb{P}(g_\theta \circ z) : \theta \in \Theta \right\}$.  
-Choosing $\mathcal{G}$ to be a parameter-indexed family of deep neural \emph{density networks} has both a rich history \cite{dayan1995helmholtz,mackay1997density}, and has recently been used to produce exciting results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  
+More recently the pendulum has swung, via a resurgence in models which map a latent random variable $w\sim q_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ q(g_\theta \circ z) : \theta \in \Theta \right\}$ (where $q(\cdot)$ is the pushforward density, i.e. the density induced on the image of the random variable under the function $g_\theta$).  
+Choosing $\mathcal{G}$ to be a parameter-indexed family of neural networks has both a rich history \cite{dayan1995helmholtz,mackay1997density}, and has recently been used to produce exciting results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  
 A noted advantage of these implicit density network models is that in many cases they make minimal assumptions about the data generative (or posterior inference) process.  
 On the other hand, since these models have been chosen to be generic and flexible, they can lack the classic stipulation that a model instantiates existing domain knowledge.  
 The downsides of a too-flexible model with finite data (albeit large) -- and the corresponding bias-variance benefit of a restricted model -- are textbook knowledge \cite[\S 7.3]{friedman2001elements}, and work on generalization and compressibility in deep networks suggests that this broad class of function families are indeed quite large, perhaps problematically so \cite{zhou2018compressibility}.  
@@ -185,19 +185,21 @@ In all, our contributions include:
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \section{Exponential family networks}
  
+ To define exponential family networks (EFN), we begin with the primary network architectural constraint and the background we leverage to satisfy that constraint (\S2.1).  We then give relevant context for our modeling choice of exponential families (\S2.2). We then introduce EFN in detail, including the optimization algorithm used for learning (\S2.3).  The similarities with variational inference are then explored in depth in \S2.4.
+  
  \subsection{Implicit probability models via density networks}
 
-bants.  defines a Q.
- \emph{Why this is coherent}
- $\Theta$ defines quite a big $\mathcal{Q}$, and indeed the subject of compressibility, generalization, etc is of keen interest to many \cite{zhou2018compressibility}.  So actually the space of distributions is quite large, and in many cases certainly larger than it needs be.  Why?  Well, we know precisely the parameter space of the exponential family; it is defined by the \emph{natural} parameters $\eta \in \mathbb{R}^p$ (or whatever we choose there).
+Implicit probability models can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
+Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
+This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
+Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
+%
+$$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\ell=1}^L | J_\ell^{-1} |.$$
+%
+The specific form of the layers $g_\ell$ can be chosen based on empirical considerations; we clarify our choice in \S3.  For the remainder (and to avoid confusion when we introduce a second network) we call this deep bijective neural architecture the \emph{density network}.
 
+%Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    
  
-Density networks are an old idea \cite{mackay1997density}, as are neural networks to fit a probability model to data \cite{dayan1995helmholtz,hinton1995wake}.
-
- We choose flow networks  \cite{rezende2015variational}.  And "implicit generative models aka density networks" (or rather, density networks are the instantiation of an IGM with deep nets, which is effectively synonymous these days.   And invertible networks  In that vein probably definitely cite invertible/bijective deep nets in general \cite{baird2005one, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    
- 
- More generally there has been a lot of attention to making these more flexible in structured variatonal inference.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \cite{saul1996exploiting, barber1999tractable}; this is called structured variational inference or newer stuff  \cite{hoffman2015stochastic} \cite{tran2015copula}, to name but a few.
-
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \subsection{Exponential families}
@@ -272,6 +274,8 @@ Latest key distinctions:
 \end{itemize}
 
  
+ More generally there has been a lot of attention to making these more flexible in structured variatonal inference.  Any generalization of this is also dandy though, so could use a mean field approach (standard) or any of the things that go beyond mean field, either classically \cite{saul1996exploiting, barber1999tractable}; this is called structured variational inference or newer stuff  \cite{hoffman2015stochastic} \cite{tran2015copula}, to name but a few.
+
  
 
 
