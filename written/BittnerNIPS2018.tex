@@ -190,11 +190,11 @@ In all, our contributions include:
 \begin{figure}
 \centering
 \input{figs/fig1/efn1b.tex}
-  \caption{Learning exponential families.  A shows the graphical model, emphasizing conditional iid sampling.  B shows Dirichlet prior (a density), conditional Dirichlet observations (some observed points in the simplex), and then the posteriors learned by an EFN.  SRB to fill in these triangles.   C shows the EFN network schematic.}
+  \caption{(A) Graphical model for conditionally iid sampling from an exponential family likelihood.  (B) Hierarchical Dirichlets -- prior $p_0(z)$ (top), three sample conditional Dirichlet datasets $X$ of $N=2, N=20, N=100$ (middle), and three corresponding posteriors that themselves form an exponential family $\mathcal{P}$ (bottom).  (C) Architecture for exponential family network (EFN) -- density network running top to bottom; parameter network running right to left.}
 \end{figure}
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \subsection{Exponential families as target models}
+ \subsection{Exponential families as target model $\mathcal{P}$}
 
 We will focus on a fundamental problem setup in probabilistic inference, that of a latent variable $z \in \mathcal{Z}$ with prior belief $p_0(z)$, and where we observe a dataset $X = \left\{x_1,...,x_N\right\} \subset \mathcal{X}$ as conditionally independent draws given $z$.   Updating our belief with data produces the posterior $p(z | X) \propto p_0(z) \prod_{i=1}^N p(x_i | z)$.  This setup is shown as a graphical model in Figure 1A.
 
@@ -212,7 +212,7 @@ which again is an exponential family, albeit intractable.
 
 To give a concrete example, consider the hierarchical Dirichlet -- a Dirichlet prior $z\sim Dir(\alpha)$ (of dimension $|\mathcal{Z}|$) with conditionally iid Dirichlet draws $x_i | z \sim Dir(\beta z)$, which has been considered historically \cite{mackay1995hierarchical}, and is perhaps most notable for its nonparametric extension \cite{teh2006hdp} (and has relevance for multi-corpus extensions of topic models \cite{blei2003latent, pritchard2000inference}).  
 Figure 1B shows the prior for a given $\alpha$ (top), and three examples of datasets that could arise via this generative model (middle).  
-A set of basic manipulations shows the hierarchical Dirichlet posterior $p(z|X)$ to be itself an exponential family with natural parameter $\eta = \left[ \alpha -1 , \sum_i \log(x_i) , -N \right]^\top$ and sufficient statistic $t(z) = \left[ \log(z), \beta z , \log(B(\beta z)) \right]^\top$ (where $B$ is the Beta function).\footnote{To be clear this model is an exponential family if $\beta$ is fixed or treated as a latent variable; this fact however will not be important for the development of this paper.}
+A set of basic manipulations shows the hierarchical Dirichlet posterior $p(z|X)$ to be itself an exponential family with natural parameter $\eta = \left[ \alpha -1 , \sum_i \log(x_i) , -N \right]^\top$ and sufficient statistic $t(z) = \left[ \log(z), \beta z , \log(B(\beta z)) \right]^\top$.\footnote{To be clear this model is an exponential family if $\beta$ is fixed or treated as a latent variable; this fact however will not be important for the development of this paper.}
 The corresponding posteriors are shown in Figure 1B (bottom).  
 
 Note importantly that, because the likelihood was chosen to be an exponential family (which is closed under sampling), this form will not change for any choice of $|Z|$-dimensional hiearchical Dirichlet -- any draw from the prior, any $N$, or any particular realization of observed data $X$ (technically the prior need not be exponential family, but we leave it as such for simplicity).  
@@ -226,9 +226,9 @@ The critical observation here is that, if we can approximately learn an intracta
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \subsection{Density networks as approximating family}
+ \subsection{Density networks as approximating family $\mathcal{Q}$}
 
-Implicit probability models can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
+Implicit probability models, which we will use for our approximating family $\mathcal{Q}$, can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
 Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
 This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
 Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
