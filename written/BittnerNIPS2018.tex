@@ -25,7 +25,7 @@
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
-
+\usepackage{caption}
 
 %% PGF
 \usepackage{tikz,amsmath,amssymb}
@@ -367,11 +367,29 @@ Second, in Figure 3 we consider how this performance scales across dimensionalit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{The hierarchical Dirichlet family}
 
+%
+% \begin{figure}
+%  \centering
+%\includegraphics[scale=0.26]{figs/fig4/fig4.pdf}
+%  \caption{Scaling Dir-Dir}
+%\includegraphics[scale=0.26]{figs/fig4/fig4.pdf}
+%  \caption{Scaling Dir-Dir}
+%\end{figure}
 
- \begin{figure}
+\begin{figure}
+\centering
+\begin{minipage}{.5\textwidth}
   \centering
-\includegraphics[scale=0.46]{figs/fig4/fig4.pdf}
-  \caption{Scaling Dir-Dir}
+  \includegraphics[scale=0.38]{figs/fig4/fig4.pdf}
+  \captionof{figure}{Dirichlet families.  See text.}
+  \label{fig:test1}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[scale=0.38]{figs/fig5/fig5a.pdf}
+  \captionof{figure}{Truncated normal Poisson and neural spike train analysis.  See text.}
+  \label{fig:test2}
+\end{minipage}
 \end{figure}
 
 Of course the main interest of an EFN is to learn intractable exponential families.  
@@ -381,11 +399,11 @@ We here consider the hierchical Dirichlet family (as introduced in \S2.1 and Fig
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{The truncated normal Poisson family, and neural spike train analysis}
 
- \begin{figure}
-  \centering
-\includegraphics[scale=0.46]{figs/fig5/fig5.pdf}
-  \caption{TNP... TO COME}
-\end{figure}
+% \begin{figure}
+%  \centering
+%\includegraphics[scale=0.46]{figs/fig5/fig5.pdf}
+%  \caption{TNP... TO COME}
+%\end{figure}
 
 The normal family is the ubiquitous prior for real valued parameters, but it does not match well with the nonnegativity requirements of the intensity measure required of certain distributions, most notably the Poisson.  Truncated normal and log Gaussian Cox Processes have been used numerous times in machine learning, and all have required attention to approximate inference in this fundamentally nonconjugate model; furthermore, very many of these examples have been used to analyze the latent firing intensity of neural spike train data \cite{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}.
 
