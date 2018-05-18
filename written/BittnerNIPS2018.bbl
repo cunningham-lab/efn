@@ -173,17 +173,11 @@ George Papamakarios and Iain Murray.
 \newblock In {\em Probabilistic Integration Workshop at Neural Information
   Processing Systems}, 2015.
 
-\bibitem{hoffman2016elbo}
-Matthew~D Hoffman and Matthew~J Johnson.
-\newblock Elbo surgery: yet another way to carve up the variational evidence
-  lower bound.
-\newblock In {\em Workshop in Advances in Approximate Bayesian Inference,
-  NIPS}, 2016.
-
-\bibitem{cremer2018inference}
-Chris Cremer, Xuechen Li, and David Duvenaud.
-\newblock Inference suboptimality in variational autoencoders.
-\newblock {\em arXiv preprint arXiv:1801.03558}, 2018.
+\bibitem{blei2017variational}
+David~M Blei, Alp Kucukelbir, and Jon~D McAuliffe.
+\newblock Variational inference: A review for statisticians.
+\newblock {\em Journal of the American Statistical Association},
+  112(518):859--877, 2017.
 
 \bibitem{saul1996exploiting}
 Lawrence~K Saul and Michael~I Jordan.

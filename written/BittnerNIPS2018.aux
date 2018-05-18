@@ -37,6 +37,7 @@
 \citation{blei2003latent,pritchard2000inference}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (A) Graphical model for conditionally iid sampling from an exponential family likelihood. (B) Hierarchical Dirichlets -- prior $p_0(z)$ (top), three sample conditional Dirichlet datasets $X$ of $N=2, N=20, N=100$ (middle), and three corresponding posteriors that themselves form an exponential family $\mathcal  {P}$ (bottom). (C) Architecture for exponential family network (EFN) -- density network running top to bottom; parameter network running right to left.}}{3}{figure.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Exponential families as target model $\mathcal  {P}$}{3}{subsection.2.1}}
+\newlabel{eq:1}{{1}{3}{Exponential families as target model $\mathcal {P}$}{equation.2.1}{}}
 \citation{robert2007bayesian}
 \citation{mackay1997density,baird2005one,tabak2010density,rippel2013high,uria2013rnade,rezende2015variational,dinh2016density,papamakarios2017masked,jacobsen2018revnet}
 \citation{andrychowicz2016learning}
@@ -44,28 +45,32 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Density networks as generic approximating family $\mathcal  {M}$}{4}{subsection.2.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Exponential family networks as approximating model $\mathcal  {Q}$}{4}{subsection.2.3}}
 \citation{papamakarios2015distilling}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Relation to variational inference}{5}{subsection.2.4}}
-\citation{hoffman2016elbo,cremer2018inference}
-\citation{robert2007bayesian}
+\citation{Kingma:2013aa}
+\citation{blei2003latent,blei2017variational}
+\citation{Kingma:2013aa}
 \citation{saul1996exploiting,barber1999tractable}
-\citation{hoffman2015stochastic}
-\citation{tran2015copula}
+\citation{hoffman2015stochastic,tran2015copula}
+\citation{rezende2015variational}
+\citation{rezende2015variational}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Relation to variational inference}{5}{subsection.2.4}}
+\citation{robert2007bayesian}
 \citation{rezende2015variational}
 \citation{gretton2012kernel}
 \citation{gretton2012kernel}
 \citation{teh2006hdp}
 \citation{mackay1995hierarchical}
 \citation{blei2003latent,pritchard2000inference}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 25-dimensional Dirichlet exopnential family network. A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta $ throughout optimization. B.) Distribution of KL divergence across choices of $\eta $ throughout optimization. C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization \cite  {gretton2012kernel}.}}{7}{figure.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Results}{7}{section.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 25-dimensional Dirichlet exopnential family network. A.) Distribution of $r^2$ between the sufficient statistics and log-probability across choices of $\eta $ throughout optimization. B.) Distribution of KL divergence across choices of $\eta $ throughout optimization. C.) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization \cite  {gretton2012kernel}.}}{6}{figure.2}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Results}{6}{section.3}}
 \citation{gao2016linear}
 \citation{adams2009tractable}
 \citation{cunningham2008fast,cunningham2008inferring}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Scaling exponential family networks. A.) Dirichlet. B.) Gaussian C.) Inverse-Wishart}}{8}{figure.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Tractable exponential families}{8}{subsection.3.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Intractable exponential families}{8}{subsection.3.2}}
-\@writefile{toc}{\contentsline {paragraph}{Hierarchical Dirichlets}{8}{section*.1}}
-\@writefile{toc}{\contentsline {paragraph}{Truncated- and log-normal Poisson}{8}{section*.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Scaling exponential family networks. A.) Dirichlet. B.) Gaussian C.) Inverse-Wishart}}{7}{figure.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Scaling Dir-Dir}}{7}{figure.4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Tractable exponential families}{7}{subsection.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Intractable exponential families}{7}{subsection.3.2}}
+\@writefile{toc}{\contentsline {paragraph}{Hierarchical Dirichlets}{7}{section*.1}}
+\@writefile{toc}{\contentsline {paragraph}{Truncated- and log-normal Poisson}{7}{section*.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Neural spike train analysis}{8}{subsection.3.3}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Conclusion}{9}{section.4}}
 \bibstyle{unsrt}
@@ -101,15 +106,14 @@
 \bibcite{jacobsen2018revnet}{{29}{}{{}}{{}}}
 \bibcite{andrychowicz2016learning}{{30}{}{{}}{{}}}
 \bibcite{papamakarios2015distilling}{{31}{}{{}}{{}}}
-\bibcite{hoffman2016elbo}{{32}{}{{}}{{}}}
-\bibcite{cremer2018inference}{{33}{}{{}}{{}}}
-\bibcite{saul1996exploiting}{{34}{}{{}}{{}}}
-\bibcite{barber1999tractable}{{35}{}{{}}{{}}}
-\bibcite{hoffman2015stochastic}{{36}{}{{}}{{}}}
-\bibcite{tran2015copula}{{37}{}{{}}{{}}}
-\bibcite{gretton2012kernel}{{38}{}{{}}{{}}}
-\bibcite{gao2016linear}{{39}{}{{}}{{}}}
-\bibcite{adams2009tractable}{{40}{}{{}}{{}}}
-\bibcite{cunningham2008fast}{{41}{}{{}}{{}}}
-\bibcite{cunningham2008inferring}{{42}{}{{}}{{}}}
+\bibcite{blei2017variational}{{32}{}{{}}{{}}}
+\bibcite{saul1996exploiting}{{33}{}{{}}{{}}}
+\bibcite{barber1999tractable}{{34}{}{{}}{{}}}
+\bibcite{hoffman2015stochastic}{{35}{}{{}}{{}}}
+\bibcite{tran2015copula}{{36}{}{{}}{{}}}
+\bibcite{gretton2012kernel}{{37}{}{{}}{{}}}
+\bibcite{gao2016linear}{{38}{}{{}}{{}}}
+\bibcite{adams2009tractable}{{39}{}{{}}{{}}}
+\bibcite{cunningham2008fast}{{40}{}{{}}{{}}}
+\bibcite{cunningham2008inferring}{{41}{}{{}}{{}}}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
