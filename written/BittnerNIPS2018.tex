@@ -248,27 +248,22 @@ This density network induces the model $\mathcal{M} = \left\{ q(g_\theta \circ w
 Having introduced our target model $\mathcal{P}$, an exponential family with natural parameters $\eta \in H$, and the density network family $\mathcal{M}$, we now seek to learn $\mathcal{Q} \approx \mathcal{P}$, where $\mathcal{Q} \subset \mathcal{M}$.  
 To do so we will parameterize $\theta$, the parameters of the density network, as the image of a second \emph{parameter network} family $\mathcal{F} = \left\{ f_\phi : H \rightarrow \Theta, \phi \in \Phi\right\}$.   
 This network is shown flowing from right to left in Figure 1C.  
-Any choice of parameter network parameters $\phi$ induces a $|H|$-dimensional submanifold (the image $f_\phi(H)$) of the density network parameter space $\Theta$, and as such defines a restricted model $\mathcal{Q}_\phi = \left\{ q_{f_{\phi}}(z; \eta): \eta \in H\right\} \subset \mathcal{M}$.
-
-...
-
 Using a second meta-network to aid or restrict network learning has been used in a variety of settings; a few examples include parameterizing the optimization algorithm in the so-called ``learning to learn'' setting \cite{andrychowicz2016learning}, and a more closely related work that used a second network to condition on observations for local latent variational inference \cite{rezende2015variational}, a connection which we explore closely in the following section.
 
-% Should we be able to learn a tractable approximation to this exponential family model, we would in the very least get the bias-variance benefits of an intelligently restricted model space, and at best would get inference ``for free'' in the sense that we could evaluate approximate posteriors directly without separate optimization for each dataset encountered (a different form of amortized inference \cite{gershman2014amortized,Kingma:2013aa,rezende2014stochastic,stuhlmuller2013learning}).  
-% In this paper we aim to learn a restricted model $\mathcal{Q} = \left\{ q(z; \eta): \eta \in H\right\}$ that will be a strict subset of the deep implicit model $\mathcal{M}$ and will closely approximate a target exponential family $\mathcal{P}$.  
-% Note the critical difference between this aim and much of the literature that seeks to learn a density $q_{\theta}^* \in \mathcal{M}$ (we explore this distinction in depth both algorithmically and empirically).  
-% 
-%To proceed, we must first specify a set of models $\mathbb{Q} = \left\{ \mathcal{Q}_\phi : \phi \in \Phi \right\}$, from which we can learn a single model $\mathcal{Q}_{\phi^*}$, and we must second define a sensible parameter space $H$ of each model.  
-%To the first, we restrict $\Theta$, the parameter space of $\mathcal{M}$, to be itself the image of a second deep \emph{parameter network} family $\mathcal{F} = \left\{f_\phi : \phi \in \Phi\right\}$, such that $\left\{ f_\phi(\eta) : \eta \in H \right\} \subset \Theta$.
-%The second part is answered immediately by our choice of target $\mathcal{P}$, an exponential family which by definition has \emph{natural} parameterization $\eta \in H$.  
-%Thus, appealingly, we know that $H$ is precisely the correct parameter space for $\mathcal{Q}$ (as it defines $\mathcal{P}$), and that the image of $H$ under $f_\phi$ will be of the correct dimensionality within the codomain $\Theta$; approximation error between $\mathcal{Q}$ and $\mathcal{P}$ will be caused by the flexibility and learnability of the parameter network $f_\phi$ and the density network $g_{f_{\phi}(\eta)}$.  
-%
- 
+Any choice of parameter network parameters $\phi$ induces a $|H|$-dimensional submanifold (the image $f_\phi(H)$) of the density network parameter space $\Theta$, and as such defines a restricted model $\mathcal{Q}_\phi = \left\{ q_{f_{\phi}}(z; \eta): \eta \in H\right\} \subset \mathcal{M}$; by our choice of $H$ as the natural parameter space of the exponential family target $\mathcal{P}$, this model restriction is at least of the correct dimensionality.
+Our goal then is to search over the implied set of models $\mathbb{Q} = \left\{ \mathcal{Q}_\phi : \phi \in \Phi \right\}$ to find an optimal $\phi^*$ such that $\mathcal{Q}_{\phi^*} \approx \mathcal{P}$. 
 
-%Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
-%Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
+KL p q for a fixed eta
 
-Note that this objective can also produce approximations of the log partition, via essentially linear regression; more nuanced schemes are recommended \cite{papamakarios2015distilling}.  We don't explore that here.
+Note that this objective can also produce approximations of the log partition, via essentially linear regression; more nuanced schemes are likely appropriate \cite{papamakarios2015distilling}.  We don't explore that here.
+
+Of course we don't just want to learn a single eta, but the whole model.  As a practical necessity we introduce a sampling distribution... and we are interested in the $E(KL)$, or equiv KL(...)
+
+This is amenable to sampling, and note that since we have no data (we are fitting a model, not a conditional based on finite data), we can sample forever.  Here is an unbiased objective for stochastic optimization.
+
+
+This defines an EFN.  What remains for empirical implementation is to make particular choices of hyperparameters, network layers, and optimization algorithm, which we specify in \S3 below.
+
 
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
