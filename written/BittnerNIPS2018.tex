@@ -206,7 +206,10 @@ $$ p_0(z) = \frac{1}{A_0(\alpha)} \exp\left\{ \alpha^\top t_0(z) \right \} ~~~ ,
 
 where $t(\cdot)$ is the sufficient statistic vector, and $\nu(z)$ is the natural parameter of the likelihood in natural form \cite{robert2007bayesian}.   The posterior then has the form:
 
-$$  p(z | x_1,...,x_N)  \propto  \exp\left\{ \begin{bmatrix} \alpha \\ \sum_i t(x_i) \\ -N \end{bmatrix}^\top\begin{bmatrix} t_0(z) \\ \nu(z) \\ \log A(z) \end{bmatrix} \right\},$$
+\begin{equation}
+  p(z | x_1,...,x_N)  \propto  \exp\left\{ \begin{bmatrix} \alpha \\ \sum_i t(x_i) \\ -N \end{bmatrix}^\top\begin{bmatrix} t_0(z) \\ \nu(z) \\ \log A(z) \end{bmatrix} \right\},
+\end{equation}
+\label{eq:1}
 
 which again is an exponential family, albeit intractable.
 
@@ -275,25 +278,24 @@ where $\theta^k = f_\phi\left(\eta_k\right)$.  Successful optimization over $\ph
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \subsection{Relation to variational inference}
  
-A tremendous amount of work in recent years has gone into variational inference (VI), and its similarity to EFN warrants careful attention. First, we consider the differences in the problem being solved by VI and EFN.  Second, we consider the key mechanical differences that offer some insight into VI. Third, we highlight recent VI work that has particular proximity to EFN.  In summary, the differences are material at several points, and the connections are such that our ideas and forthcoming empirical results may offer improvements to VI, and vice versa.
+A tremendous amount of work in recent years has gone into variational inference (VI), and its similarity to EFN warrants careful attention. In the following, to bring us closest to VI, let us consider the EFN target model $\mathcal{P}$ to be a family of posterior distributions.  First, we consider the differences in the problem being solved by VI and EFN.  Second, we consider the key mechanical differences that offer some insight into VI. Third, we highlight recent VI work that has particular proximity to EFN.  
 
-First, at the conceptual level, there is an important difference in motivation 
+The typical role of variational inference is to infer an approximate posterior $q_\phi(z) \approx p(z |X)$.  In this setting, the difference with EFN is stark, in so much as VI learns this single posterior approximation, whereas the main goal of the EFN is to approximate the model $\mathcal{P} = p_\eta(z|X): \eta in H$: to learn the family of distributions.  More recently, much focus has gone into the particular instance of VI for local variables $z_i$, for example $\prod_{i=1}^N p(z_i)p(x_i | z_i)$ (such as a variational autoencoder \cite{Kingma:2013aa}) or  $p(u)\prod_{i=1}^N p(z_i|u)p(x_i | z_i)$ (latent Dirichlet allocation being a canonical example \cite{blei2003latent,blei2017variational}), the result of which is often an amortized inference/recognition network that produces a local variational distribution $q_{\phi^*}(z_i | x_i)$.  This local variational distribution is typically parameterized explicitly: the inference network $\mu_\phi(x_i)$ induces a local parametric distribution, often a Gaussian $q(z_i | x_i) \sim \mathcal{N}\left(z_i; \mu_\phi(x_i)\right)$ \cite[for example]{Kingma:2013aa}.  In several cases a inference network has been used to parameterize a deep implicit model (in a two-network inference architecture, to say nothing of whether or not the generative model itself is a deep implicit model); closest to the EFN architecture is that mentioned in Figure 2 of \cite{rezende2015variational}.  Viewed this way, local-latent-variable VI methods induce a model $\left\{  q_{\phi^*}(z_i | x_i) : x_i \in X \right\}$ for a finite dataset $X$.  In that sense EFN and VI are similar.   
 
- We have already covered related work; here we scrutinize EFNs in terms of VI.
+However, even accepting this VI-as-a-model view, the difference between the finite dataset $X$ and the natural parameter space $H$ persists when viewed at a mechanical level; well-known are the overfitting/generalization issues associated with a finite dataset compared with access to a distribution $p(\eta)$.    Thus one goal of EFN is to allow the model $\mathcal{Q}_{\phi^*} \approx \mathcal{P}$ to be learned in the absence of a finite dataset, such that inference on that dataset can then be executed without concerns of overfitting to that set (and of course without having to run a VI optimization for every new dataset).   Perhaps more importantly, the ``model'' implied by VI is parameterized by $x_i$, and indeed the inference network takes $x_i$ as input.  The EFN on the other hand is considerably more general:  as Equation \ref{eq:1} shows, the posterior includes the natural parameters of the prior, allowing the EFN architecture to learn across a more general setting that VI can not (since any VI inference network is only parameterized by data).  One final difference made clear by Equation \ref{eq:1} is that the observations are given to the EFN \emph{in natural form} (that is, $t(x_i)$, not $x_i$).  This choice is a novel insight: by exploiting the known sufficiency of $t(x_i)$ in the target model $\mathcal{P}$, some difference in performance for VI may be observed.  We explore this empirically in the following section.
+
+Accordingly, while EFN and VI do at a high level bear multiple similarities, the differences are both material and provoke interesting speculation about means to improve both VI and EFN.
+
+
+
+% other banter
  
-We are interested in perhaps the most classic inference problem:
+ % a bit sad I didn't get this point in here, but it's really beside the point.  But so true!
+ %  Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
 
-$$p(z | x) \propto p(z) \prod_{i=1}^n p(x_i | z)$$
-
- shown with the attached plate model (not local latents).  Supposing as is often the case that the likelihood is a member of the $s$ exp fam, we have:
- 
- $$p(z | x ) \propto \exp\left\{ \left[ \sum_{i=1}^n s(x_i) \right]^\top\left[ t(z) \right] + g_0(\alpha,z) \right\}$$
- 
- Important to distinguish carefully from VI.  In a sense VI does parameterize a family: given data, you get local variational parameters and that parmaterizes a density (like a regular VAE).  Inference networks are exclusively used to data to amortize with a global set of parameters a variational distribution, not a model.  Of course it is in a sense a model, but that's a bunch of normals.  The sampling mechanism is easy (Guassian).  
  
  where the natural parameters of the sampling distribution are indexed by the latent parameter on which we want to inference ($z$).  Here I've written the prior as arbitrary, and possibly not exp fam, which is fine, since this is still an exp fam in the  sense of, for a fixed $\alpha$, the function $g_0$ can just be viewed as a sufficient statistic.  Even if $\alpha$ is not fixed though, we can sample over that too to learn the whole fam (but maybe not if we want to infer it?).  Regardless, life is simpler to make sense of if we take an exp fam prior $g_0(\alpha,z) = \alpha^\top t_0(z)$, and then the desired posterior is an intractable exp fam, but still just an exp fam.
  
- Note: consider changing all $z$ to $\theta$ to remind the average reader that we're doing real bayesian inference and not just run of the mill VI with local latents in a nonlinear dimension reduction setting.  Perhaps an important reminder that most all of VAE and such are for inference of local latents, and that's a little bit too bad.  We fix that.
 
 Another key  idea that EFNs enable is to ask if learning the $\theta(\eta)$ network leads to better VI in terms of inference networks, since it is apparently appropriately regularized and can just take suff stats.  That's testable if we have time.
 
