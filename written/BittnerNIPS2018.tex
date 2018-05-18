@@ -346,7 +346,10 @@ All code was implemented in tensorflow, and will be available at {\tt www.github
 
 \subsection{Tractable exponential families}
 
-Here we study the Dirichlet, Gaussian, and inverse-Wishart families.  
+Here we study the Dirichlet, Gaussian, and inverse-Wishart families, which offer a known ground truth and intuition about the range of performance that EFN -- learning a model -- can see with respect to its single-distribution counterparts (NF1 and EFN1).  
+
+First, to validate the basic EFN approach, we train the $D=25$-dimensional Dirichlet family.  We chose $p(\eta)$, the prior on the $\alpha$ parameter vector of the Dirichlet, as {\bf XXXXXX}.  The number of $\eta$ samples $K$ at each iteration was $XXX$, and the minibatch size in $z$ was $M=XXXX$.   Figure 2 shows a high accuracy fit to this Dirichlet model: Figures 2A and 2B shows rapid convergence to high $r^2$ and low Kullback-Leibler divergence.  $r^2$ is a convenient metric in so much as we are here doing distribution regression, so we calculate the coefficient of determination between the model predictions $q_\phi(z_i; \eta_k)$ and their known targets $\eta_k^\top t(z_i)$.  We can then perform a standard MMD-based kernel two-sample test \cite{gretton2012kernel} between distributions chosen from $\mathcal{P}$ and $\mathcal{Q}_{\phi^*}$: the unstructured distribution of $p$ values clarifies that the EFN model $\mathcal{Q}_{\phi^*}$  is not statistically significantly different than the true target Dirichlet family $\mathcal{P}$.
+
  \begin{figure}
   \centering
 \includegraphics[scale=0.46]{figs/fig2/fig2.pdf}
