@@ -39,8 +39,8 @@ else:
 	model_info = {'subclass':subclass, 'extrastr':'1samp_'};
 
 cost_type = 'KL';
-K_eta = 100;
-M_eta = 100;
+K_eta = 1;
+M_eta = 1000;
 stochastic_eta = False;
 lr_order = -4;
 max_iters = 20000;
