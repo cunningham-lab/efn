@@ -384,7 +384,7 @@ We here consider the hierchical Dirichlet family (as introduced in \S2.1 and Fig
 
  \begin{figure}
   \centering
-\includegraphics[scale=0.46]{figs/fig4/fig4.pdf}
+\includegraphics[scale=0.46]{figs/fig5/fig5.pdf}
   \caption{TNP... TO COME}
 \end{figure}
 
@@ -442,12 +442,16 @@ The normal family is the ubiquitous prior for real valued parameters, but it doe
 
 \section{Conclusion}
 
-Snappy closing remarks!
+We have approached the problem of learning an exponential family, rather than a particular member of that family.  
+We did so using a deep density network as an implicit probability model, the parameters of which are the image of the natural parameters of the target exponential family under another deep neural network.  
+We demonstrated high quality empirical performance across a range of dimensionalities, making a number of previously intractable distributions, including posterior distributions, \emph{approximately tractable}.  
+We have scrutinized the connections between our exponential family networks and variational inference, producing surprising and at times puzzling results that are worthy of meaningful follow up study.  
+In all, we have demonstrated the ability to capture performance gains and massive test-time advantage by sensibly restricting the space of an implicit probability model. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %\subsubsection*{Acknowledgments}
 %
-%Peter Orbanz.  Funding.
+%Peter Orbanz for P-K.  Funding.
 
 
 \clearpage
@@ -518,72 +522,72 @@ Snappy closing remarks!
 
 
 %%%%%%%%%%%RESULTS WE WANT TO GET TO EVEN IF NOT RIGHT NOW%%%%%%%%%%%
-
-
-Fig 5.  Heaps of examples with conditional iid exp fams.  Math details of that pending.  Some cool examples:
-\begin{itemize}
-\item Censored data.  normal prior, censored normal observations, what is posterior distribution on mean?  Lots of work in that.
-\item Truncated data.  truncated mvn prior, with some observations thereafter, what is posterior? (Does this work?...)
-\item Poisson/Bern "process" data.  Phony process like in neuro, normal prior on log intensity (ooh maybe that's not an exp fam prior), then a "spike train" of bern or poisson count observations
-\item multivariate t with inverse wishart prior or something like that.  That's neat but doesn't have great "oh yeah people do care about that problem" recognition.  Seems contrived.
-\item check MKB book for other cool MV distributions. (Marshall-Olkin)... seems contrived.
-\item Elliptically contoured prior with some conditionally iid exp fam observations.  People in ML like elliptical distributions.
-\item von Mises-Fisher distribution, eg http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf or https://arxiv.org/pdf/1605.00316.pdf, but again not clustering (see below), since it's a local latent variable problem then.s	
-\item Note: a whole heap of models don't quite fit comfortably here.
-\begin{itemize}
-\item Bayesian Logistic Regression.  This is an intractable exp fam in the desired sense, but the natural parameter (when parameterized) depends on $x_i$.  Thus, it grows with every datapoint, or put differently it's a diff exp fam for every dataset.  No bueno.  This is then true of GLMs, so those are out too.
-\item Latent Dirichlet Allocation.  Local variational parameters mean that the exp fam grows with datasize.  That means that the posterior is already too big for uninteresting sizes of LDA.  This is then true of hierarchical models with local latent variables in general.   
-\end{itemize}
-
-\end{itemize}
-
-
-
-Fig 6. The Killer real data.  Perhaps Gibbs or Markov Random Field.  Learn it, then pick some $\eta$, then show samples from it.  Can this look interesting?  Some thoughts...
- 
- Criteria:
- \begin{itemize}
-\item Needs to be an exp fam.
-\item Needs to be a forward exp fam.  As in, not fit to data, because we don't have $\mu$ parameters, we have $\eta$ parameters.
-\item ``real data" is a misnomer, since we are not doing VI or similar.  Really we want an exp fam that is real and somehow useful in its own right, and that people want to sample from.
-\item Reminder: we will \emph{always} be comparing to "well normally you can do this with learning a \emph{single} distribution in the $\min KL(q||p)$ sense.  That's fine.  The point is we can learn the whole family, then choose and sample, vs just one by one.
-\item something hard to sample will be key, since the "toy" results will have used things we already "know" how to sample, like NIW or Dirichlet.
- \end{itemize} 
-
-Ideas: 
-\begin{itemize}
-\item Fancy Exp Fam like Marshall-Olkin.  Yeah but who really cares about this esoteric distribution?  It doesn't look cool visually either.
-\item Ising models: classic, bw images, but gross NP-Hard Cooper 1990.
-\item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	Also both Potts and Ising are NP-hard Cooper 1990 The Computational Complexity of
-Probabilistic Inference Using Bayesian
-Belief Networks 
-\item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
-\item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
-\end{itemize}  
-
-
-\begin{table}
-  \caption{Sample table title}
-  \label{sample-table}
-  \centering
-  \begin{tabular}{lll}
-    \toprule
-    \multicolumn{2}{c}{Part}                   \\
-    \cmidrule(r){1-2}
-    Name     & Description     & Size ($\mu$m) \\
-    \midrule
-    Dendrite & Input terminal  & $\sim$100     \\
-    Axon     & Output terminal & $\sim$10      \\
-    Soma     & Cell body       & up to $10^6$  \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-
-\begin{verbatim}
-   \usepackage[pdftex]{graphicx} ...
-   \includegraphics[width=0.8\linewidth]{myfile.pdf}
-\end{verbatim}
+%
+%
+%Fig 5.  Heaps of examples with conditional iid exp fams.  Math details of that pending.  Some cool examples:
+%\begin{itemize}
+%\item Censored data.  normal prior, censored normal observations, what is posterior distribution on mean?  Lots of work in that.
+%\item Truncated data.  truncated mvn prior, with some observations thereafter, what is posterior? (Does this work?...)
+%\item Poisson/Bern "process" data.  Phony process like in neuro, normal prior on log intensity (ooh maybe that's not an exp fam prior), then a "spike train" of bern or poisson count observations
+%\item multivariate t with inverse wishart prior or something like that.  That's neat but doesn't have great "oh yeah people do care about that problem" recognition.  Seems contrived.
+%\item check MKB book for other cool MV distributions. (Marshall-Olkin)... seems contrived.
+%\item Elliptically contoured prior with some conditionally iid exp fam observations.  People in ML like elliptical distributions.
+%\item von Mises-Fisher distribution, eg http://www.jmlr.org/papers/volume6/banerjee05a/banerjee05a.pdf or https://arxiv.org/pdf/1605.00316.pdf, but again not clustering (see below), since it's a local latent variable problem then.s	
+%\item Note: a whole heap of models don't quite fit comfortably here.
+%\begin{itemize}
+%\item Bayesian Logistic Regression.  This is an intractable exp fam in the desired sense, but the natural parameter (when parameterized) depends on $x_i$.  Thus, it grows with every datapoint, or put differently it's a diff exp fam for every dataset.  No bueno.  This is then true of GLMs, so those are out too.
+%\item Latent Dirichlet Allocation.  Local variational parameters mean that the exp fam grows with datasize.  That means that the posterior is already too big for uninteresting sizes of LDA.  This is then true of hierarchical models with local latent variables in general.   
+%\end{itemize}
+%
+%\end{itemize}
+%
+%
+%
+%Fig 6. The Killer real data.  Perhaps Gibbs or Markov Random Field.  Learn it, then pick some $\eta$, then show samples from it.  Can this look interesting?  Some thoughts...
+% 
+% Criteria:
+% \begin{itemize}
+%\item Needs to be an exp fam.
+%\item Needs to be a forward exp fam.  As in, not fit to data, because we don't have $\mu$ parameters, we have $\eta$ parameters.
+%\item ``real data" is a misnomer, since we are not doing VI or similar.  Really we want an exp fam that is real and somehow useful in its own right, and that people want to sample from.
+%\item Reminder: we will \emph{always} be comparing to "well normally you can do this with learning a \emph{single} distribution in the $\min KL(q||p)$ sense.  That's fine.  The point is we can learn the whole family, then choose and sample, vs just one by one.
+%\item something hard to sample will be key, since the "toy" results will have used things we already "know" how to sample, like NIW or Dirichlet.
+% \end{itemize} 
+%
+%Ideas: 
+%\begin{itemize}
+%\item Fancy Exp Fam like Marshall-Olkin.  Yeah but who really cares about this esoteric distribution?  It doesn't look cool visually either.
+%\item Ising models: classic, bw images, but gross NP-Hard Cooper 1990.
+%\item Potts model: great because failure of MCMC (Gibbs sampling) here is at least locally well known from Geman and Geman 1984 through Sudderth correcting this (see Gibbs sampler slides from Advanced ML, Peter's part).  But that is kind of a failure example, not an interesting one (MRFs are smoothness prior, not segmentation prior).	Also both Potts and Ising are NP-hard Cooper 1990 The Computational Complexity of
+%Probabilistic Inference Using Bayesian
+%Belief Networks 
+%\item Markov Random Fields / Gibbs Random Fields (same, by Hammersley Clifford theorem).  Yes this is cool: image distributions, texture distributions.  Can show wild diff sets of textures, none of which require any sampling or any such thing.  Can we make this super intractable from an MCMC perspective?  Need to read on how sampling is done there.  Erik Sudderth and his phd thesis are likely good resources.
+%\item Gatys and Simoncelli texture stuff (see for example MEFN paper for refs); those are interesting distributions on textures, or specified moments.  Can then just sample from this family.
+%\end{itemize}  
+%
+%
+%\begin{table}
+%  \caption{Sample table title}
+%  \label{sample-table}
+%  \centering
+%  \begin{tabular}{lll}
+%    \toprule
+%    \multicolumn{2}{c}{Part}                   \\
+%    \cmidrule(r){1-2}
+%    Name     & Description     & Size ($\mu$m) \\
+%    \midrule
+%    Dendrite & Input terminal  & $\sim$100     \\
+%    Axon     & Output terminal & $\sim$10      \\
+%    Soma     & Cell body       & up to $10^6$  \\
+%    \bottomrule
+%  \end{tabular}
+%\end{table}
+%
+%
+%\begin{verbatim}
+%   \usepackage[pdftex]{graphicx} ...
+%   \includegraphics[width=0.8\linewidth]{myfile.pdf}
+%\end{verbatim}
 
 
 
