@@ -1,7 +1,6 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  18 MAY 2018 14:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  18 MAY 2018 15:00
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **BittnerNIPS2018.tex
 (./BittnerNIPS2018.tex
@@ -1375,7 +1374,7 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `math shift' on input line 249.
 
 [4] [5]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 5533) has occurred while \output is active []
 
  [6]
 <figs/fig2/fig2.pdf, id=211, 830.45155pt x 211.84746pt>
@@ -1391,33 +1390,23 @@ File: figs/fig3/fig3.pdf Graphic file (type pdf)
 Package pdftex.def Info: figs/fig3/fig3.pdf used on input line 362.
 (pdftex.def)             Requested size: 393.39449pt x 185.63739pt.
  [7 <./figs/fig2/fig2.pdf> <./figs/fig3/fig3.pdf>]
-<figs/fig4/fig4.pdf, id=267, 855.195pt x 403.55467pt>
+<figs/fig4/fig4.pdf, id=261, 855.195pt x 403.55467pt>
 File: figs/fig4/fig4.pdf Graphic file (type pdf)
  <use figs/fig4/fig4.pdf>
 Package pdftex.def Info: figs/fig4/fig4.pdf used on input line 374.
 (pdftex.def)             Requested size: 393.39449pt x 185.63739pt.
 
+<figs/fig5/fig5.pdf, id=262, 855.195pt x 403.55467pt>
+File: figs/fig5/fig5.pdf Graphic file (type pdf)
+ <use figs/fig5/fig5.pdf>
+Package pdftex.def Info: figs/fig5/fig5.pdf used on input line 387.
+(pdftex.def)             Requested size: 393.39449pt x 185.63739pt.
 
-LaTeX Warning: File `figs/fig5/fig5.pdf' not found on input line 387.
-
-
-./BittnerNIPS2018.tex:387: Package pdftex.def Error: File `figs/fig5/fig5.pdf' 
-not found.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.387 ...egraphics[scale=0.46]{figs/fig5/fig5.pdf}
-                                                  
-? 
-
-Underfull \vbox (badness 6348) has occurred while \output is active []
-
- [8 <./figs/fig4/fig4.pdf>] [9] (./BittnerNIPS2018.bbl
+[8 <./figs/fig4/fig4.pdf>] [9 <./figs/fig5/fig5.pdf>] (./BittnerNIPS2018.bbl
 LaTeX Font Info:    Font shape `OMS/ptm/m/it' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 85.
- [10
+
+[10
 
 ]) [11]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 520.
@@ -1430,10 +1419,10 @@ Package rerunfilecheck Info: File `BittnerNIPS2018.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 520.
  ) 
 Here is how much of TeX's memory you used:
- 23850 strings out of 493014
- 475654 string characters out of 6133351
+ 23854 strings out of 493014
+ 475749 string characters out of 6133351
  610079 words of memory out of 5000000
- 26652 multiletter control sequences out of 15000+600000
+ 26656 multiletter control sequences out of 15000+600000
  47072 words of font info for 176 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,8n,78p,3514b,803s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1461,10 +1450,10 @@ s/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1
 /urw/times/utmb8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times
 /utmr8a.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/urw/times/utmri8a.p
 fb>
-Output written on BittnerNIPS2018.pdf (11 pages, 898166 bytes).
+Output written on BittnerNIPS2018.pdf (11 pages, 1353572 bytes).
 PDF statistics:
- 408 PDF objects out of 1000 (max. 8388607)
- 323 compressed objects within 4 object streams
+ 424 PDF objects out of 1000 (max. 8388607)
+ 337 compressed objects within 4 object streams
  73 named destinations out of 1000 (max. 500000)
- 21143 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 21148 words of extra memory for PDF output out of 24883 (max. 10000000)
 
