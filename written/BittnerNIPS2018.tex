@@ -98,7 +98,7 @@ Recently much attention has been paid to implicit probabilistic models -- models
 Probability models, the fundamental object of Bayesian machine learning, have long challenged researchers with the tradeoff between tractability and expressivity.
 Though well understood that a model should be chosen to instantiate a set of assumptions and capture existing domain knowledge \cite{gelman2014bayesian, tenenbaum2006theory, mccullagh2002}, for many years too-simple models were chosen for their practical advantanges (such as conditional conjugacy), which left much to be desired in terms of expressive performance and scalability of these models.  
 
-More recently the pendulum has swung, via a resurgence in models which map a latent random variable $w\sim q_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ q(g_\theta \circ z) : \theta \in \Theta \right\}$ (where $q(\cdot)$ is the pushforward density, i.e. the density induced on the image of the random variable under the function $g_\theta$).  
+More recently the pendulum has swung, via a resurgence in models which map a latent random variable $w\sim q_0$ through a member of a highly expressive function family $\mathcal{G} = \left\{g_\theta : \theta \in \Theta\right\}$, the composition resulting in an \emph{implicit probability model} $\mathcal{M} = \left\{ q(g_\theta \circ w) : \theta \in \Theta \right\}$ (where $q(\cdot)$ is the pushforward density, i.e. the density induced on the image of the random variable $w$ under the function $g_\theta$).  
 Choosing $\mathcal{G}$ to be a parameter-indexed family of neural networks has both a rich history \cite{dayan1995helmholtz,mackay1997density}, and has recently been used to produce exciting results for density estimation \cite{uria2013rnade, rippel2013high, papamakarios2017masked}, generation of complex data \cite{Goodfellow:2014aa}, variational inference \cite{Kingma:2013aa, rezende2014stochastic, titsias2014doubly}, and more.  
 A noted advantage of these implicit density network models is that in many cases they make minimal assumptions about the data generative (or posterior inference) process.  
 On the other hand, since these models have been chosen to be generic and flexible, they can lack the classic stipulation that a model instantiates existing domain knowledge.  
@@ -107,9 +107,9 @@ The downsides of a too-flexible model with finite data (albeit large) -- and the
 Is all the flexibility of an implicit density network model $\mathcal{M}$ always necessary?  
 Consider the case of variational inference, where a generative model $p(z)p_\beta(X | z)$ (latent $z$, observed data $X$) is stipulated in the classic sense to embody modeling assumptions (hierarchical model, topic model, Bayesian logistic regression, etc.).  
 When such a model is intractable, it is increasingly common to deploy an implicit ``recognition network'' model for variational inference \cite{Kingma:2013aa}, which finds a $q_{\theta^*}(z) \in \mathcal{M}$ such that an evidence bound is optimized with respect to the true posterior $p(z|X)$.  
-However, note the widely recognized fact \cite{wainwright2008graphical} that many such true posteriors $p(z|X)$ belong to models that can be written as exponential families (albeit intractable, due to the choice of sufficient statistics $t(z)$), of the form: $\mathcal{P} = \left\{ \frac{h(z)}{A(\eta)} \exp\left\{ \eta^\top t(z) \right \} : \eta \in H \right\}$.
+However, note the widely recognized fact \cite{wainwright2008graphical} that many such true posteriors $p(z|X)$ belong to models that can be written as exponential families (albeit intractable, due to the choice of sufficient statistics $t(z)$), of the form: $\mathcal{P} = \left\{ \frac{h(z)}{A(\eta)} \exp\left\{ \eta^\top t(z) \right \} : \eta \in H \right\}$.  Some effort has been made to learn single members of exponential families from their mean parameters \cite{loaiza2017maximum}, but here we are focused on the natural parameterization and the model itself (not simply members thereof). 
 
- Should we be able to learn a tractable approximation to this exponential family model (not simply members thereof), we would in the very least get the bias-variance benefits of an intelligently restricted model space, and at best would get inference ``for free'' in the sense that we could evaluate approximate posteriors directly without separate optimization for each dataset encountered (a different form of amortized inference \cite{gershman2014amortized,Kingma:2013aa,rezende2014stochastic,stuhlmuller2013learning}).  
+ Should we be able to learn a tractable approximation to this exponential family model, we would in the very least get the bias-variance benefits of an intelligently restricted model space, and at best would get inference ``for free'' in the sense that we could evaluate approximate posteriors directly without separate optimization for each dataset encountered (a different form of amortized inference \cite{gershman2014amortized,Kingma:2013aa,rezende2014stochastic,stuhlmuller2013learning}).  
  In this paper we aim to learn a restricted model $\mathcal{Q} = \left\{ q(z; \eta: \eta \in H)\right\}$ that will be a strict subset of the deep implicit model $\mathcal{M}$ and will closely approximate a target exponential family $\mathcal{P}$.  
  Note the critical difference between this aim and much of the literature that seeks to learn a density $q_{\theta}^* \in \mathcal{M}$ (we explore this distinction in depth both algorithmically and empirically).  
  
@@ -226,9 +226,9 @@ The critical observation here is that, if we can approximately learn an intracta
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \subsection{Density networks as approximating family $\mathcal{Q}$}
+ \subsection{Density networks as generic approximating family $\mathcal{M}$}
 
-Implicit probability models, which we will use for our approximating family $\mathcal{Q}$, can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
+Implicit probability models, which we will use for our approximating model family $\mathcal{M}$, can be defined by any base random variable $w\sim p_0$ mapped through any measurable, parameter-indexed function family  $\mathcal{G} = \left\{g_\theta: \theta \in \Theta\right\}$; we denote the induced density on $z=g_\theta(w)$ as $q_\theta(z)$.   
 Though trivial to sample from $q_\theta(z)$ for any choice of family $\mathcal{G}$, we here additionally require that we be able to explicitly calculate $q_\theta(z)$.  
 This goal can be readily achieved by designing $\mathcal{G}$ to contain only bijective functions, ideally with a Jacobian form that is convenient to compute. %such that $q_\theta(z) = \frac{1}{|J_\theta(z)|} q_0\left(g_\theta^{-1}(z)\right)$ is convenient to compute.   
 Designing that bijective $\mathcal{G}$ as a deep neural network family, as we do here, is a well-established idea that has recently seen many variants and applications \cite{mackay1997density, baird2005one, tabak2010density, rippel2013high, uria2013rnade, rezende2015variational, dinh2016density, papamakarios2017masked, jacobsen2018revnet}.  Specifically, let $z = g_\theta(w) = g_L \circ ... \circ g_1(w)$ for bijective vector-valued functions $g_\ell$ (where for clarity we have surpressed the dependence of each on $\theta$), and denote $J_\ell$ as the Jacobian of the function $g_\ell$.  Then we have:
@@ -237,18 +237,36 @@ $$q_\theta(z) = q_0\left( g_1^{-1} \circ ... \circ g_L^{-1}(z) \right) \prod_{\e
 %
 The specific form of the layers $g_\ell$ can be chosen based on empirical considerations; we clarify our choice in \S3.  For the remainder (and to avoid confusion when we introduce a second network) we call this deep bijective neural architecture the \emph{density network}; this network is shown vertically oriented (flowing from $w$ down to $z$) in Figure 1C.
 
+This density network induces the model $\mathcal{M} = \left\{ q(g_\theta \circ w) : \theta \in \Theta \right\}$, which previous work has searched to find a single optimized distribution (such as a posterior or data generative density), on the assumption and subsequent empirical evidence that the target exponential family member is close to (or approximately belongs to) $\mathcal{M}$.   We make the same assumption for the exponential family itself and seek to intelligently restrict $\mathcal{M}$ in order to learn the exponential family.  
+
 %Note that what norm flows  \cite{rezende2015variational} did is make it tractable and scalable and in the modern VAE style, and even that is probably overstating the case.  That makes these comparisons legitimate and apples to apples.   Gaussianization is an old idea that this is basically the inverse of \cite{chen2001gaussianization}; same idea in more depth and that argues for the normal prior in \cite{tabak2010density}.  Really the norm flow is not so special as this is a well established classic idea.    
  
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
- \subsection{Exponential family networks}
+ \subsection{Exponential family networks as approximating model $\mathcal{Q}$}
 
-includes the network definition of Fig 1c, the objective, and the optimization algorithm.
+Having introduced our target model $\mathcal{P}$, an exponential family with natural parameters $\eta \in H$, and the density network family $\mathcal{M}$, we now seek to learn $\mathcal{Q} \approx \mathcal{P}$, where $\mathcal{Q} \subset \mathcal{M}$.  
+To do so we will parameterize $\theta$, the parameters of the density network, as the image of a second \emph{parameter network} family $\mathcal{F} = \left\{ f_\phi : H \rightarrow \Theta, \phi \in \Phi\right\}$.   
+This network is shown flowing from right to left in Figure 1C.  
+Any choice of parameter network parameters $\phi$ induces a $|H|$-dimensional submanifold (the image $f_\phi(H)$) of the density network parameter space $\Theta$, and as such defines a restricted model $\mathcal{Q}_\phi = \left\{ q_{f_{\phi}}(z; \eta): \eta \in H\right\} \subset \mathcal{M}$.
+
+
+Using a second meta-network to aid or restrict network learning has been used in a variety of settings; a few examples include parameterizing the optimization algorithm in the so-called ``learning to learn'' setting \cite{andrychowicz2016learning}, and a more closely related work that used a second network to condition on observations for local latent variational inference \cite{rezende2015variational}, a connection which we explore closely in the following section.
+
+...
+ Should we be able to learn a tractable approximation to this exponential family model, we would in the very least get the bias-variance benefits of an intelligently restricted model space, and at best would get inference ``for free'' in the sense that we could evaluate approximate posteriors directly without separate optimization for each dataset encountered (a different form of amortized inference \cite{gershman2014amortized,Kingma:2013aa,rezende2014stochastic,stuhlmuller2013learning}).  
+ In this paper we aim to learn a restricted model $\mathcal{Q} = \left\{ q(z; \eta): \eta \in H\right\}$ that will be a strict subset of the deep implicit model $\mathcal{M}$ and will closely approximate a target exponential family $\mathcal{P}$.  
+ Note the critical difference between this aim and much of the literature that seeks to learn a density $q_{\theta}^* \in \mathcal{M}$ (we explore this distinction in depth both algorithmically and empirically).  
  
-This should not be confused with "Learning to learn by gradient descent by gradient descent" \cite{andrychowicz2016learning} 
+To proceed, we must first specify a set of models $\mathbb{Q} = \left\{ \mathcal{Q}_\phi : \phi \in \Phi \right\}$, from which we can learn a single model $\mathcal{Q}_{\phi^*}$, and we must second define a sensible parameter space $H$ of each model.  
+To the first, we restrict $\Theta$, the parameter space of $\mathcal{M}$, to be itself the image of a second deep \emph{parameter network} family $\mathcal{F} = \left\{f_\phi : \phi \in \Phi\right\}$, such that $\left\{ f_\phi(\eta) : \eta \in H \right\} \subset \Theta$.
+The second part is answered immediately by our choice of target $\mathcal{P}$, an exponential family which by definition has \emph{natural} parameterization $\eta \in H$.  
+Thus, appealingly, we know that $H$ is precisely the correct parameter space for $\mathcal{Q}$ (as it defines $\mathcal{P}$), and that the image of $H$ under $f_\phi$ will be of the correct dimensionality within the codomain $\Theta$; approximation error between $\mathcal{Q}$ and $\mathcal{P}$ will be caused by the flexibility and learnability of the parameter network $f_\phi$ and the density network $g_{f_{\phi}(\eta)}$.  
 
-Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
-Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
+ 
+
+%Another related work is that this is somehow the dual of MEFN \cite{loaiza2017maximum}, or a generalization of the dual problem.  In the wainwright and jordan sense of forward and backward mappings.
+%Stuff on sampling from Gibbs distributions (max ent models), and sampling from exp fams generally, with MCMC and such.
 
 Note that this objective can also produce approximations of the log partition, via essentially linear regression; more nuanced schemes are recommended \cite{papamakarios2015distilling}.  We don't explore that here.
 

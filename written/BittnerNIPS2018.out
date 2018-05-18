@@ -1,8 +1,8 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Exponential family networks}{}% 2
 \BOOKMARK [2][-]{subsection.2.1}{Exponential families as target model P}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Density networks as approximating family Q}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Exponential family networks}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Density networks as generic approximating family M}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Exponential family networks as approximating model Q}{section.2}% 5
 \BOOKMARK [2][-]{subsection.2.4}{Relation to variational inference}{section.2}% 6
 \BOOKMARK [1][-]{section.3}{Results}{}% 7
 \BOOKMARK [2][-]{subsection.3.1}{Tractable exponential families}{section.3}% 8
