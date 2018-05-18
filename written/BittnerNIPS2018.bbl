@@ -85,6 +85,11 @@ Martin~J Wainwright, Michael~I Jordan, et~al.
 \newblock {\em Foundations and Trends{\textregistered} in Machine Learning},
   1(1--2):1--305, 2008.
 
+\bibitem{loaiza2017maximum}
+Gabriel Loaiza-Ganem, Yuanjun Gao, and John~P Cunningham.
+\newblock Maximum entropy flow networks.
+\newblock {\em International Conference on Learning Representations}, 2017.
+
 \bibitem{gershman2014amortized}
 Samuel Gershman and Noah Goodman.
 \newblock Amortized inference in probabilistic reasoning.
@@ -161,11 +166,6 @@ Marcin Andrychowicz, Misha Denil, Sergio Gomez, Matthew~W Hoffman, David Pfau,
 \newblock Learning to learn by gradient descent by gradient descent.
 \newblock In {\em Advances in Neural Information Processing Systems}, pages
   3981--3989, 2016.
-
-\bibitem{loaiza2017maximum}
-Gabriel Loaiza-Ganem, Yuanjun Gao, and John~P Cunningham.
-\newblock Maximum entropy flow networks.
-\newblock {\em International Conference on Learning Representations}, 2017.
 
 \bibitem{papamakarios2015distilling}
 George Papamakarios and Iain Murray.

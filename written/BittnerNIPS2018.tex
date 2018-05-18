@@ -263,15 +263,13 @@ where again we note that $\theta = f_\phi(\eta)$, and thus for a fixed eta, this
 
 Of course we seek to approximate not just a single target exponential family member ($p(z;\eta)$ for a fixed $\eta$), but rather the entire model $\mathcal{P} = \left\{p(z;\eta): \eta \in H\right\}$.   For optimization we thus need to introduce a distribution $p(\eta)$ (for sampling), leading to the objective: 
 
-$$\arg\min_\phi \mathbb{E}_{p(\eta)} \left( D\left( q_\phi(z;\eta) || p(z;\eta) \right)\right) =  \arg\min_\phi D\left( q_\phi(z;\eta)p(\eta) || p(z;\eta)p(\eta) \right).$$
+$$\arg\!\min_{\!\!\!\!\!\!\!\!\!\!\!\phi} \mathbb{E}_{p(\eta)} \left( D\left( q_\phi(z;\eta) || p(z;\eta) \right)\right) =  \arg\!\min_{\!\!\!\!\!\!\!\!\!\!\!\phi}  D\left( q_\phi(z;\eta)p(\eta) || p(z;\eta)p(\eta) \right).$$
 
+Unbiased estimates of this objective are immediate: $q_\phi(z;\eta)$ is sampled by computing calculating the density network parameters $\theta = f_\phi(\eta)$ (using the parameter network), sampling the latent $w \sim p_0(w)$, and running that $w$ through the density network; $p(\eta)$ is user defined and thus trivial to sample.  Stochastic optimization can then be carried out on the estimator:   
 
+$$\mathbb{L}(\phi) = \frac{1}{K}\frac{1}{M}\sum_{k=1}^K \sum_{m=1}^M \left( q_0\left( g_{\theta^k}^{-1}\left(z^m\right)\right) + \sum_{\ell=1}^L  \log | J^\ell_{\theta^k}\left(z^m\right) | - \eta_k^\top t\left(z^m\right) \right),$$
 
-This is amenable to sampling, and note that since we have no data (we are fitting a model, not a conditional based on finite data), we can sample forever.  Here is an unbiased objective for stochastic optimization.
-
-
-This defines an EFN.  What remains for empirical implementation is to make particular choices of hyperparameters, network layers, and optimization algorithm, which we specify in \S3 below.
-
+where $\theta^k = f_\phi\left(\eta_k\right)$.  Successful optimization over $\phi$ should thus result in $\mathcal{Q}_{\phi^*} \in \mathbb{Q}$ that accurately approximates the target exponential family; that is, $\mathcal{Q} \approx \mathcal{P}$.  We call this two-network architecture and optimization an exponential family network (EFN).   What remains for empirical implementation is to make particular choices of hyperparameters, network layers, and optimization algorithm, which we specify in \S3 below.
 
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
