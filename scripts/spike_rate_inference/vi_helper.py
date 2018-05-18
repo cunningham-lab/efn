@@ -25,7 +25,7 @@ flow_ids = flow_dict['flow_ids'];
 flow_repeats = flow_dict['flow_repeats'];
 print_flowdict(flow_dict);
 
-datapath = '/Users/sbittner/Documents/efn/data/spike_counts_neuron4.mat';
+datapath = '/home/sbittner/efn/data/spike_counts_neuron4.mat';
 data = sio.loadmat(datapath);
 datax = data['x'];
 extrastr = 'R=%d_N=%d_' % (R,N);
