@@ -14,7 +14,6 @@ N = int(sys.argv[2]);
 random_seed = int(sys.argv[3]);
 D = 20;
 planar_layers = 30;
-random_seed = 0;
 
 if (R > N):
 	print('R > N, so quitting');
@@ -34,7 +33,7 @@ model_info = {'subclass':'VI', 'extrastr':extrastr, 'R':R, 'trainx':datax[:N,:],
 cost_type = 'KL';
 M = 1000;
 lr_order = -3;
-max_iters = 50000;
+max_iters = 20000;
 check_rate = 100;
 
 log_p_zs, X, train_R2s, train_KLs, it = train_vi(exp_fam, D, flow_dict, cost_type, M, model_info, \
