@@ -9,17 +9,16 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import MMD2u, PlanarFlowLayer, computeMoments, \
-                      latent_dynamics, connect_flow, construct_flow, \
-                      setup_IO, construct_param_network, log_grads, \
-                      approxKL, drawEtas, checkH, declare_theta, cost_fn, \
-                      computeLogBaseMeasure, check_convergence, batch_diagnostics, \
+from efn_util import connect_flow, construct_flow, \
+                     setup_IO, construct_param_network, log_grads, \
+                      cost_fn, \
+                      check_convergence, \
                       memory_extension, setup_param_logging, count_params, \
                       get_param_network_hyperparams, get_ef_dimensionalities
 from tensorflow.python import debug as tf_debug
 
-def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stochastic_eta, \
-              give_inverse_hint=False, lr_order=-3, random_seed=0, \
+def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
+              stochastic_eta, give_hint=False, lr_order=-3, random_seed=0, \
               max_iters=10000, check_rate=200):
     batch_norm = False;
     dropout = False;
@@ -30,8 +29,7 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
     cost_grad_lag = 100;
     pthresh = 0.1;
 
-
-    D_Z, ncons, num_param_net_inputs, num_Tx_inputs = get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint);
+    D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims(param_net_input_type, give_hint);
 
     # set number of layers in the parameter network
     L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
@@ -42,13 +40,14 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
     tf.set_random_seed(random_seed);
     np.random.seed(random_seed);
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(exp_fam, flow_dict, D_Z, T);
-    K = tf.shape(Z0)[0];
-    M = tf.shape(Z0)[1];
-    batch_size = tf.multiply(K, M);
+    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_dict, D_Z, T);
+    flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
+    Z0_shape = tf.shape(Z0);
+    batch_size = tf.multiply(Z0_shape[0], Z0_shape[1]);
+
     dynamics = P > 0;
 
-    n = K_eta*M_eta;
+    n = K*M;
 
     # optimization hyperparameters
     opt_method = 'adam';
@@ -58,26 +57,27 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
     model_save_every = max_iters-1;
     tb_save_params = False;
 
-    eta = tf.placeholder(tf.float64, shape=(None, ncons));
+    eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats));
     param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs));
-    Tx_input = tf.placeholder(tf.float64, shape=(None, num_Tx_inputs));
+    T_x_input = tf.placeholder(tf.float64, shape=(None, num_T_x_inputs));
 
     if (not stochastic_eta):
         # get etas based on constraint_id
-        _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
-        _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
-
+        _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
 
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
 
-    savedir = setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, model_info, stochastic_eta, give_inverse_hint, random_seed);
-    print(random_seed, savedir);
+    savedir = setup_IO(family, 'EFN', param_net_input_type, K, M, flow_dict, \
+                       param_net_hps, stochastic_eta, give_hint, random_seed);
 
     # construct the parameter network
-    theta = construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps);
+    theta = construct_param_network(param_net_input, K, flow_layers, param_net_hps);
 
     # connect time-invariant flow
     Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta);
+
+
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified
@@ -86,11 +86,11 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
 
     X = Z; # [n,D,T] 
     # set up the constraint computation
-    Tx = computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input);
-    Bx = computeLogBaseMeasure(X, exp_fam, D, T);
+    T_x = family.compute_suff_stats(X, Z_by_layer, T_x_input);
+    log_h_x = family.compute_log_base_measure(X);
 
     # exponential family optimization
-    cost, costs, R2s = cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type)
+    cost, costs, R2s = cost_fn(eta, log_p_zs, T_x, log_h_x, K, cost_type)
     cost_grad = tf.gradients(cost, all_params);
 
     grads_and_vars = [];
@@ -103,13 +103,11 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
     tf.add_to_collection('eta', eta);
     tf.add_to_collection('param_net_input', param_net_input);
     tf.add_to_collection('log_p_zs', log_p_zs);
-    tf.add_to_collection('Tx_input', Tx_input);
+    tf.add_to_collection('T_x_input', T_x_input);
     saver = tf.train.Saver();
 
     # tensorboard logging
     summary_writer = tf.summary.FileWriter(savedir);
-    #for k in range(K_eta):
-    #    tf.summary.scalar('R2%d' % (k+1), R2s[k]);
     tf.summary.scalar('cost', cost);
 
     if (tb_save_params):
@@ -130,25 +128,25 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
     array_cur_len = array_init_len;
 
     num_diagnostic_checks = (max_iters // check_rate);
-    train_elbos = np.zeros((num_diagnostic_checks, K_eta));
-    test_elbos = np.zeros((num_diagnostic_checks, K_eta));
-    train_R2s = np.zeros((num_diagnostic_checks, K_eta));
-    test_R2s = np.zeros((num_diagnostic_checks, K_eta));
-    train_KLs = np.zeros((num_diagnostic_checks, K_eta));
-    test_KLs = np.zeros((num_diagnostic_checks, K_eta));
+    train_elbos = np.zeros((num_diagnostic_checks, K));
+    test_elbos = np.zeros((num_diagnostic_checks, K));
+    train_R2s = np.zeros((num_diagnostic_checks, K));
+    test_R2s = np.zeros((num_diagnostic_checks, K));
+    train_KLs = np.zeros((num_diagnostic_checks, K));
+    test_KLs = np.zeros((num_diagnostic_checks, K));
     check_it = 0;
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 
-        z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
         if (stochastic_eta):
-            _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
-            _eta_test, _param_net_input_test, _Tx_input_test, eta_test_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
-        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
+            _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+            _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
 
-        cost_i, _cost_grads, _X, _y, _Tx, summary = \
-            sess.run([cost, cost_grad, X, log_p_zs, Tx, summary_op], feed_dict);
+        cost_i, _cost_grads, _X, _y, _T_x, summary = \
+            sess.run([cost, cost_grad, X, log_p_zs, T_x, summary_op], feed_dict);
 
         if (dynamics):
             A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
@@ -175,16 +173,16 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
                 memory_extension(cost_grad_vals, array_cur_len);
                 array_cur_len = 2*array_cur_len;
 
-            z_i = np.random.normal(np.zeros((K_eta, M_eta, D_Z, num_zi)), 1.0);
+            z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
             if (stochastic_eta): 
-                _eta, _param_net_input, _Tx_input, eta_draw_params = drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint);
+                _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
 
-            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
+            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
-            ts, cost_i, _X, _cost_grads, _log_p_zs, _Tx, summary = \
-                sess.run([train_step, cost, X, cost_grad, log_p_zs, Tx, summary_op], feed_dict);
+            ts, cost_i, _X, _cost_grads, _log_p_zs, _T_x, summary = \
+                sess.run([train_step, cost, X, cost_grad, log_p_zs, T_x, summary_op], feed_dict);
             if (np.mod(i, check_rate)==0):
                 end_time = time.time();
                 print('iter %d took %f seconds' % (i+1, end_time-start_time));
@@ -217,12 +215,12 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
                     has_converged = check_convergence([cost_grad_vals], i, cost_grad_lag, pthresh, criteria='grad_mean_ttest');
                 
                 # compute R^2 and KL for training and batch
-                z_i = np.random.normal(np.zeros((K_eta, int(1e3), D_Z, num_zi)), 1.0);
-                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, Tx_input:_Tx_input};
-                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, Tx_input:_Tx_input_test};
+                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
+                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
+                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
 
-                train_costs_i, train_R2s_i, train_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
-                test_costs_i, test_R2s_i, test_KLs_i = batch_diagnostics(exp_fam, K_eta, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
+                train_costs_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
+                test_costs_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
                 end_time = time.time();
                 print('check diagnostics processes took: %f seconds' % (end_time-start_time));
 
@@ -244,26 +242,25 @@ def train_efn(exp_fam, D, flow_dict, cost_type, K_eta, M_eta, model_info, stocha
                 print('cost', cost_i);
                 print('train elbo: %f' % mean_train_elbo);
                 print('train R2: %f' % mean_train_R2);
-                if (not (exp_fam in ['prp_tn'])):
+                if (family.name in ['dirichlet', 'normal', 'inv_wishart']):
                     print('train KL: %f' % mean_train_KL);
 
                 print('test elbo: %f' % mean_test_elbo);
                 print('test R2: %f' % mean_test_R2);
-                if (not (exp_fam in ['prp_tn'])):
+                if (family.name in ['dirichlet', 'normal', 'inv_wishart']):
                     print('test KL: %f' % mean_test_KL);
-                #print('train R2: %.3f and train KL %.3f' % (mean_train_R2, mean_train_KL));
 
                 if (dynamics):
                     np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
                                                       it=i, X=_X, check_rate=check_rate, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
-                                                      Tx_input=_Tx_input, \
+                                                      T_x_input=_T_x_input, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                       X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
-                                                      Tx_input=_Tx_input, \
+                                                      T_x_input=_T_x_input, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);

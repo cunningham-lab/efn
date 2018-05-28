@@ -14,18 +14,28 @@ import os
 import re
 
 p_eps = 10e-6;
-def setup_IO(exp_fam, K_eta, M_eta, D, flow_dict, param_net_hps, model_info, stochastic_eta, give_inverse_hint, random_seed):
-# set file I/O stuff
+def setup_IO(family, model_type_str, param_net_input_type, K, M, flow_dict, \
+             param_net_hps, stochastic_eta, give_hint, random_seed):
+    # set file I/O stuff
     resdir = 'results/MK/';
     eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
-    give_inv_str = 'giveInv_' if give_inverse_hint else '';
+    give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
-    subclass = model_info['subclass'];
-    extrastr = model_info['extrastr'];
-    if (subclass == 'EFN'):
-        savedir = resdir + '/tb/' + 'EFN_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' % (exp_fam, eta_str, give_inv_str, D, K_eta, M_eta, flowstring, param_net_hps['L'], random_seed);
+    if (model_type_str == 'EFN'):
+        if (param_net_input_type == 'eta'):
+            substr = '';
+        elif (param_net_input_type == 'prior'):
+            substr = 'a';
+        elif (param_net_input_type == 'likelihood'):
+            substr = 'b';
+        elif (param_net_input_type == 'data'):
+            substr = 'c';
+        else:
+            raise NotImplementedError();
+        savedir = resdir + '/tb/' + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
+                  % (substr, family.name, eta_str, give_hint_str, family.D, K, M, flowstring, param_net_hps['L'], random_seed);
     else:
-        savedir = resdir + '/tb/' + '%s_%s_%sD=%d_flow=%s_rs=%d/' % (subclass, exp_fam, extrastr, D, flowstring, random_seed);
+        savedir = resdir + '/tb/' + '%s_%s_D=%d_flow=%s_rs=%d/' % (model_type_str, family.name, family.D, flowstring, random_seed);
     return savedir
 
 def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
@@ -39,7 +49,7 @@ def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
         D_Z = D;
         ncons = int(D_Z+D_Z*(D_Z+1)/2);
         if (give_inverse_hint):
-            num_param_net_inputs = int(D + D*(D+1)); # <- figure out what this number is
+            num_param_net_inputs = int(D + D*(D+1)); 
         else:
             num_param_net_inputs = ncons;
         num_Tx_inputs = 0;
@@ -49,7 +59,7 @@ def get_ef_dimensionalities(exp_fam, D, model_info, give_inverse_hint):
         D_Z = int(sqrtD*(sqrtD+1)/2)
         ncons = D_Z + 1;
         if (give_inverse_hint):
-            num_param_net_inputs = 2*D_Z + 1 # < -- something like this
+            num_param_net_inputs = 2*D_Z + 1;
         else:
             num_param_net_inputs = ncons;
         num_Tx_inputs = 0;
@@ -179,7 +189,15 @@ def declare_theta(flow_layers):
         theta.append(layer_i_params);
     return theta;
 
-def construct_flow(exp_fam, flow_dict, D_Z, T):
+def count_layer_params(layer):
+    num_params = 0;
+    name, param_names, dims = layer.get_layer_info();
+    nparams = len(dims);
+    for j in range(nparams):
+        num_params += np.prod(dims[j]);
+    return num_params;
+
+def construct_flow(flow_dict, D_Z, T):
     P = 0
     assert(P >= 0);
     flow_ids = flow_dict['flow_ids'];
@@ -200,24 +218,12 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
             elif (flow_id == 'TanhLayer'):
                 layers.append(TanhLayer('Tanh_Layer%d' % layer_ind));
             layer_ind += 1;
-    # take care of the T-exp family-specific support transformations
-    if ((exp_fam == 'dirichlet') or (exp_fam == 'dir_dir') or (exp_fam == 'dir_mult')):
-        layers.append(SimplexBijectionLayer());
-    elif (exp_fam == 'inv_wishart'):
-        layers.append(CholProdLayer());
-    elif (exp_fam == 'prp_tn'):
-        layers.append(SoftPlusLayer());
-
     nlayers = len(layers); 
-
 
     num_theta_params = 0;
     for i in range(nlayers):
         layer = layers[i];
-        name, param_names, dims = layer.get_layer_info();
-        nparams = len(dims);
-        for j in range(nparams):
-            num_theta_params += np.prod(dims[j]);
+        num_theta_params += count_layer_params(layer);
 
     dynamics = P > 0;
 
@@ -227,7 +233,7 @@ def construct_flow(exp_fam, flow_dict, D_Z, T):
     else:
         num_zi = T;
 
-    Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi));
+    Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, num_zi), name='Z0');
     K = tf.shape(Z0)[0];
     M = tf.shape(Z0)[1];
     if (dynamics):
@@ -418,7 +424,7 @@ def computeMoments(X, exp_fam, D, T, Z_by_layer, Tx_input):
             Tx = tf.concat((logz, betaz, log_gamma_beta_z), 2);
         elif (exp_fam == 'dir_mult'):
             logz = tf.log(X[:,:,:,0]);
-            Tx = logz
+            Tx = logz;
         else:
             raise NotImplementedError;
     else:
@@ -449,32 +455,32 @@ def computeLogBaseMeasure(X, exp_fam, D, T):
         raise NotImplementedError;
     return Bx;
 
-def cost_fn(eta, log_p_zs, Tx, Bx, K_eta, cost_type):
+def cost_fn(eta, log_p_zs, T_x, log_h_x, K_eta, cost_type):
     y = log_p_zs;
     R2s = [];
-    costs = [];
+    elbos = [];
     for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
         y_k = tf.expand_dims(y[k,:], 1);
-        Tx_k = Tx[k,:,:];
-        Bx_k = tf.expand_dims(Bx[k,:], 1);
+        T_x_k = T_x[k,:,:];
+        log_h_x_k = tf.expand_dims(log_h_x[k,:], 1);
         eta_k = tf.expand_dims(eta[k,:], 1);
         # compute optimial linear regression offset term for eta
-        alpha_k = tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k) + Bx_k));
-        residuals = y_k - (tf.matmul(Tx_k, eta_k)+Bx_k) - alpha_k;
+        alpha_k = tf.reduce_mean(y_k - (tf.matmul(T_x_k, eta_k) + log_h_x_k));
+        residuals = y_k - (tf.matmul(T_x_k, eta_k)+log_h_x_k) - alpha_k;
         RSS_k = tf.matmul(tf.transpose(residuals), residuals);
         y_k_mc = y_k - tf.reduce_mean(y_k);
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        costs.append(tf.reduce_mean(y_k - (tf.matmul(Tx_k, eta_k)+Bx_k)));
+        elbos.append(tf.reduce_mean(y_k - (tf.matmul(T_x_k, eta_k)+log_h_x_k)));
 
     y = tf.expand_dims(log_p_zs, 2);
-    Bx = tf.expand_dims(Bx, 2);
+    log_h_x = tf.expand_dims(log_h_x, 2);
     eta = tf.expand_dims(eta, 2);
-    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(Tx, eta) + Bx), [1,2]));
+    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(T_x, eta) + log_h_x), [1,2]));
     #return cost, costs, R2s;
-    return cost, costs, R2s;
+    return cost, elbos, R2s;
 
 def normal_eta(mu, Sigma, give_inverse_hint):
     D_Z = mu.shape[0];
@@ -598,9 +604,8 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
     eta = np.zeros((K_eta, ncons));
     param_net_inputs = np.zeros((K_eta, num_param_net_inputs));
     Tx_input = np.zeros((K_eta, num_Tx_inputs));
+    params = [];
     if (exp_fam == 'normal'):
-        mu_targs = np.zeros((K_eta, D_Z));
-        Sigma_targs = np.zeros((K_eta, D_Z, D_Z));
         df_fac = 5;
         df = df_fac*D_Z;
         Sigma_dist = invwishart(df=df, scale=df*np.eye(D_Z));
@@ -610,19 +615,17 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
             eta_k, param_net_input_k = normal_eta(mu_k, Sigma_k, give_inverse_hint);
             eta[k,:] = eta_k[0,:];
             param_net_inputs[k,:] = param_net_input_k[0,:];
-            mu_targs[k,:] = mu_k;
-            Sigma_targs[k,:,:] = Sigma_k;
-        params = {'mu':mu_targs, 'Sigma':Sigma_targs, 'D':D_Z};
+            params.append({'mu':mu_k, 'Sigma':Sigma_k});
 
     elif (exp_fam == 'dirichlet'):
-        alpha_targs = np.zeros((K_eta, D));
+        params = [];
         for k in range(K_eta):
             alpha_k = np.random.uniform(.5, 5, (D,));
             eta_k = alpha_k;
             eta[k,:] = eta_k;
             param_net_inputs[k,:] = eta_k;
-            alpha_targs[k,:] = alpha_k;
-        params = {'alpha':alpha_targs, 'D':D};
+            params_k = {'alpha':alpha_k};
+            params.append(params_k);
 
     elif (exp_fam == 'inv_wishart'):
         Dsqrt = int(np.sqrt(D));
@@ -733,8 +736,6 @@ def drawEtas(exp_fam, D, K_eta, model_info, give_inverse_hint, test=False):
                 N = int(min(np.random.poisson(Nmean), Nmax));
             dist1 = dirichlet(alpha_0_k);
             z = dist1.rvs(1);
-            print(N);
-            print(z);
             x = np.random.multinomial(N, z[0]);
             #x = (x+x_eps);
             #x = x / np.expand_dims(np.sum(x, 0), 0);
