@@ -10,16 +10,32 @@ def efn_tensor_shape(z):
     T = tf.shape(z)[3];
     return K, M, D, T;
 
+def compute_K_tf(tau, T, T_s):
+    diffs = T_s*tf.range(T, dtype=tf.float64);
+    gammas = tf.exp(-(tf.square(diffs) / (2*tf.square(tau))));
+
+                
+    gammas_rev = tf.reverse(gammas, axis=[0]); # reverse list
+        
+    K_rows = [];
+    for i in range(T):
+        first = gammas_rev[T-(i+1):(T-1)];
+        second = gammas_rev[:(T-i)];
+        row_i = tf.concat((gammas_rev[T-(i+1):(T-1)], gammas[:(T-i)]), 0);
+        K_rows.append(row_i);
+
+    K = tf.convert_to_tensor(K_rows);
+    return K; 
+
 # Define the planar flow
 class Layer:
-    def __init__(self, name='SimplexBijectionLayer'):
-        # TODO this entire class needs to be compatible with the parameter network
+    def __init__(self, name=''):
         self.name = name;
         self.param_names = [];
         self.param_network = False;
 
     def get_layer_info(self,):
-        return self.name, [], [];
+        return self.name, [], [], [];
 
     def get_params(self,):
         return [];
@@ -47,7 +63,9 @@ class PlanarFlowLayer(Layer):
         w_dim = (self.dim,1);
         b_dim = (1,1);
         dims = [u_dim, w_dim, b_dim];
-        return self.name, self.param_names, dims;
+        initializers = [tf.constant(np.zeros(u_dim)), tf.glorot_uniform_initializer(), \
+                        tf.constant(np.zeros(b_dim))];
+        return self.name, self.param_names, dims, initializers;
 
     def get_params(self,):
         if (not self.param_network):
@@ -79,7 +97,8 @@ class PlanarFlowLayer(Layer):
         phi = tf.matmul(w, (1.0 - tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z_KD_MTvec) + b)**2));
         # compute the running sum of log-determinant of jacobians
         log_det_jacobian = tf.log(tf.abs(1.0 + tf.matmul(tf.transpose(u, [0,2,1]), phi)));
-        log_det_jacobian = tf.reshape(log_det_jacobian, [K,M]); # update for more time samples
+        log_det_jacobian = tf.reshape(log_det_jacobian, [K,M,T]); 
+        log_det_jacobian = tf.reduce_sum(log_det_jacobian, 2);
 
         # compute z for this layer
         nonlin_term = tf.tanh(tf.matmul(tf.transpose(w, [0,2,1]), z_KD_MTvec) + b);
@@ -197,7 +216,9 @@ class StructuredSpinnerLayer(Layer):
         d3_dim = (self.dim, 1);
         b_dim = (self.dim,1);
         dims = [d1_dim, d2_dim, d3_dim, b_dim];
-        return self.name, self.param_names, dims;
+        initializers = [tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer(), \
+                        tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer()];
+        return self.name, self.param_names, dims, initializers;
 
     def get_params(self,):
         return self.d1, self.d2, self.d3, self.b;
@@ -237,7 +258,6 @@ class StructuredSpinnerLayer(Layer):
         return z, sum_log_det_jacobians;
 
 
-
 class LinearFlowLayer(Layer):
     def __init__(self, name, dim):
         self.name = name;
@@ -248,7 +268,8 @@ class LinearFlowLayer(Layer):
         A_dim = (self.dim, self.dim);
         b_dim = (self.dim,1);
         dims = [A_dim, b_dim];
-        return self.name, self.param_names, dims;
+        initializers = [tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer()];
+        return self.name, self.param_names, dims, initializers;
 
     def connect_parameter_network(self, theta_layer):
         self.A = theta_layer[0];
@@ -275,6 +296,96 @@ class LinearFlowLayer(Layer):
         sum_log_det_jacobians += log_det_jacobian;
         return z, sum_log_det_jacobians;
 
+
+class ShiftLayer(Layer):
+    def __init__(self, name, dim):
+        self.name = name;
+        self.dim = dim;
+        self.param_names = ['b'];
+        
+    def get_layer_info(self,):
+        b_dim = (self.dim,1);
+        dims = [b_dim];
+        return self.name, self.param_names, dims;
+
+    def connect_parameter_network(self, theta_layer):
+        self.b = theta_layer[1];
+        # params will have batch dimension if result of parameter network
+        self.param_network = (len(self.b.shape) == 3);
+        return None;
+            
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        K, M, D, T = efn_tensor_shape(z);
+        if (not self.param_network):
+            b = tf.expand_dims(tf.expand_dims(self.b, 0), 0);
+            z = z + b;
+            log_det_jacobian = 0.0;
+        else:
+            z = z + tf.expand_dims(self.b, 1);
+            log_det_jacobian = 0.0;
+        sum_log_det_jacobians += log_det_jacobian;
+        return z, sum_log_det_jacobians;
+
+class GPRegressionLayer(Layer):
+    def __init__(self, name, dim, T, T_s, tau_init):
+        self.name = name;
+        self.D = dim;
+        self.T = T;
+        self.T_s = T_s;
+        self.tau_init = tau_init;
+        self.param_names = ['log_tau'];
+        
+    def get_layer_info(self,):
+        log_tau_dim = (self.D,);
+        dims = [log_tau_dim];
+        print('tau initialization:');
+        print(self.tau_init);
+        initializers = [tf.constant(np.log(self.tau_init))];
+        return self.name, self.param_names, dims, initializers;
+
+    def connect_parameter_network(self, theta_layer):
+        self.log_tau = theta_layer[0];
+        # params will have batch dimension if result of parameter network
+        self.param_network = (len(self.log_tau.shape) == 2);
+        return None;
+            
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        # TODO: his isn't going to work in an EFN yet
+        K, M, D, T = efn_tensor_shape(z);
+        eps = .00001;
+        tau = tf.exp(self.log_tau);
+        z_first = tf.expand_dims(z[:,:,:,0], 3);
+        z_last = tf.expand_dims(z[:,:,:,self.T-1], 3);
+        z_EP = tf.concat((z_first, z_last), 3);
+        z_middle = tf.slice(z, [0, 0, 0, 1], [K, M, D, self.T-2]);
+        z_out_middles = [];
+        log_det_jacobian = 0.0;
+        for i in range(self.D):
+            K = compute_K_tf(tau[i], self.T, self.T_s);
+            EP_inds = [0,int(self.T-1)];
+            pred_inds = range(1,self.T-1);
+            K_allEP = tf.transpose(tf.convert_to_tensor((K[:,0], K[:,self.T-1])));
+            K_EPEP = tf.convert_to_tensor((K_allEP[0,:], K_allEP[self.T-1]));
+            K_EPEP_inv = tf.matrix_inverse(K_EPEP);
+            K_predEP = tf.slice(K_allEP, [1, 0], [self.T-2, 2]);
+
+            A_mu = tf.matmul(K_predEP, K_EPEP_inv);
+            z_GP_mu = tf.transpose(tf.tensordot(A_mu, z_EP[:,:,i], [1, 2]), [1,2,0]);
+
+            K_EPpred = tf.transpose(K_predEP);
+            K_predpred = tf.slice(K, [1, 1], [self.T-2, self.T-2]);
+            z_GP_Sigma = K_predpred - tf.matmul(K_predEP, tf.matmul(K_EPEP_inv, K_EPpred));
+            z_GP_Sigma = z_GP_Sigma + eps*tf.eye(T-2, dtype=tf.float64); # add regularization
+            print(z_GP_Sigma.shape);
+            L = tf.cholesky(z_GP_Sigma);
+            log_det_jacobian = log_det_jacobian + tf.log(tf.abs(tf.reduce_prod(tf.matrix_diag_part(L))))
+
+            z_out_middle = z_GP_mu + tf.transpose(tf.tensordot(L, z_middle[:,:,i,:], [1, 2]), [1,2,0]);
+            z_out_middles.append(tf.expand_dims(z_out_middle, 2));
+        z_out_middle = tf.concat(z_out_middles, 2);
+        z_out = tf.concat((z_first, z_out_middle, z_last), 3);
+        sum_log_det_jacobians += log_det_jacobian;
+        return z_out, sum_log_det_jacobians;
 
 
 

@@ -5,7 +5,46 @@ from efn_util import count_layer_params, truncated_multivariate_normal_rvs, get_
 from flows import LinearFlowLayer, StructuredSpinnerLayer, PlanarFlowLayer, \
                   TanhLayer, SimplexBijectionLayer, CholProdLayer, SoftPlusLayer
 import scipy.stats
-from scipy.special import gammaln
+from scipy.special import gammaln, psi
+
+def family_from_str(exp_fam_str):
+	if (exp_fam_str in ['normal', 'multivariate_normal']):
+		return multivariate_normal;
+	elif (exp_fam_str in ['dirichlet']):
+		return dirichlet;
+	elif (exp_fam_str in ['inv_wishart']):
+		return inv_wishart;
+	elif (exp_fam_str in ['hierarchical_dirichlet', 'dir_dir']):
+		return hierarchical_dirichlet;
+	elif (exp_fam_str in ['dirichlet_multinomial']):
+		return dirichlet_multinomial;
+	elif (exp_fam_str in ['truncated_normal_poisson', 'prp_tn']):
+		return truncated_normal_poisson;
+	elif (exp_fam_str in ['S_D', 'D_S']):
+		return surrogate_S_D;
+	elif (exp_fam_str in ['S_D_nodyn', 'D_S_nodyn']):
+		return surrogate_S_D_nodyn;
+
+def autocov_tf(X, tau_max, T):
+    # need to finish this
+    X_shape = tf.shape(X);
+    K = X_shape[0];
+    M = X_shape[1];
+    D = X_shape[2];
+    X_toep = [];
+    for i in range(tau_max+1):
+        X_toep.append(tf.concat((X[:,:,:,i:], tf.zeros((K,M,D,i), dtype=tf.float64)), 3));  
+    X_toep = tf.transpose(tf.convert_to_tensor(X_toep), [1, 2, 3, 0, 4]);
+    X_toep_1 = tf.expand_dims(X_toep[:,:,:,0,:], 4);
+
+    num_samps = 1.0 / (T - tf.range(1, tau_max+1, dtype=tf.float64));
+    num_samps_bcast = tf.expand_dims(tf.expand_dims(tf.expand_dims(tf.expand_dims(num_samps, 0), 0), 0), 4);
+    
+    autocov = tf.matmul(X_toep[:,:,:,1:,:], X_toep_1);
+    print(autocov);
+    autocov = tf.multiply(autocov, num_samps_bcast);
+    print(autocov);
+    return autocov;
 
 class family:
 	"""Base class for exponential families.
@@ -31,7 +70,10 @@ class family:
 
 		self.D = D;
 		self.T = T;
+		self.realT = T;
 		self.num_T_x_inputs = 0;
+		self.constant_base_measure = True;
+		self.has_log_p = False;
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
 		"""Returns EFN component dimensionalities for the family."""
@@ -44,7 +86,15 @@ class family:
 		"""Compute sufficient statistics of density network samples."""
 		raise NotImplementedError();
 
-	def compute_log_base_measure(self, X, Z_by_layer, T_x_input):
+	def compute_mu(self, params):
+		"""No comment yet."""
+		raise NotImplementedError();
+
+	def center_suff_stats_by_mu(self, T_x, params):
+		"""Center sufficient statistics by the mean parameters mu."""
+		raise NotImplementedError();
+
+	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples."""
 		raise NotImplementedError();
 
@@ -69,7 +119,21 @@ class family:
 		T_x_input = np.array([]);
 		return T_x_input;
 
-	def batch_diagnostics(self, K, sess, feed_dict, X, log_p_zs, elbos, R2s, eta_draw_params, checkEntropy=False):
+	def log_p(self, X, params):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		raise NotImplementedError();
+		return None;
+
+	def batch_diagnostics(self, K, sess, feed_dict, X, log_p_x, elbos, R2s, eta_draw_params, checkEntropy=False):
 		"""Returns elbos, r^2s, and KL divergences of K distributions of family.
 
 		Args:
@@ -77,7 +141,7 @@ class family:
 			sess (tf session): current tf session
 			feed_dict (dict): contains Z0, eta, param_net_input, and T_x_input
 			X (tf.tensor): density network samples
-			log_p_zs (tf.tensor): log probs of X
+			log_p_x (tf.tensor): log probs of X
 			elbos (tf.tensor): ELBO for each distribution
 			R2s (tf.tensor): r^2 for each distribution
 			eta_draw_params (list): contains mean parameters of each distribution
@@ -89,16 +153,16 @@ class family:
 			KLs (np.array): approximate KL divergence for each dist
 		"""
 
-		_X, _log_p_zs, _elbos, _R2s = sess.run([X, log_p_zs, elbos, R2s], feed_dict);
+		_X, _log_p_x, _elbos, _R2s = sess.run([X, log_p_x, elbos, R2s], feed_dict);
 		KLs = [];
 		for k in range(K):
-			log_p_zs_k = _log_p_zs[k,:];
+			log_p_x_k = _log_p_x[k,:];
 			X_k = _X[k, :, :, 0]; # TODO update this for time series
 			params_k = eta_draw_params[k];
-			KL_k = self.approx_KL(log_p_zs_k, X_k, params_k);
+			KL_k = self.approx_KL(log_p_x_k, X_k, params_k);
 			KLs.append(KL_k);
 			if (checkEntropy):
-				self.check_entropy(log_p_zs_k, params_k);
+				self.check_entropy(log_p_x_k, params_k);
 		return _elbos, _R2s, KLs;
 
 	def approx_KL(self, log_Q, X, params):
@@ -223,6 +287,7 @@ class multivariate_normal(family):
 		self.name = 'normal';
 		self.D_Z = D;
 		self.num_suff_stats = int(D+D*(D+1)/2);
+		self.has_log_p = True;
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
 		"""Returns EFN component dimensionalities for the family.
@@ -243,7 +308,7 @@ class multivariate_normal(family):
 			raise NotImplementedError();
 
 		if (give_hint):
-			num_param_net_inputs = int(self.D + self.D*(self.D+1)); # <- figure out what this number is
+			num_param_net_inputs = int(self.D + self.D*(self.D+1));
 		else:
 			num_param_net_inputs = int(self.D + self.D*(self.D+1)/2);
 		return self.D_Z, self.num_suff_stats, num_param_net_inputs, self.num_T_x_inputs;
@@ -259,18 +324,36 @@ class multivariate_normal(family):
 		Returns:
 			T_x (tf.tensor): Sufficient statistics of samples.
 		"""
-
-		assert(self.T == 1);
 		X_shape = tf.shape(X);
 		K = X_shape[0];
 		M = X_shape[1];
 		cov_con_mask = np.triu(np.ones((self.D,self.D), dtype=np.bool_), 0);
-		X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, self.D]); # samps x D
-		T_x_mean = X_flat;
-		XXT = tf.matmul(tf.expand_dims(X_flat, 3), tf.expand_dims(X_flat, 2));
-		T_x_cov = tf.transpose(tf.boolean_mask(tf.transpose(XXT, [2,3,0,1]), cov_con_mask), [1, 2, 0]);
+		T_x_mean = tf.reduce_mean(X, 3);
+		X_KMTD = tf.transpose(X, [0, 1, 3, 2]); # samps x D
+		XXT_KMTDD = tf.matmul(tf.expand_dims(X_KMTD, 4), tf.expand_dims(X_KMTD, 3));
+		T_x_cov_KMTDZ = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMTDD, [3,4,0,1,2]), cov_con_mask), [1, 2, 3, 0]);
+		T_x_cov = tf.reduce_mean(T_x_cov_KMTDZ, 2);
 		T_x = tf.concat((T_x_mean, T_x_cov), axis=2);
 		return T_x;
+
+	def compute_mu(self, params):
+		mu = params['mu'];
+		Sigma = params['Sigma'];
+		mu_mu = mu;
+		mu_Sigma = np.zeros((int(self.D*(self.D+1)/2)),);
+		ind = 0;
+		for i in range(self.D):
+			for j in range(i,self.D):
+				mu_Sigma[ind] = Sigma[i,j] + mu[i]*mu[j];
+				ind += 1;
+
+		mu = np.concatenate((mu_mu, mu_Sigma), 0);
+		return mu;
+
+	def center_suff_stats_by_mu(self, T_x, mu):
+		"""Center sufficient statistics by the mean parameters mu."""
+		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
+
 
 	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples.
@@ -345,6 +428,43 @@ class multivariate_normal(family):
 			param_net_input = eta;
 		return eta, param_net_input;
 
+	def log_p(self, X, params):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		mu = params['mu'];
+		Sigma = params['Sigma'];
+		dist = tf.contrib.distributions.MultivariateNormalFullCovariance(loc=mu, covariance_matrix=Sigma);
+		#dist = scipy.stats.multivariate_normal(mean=mu, cov=Sigma);
+		assert(self.T == 1);
+		log_p_x = dist.log_prob(X[:,:,:,0]);
+		return log_p_x;
+
+	def log_p_np(self, X, params):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		mu = params['mu'];
+		Sigma = params['Sigma'];
+		dist = scipy.stats.multivariate_normal(mean=mu, cov=Sigma);
+		assert(self.T == 1);
+		log_p_x = dist.logpdf(X);
+		return log_p_x;
+
 	def approx_KL(self, log_Q, X, params):
 		"""Approximate KL(Q || P).
 
@@ -357,11 +477,7 @@ class multivariate_normal(family):
 			KL (np.float): KL(Q || P)
 		"""
 
-		batch_size = X.shape[0];
-		mu = params['mu'];
-		Sigma = params['Sigma'];
-		dist = scipy.stats.multivariate_normal(mean=mu, cov=Sigma);
-		log_P = dist.logpdf(X);
+		log_P = self.log_p_np(X, params);
 		KL = np.mean(log_Q - log_P);
 		return KL;
 
@@ -404,6 +520,8 @@ class dirichlet(family):
 		self.name = 'dirichlet';
 		self.D_Z = D-1;
 		self.num_suff_stats = D;
+		self.constant_base_measure = False;
+		self.has_log_p = True;
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
 		"""Returns EFN component dimensionalities for the family.
@@ -453,14 +571,25 @@ class dirichlet(family):
 			T_x (tf.tensor): Sufficient statistics of samples.
 		"""
 
-		assert(self.T == 1);
 		X_shape = tf.shape(X);
 		K = X_shape[0];
 		M = X_shape[1];
-		X_flat = tf.reshape(tf.transpose(X, [0, 1, 3, 2]), [K, M, self.D]); # samps x D
-		T_x_log = tf.log(X_flat);
+		log_X = tf.log(X);
+		T_x_log = tf.reduce_mean(log_X, 3);
 		T_x = T_x_log;
 		return T_x;
+
+	def compute_mu(self, params):
+		alpha = params['alpha'];
+		alpha_0 = np.sum(alpha);
+		phi_0 = psi(alpha_0);
+		mu = psi(alpha) - phi_0;
+		return mu;
+
+	def center_suff_stats_by_mu(self, T_x, mu):
+		"""Center sufficient statistics by the mean parameters mu."""
+		print(T_x.shape, mu.shape);
+		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
 
 	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples.
@@ -513,6 +642,41 @@ class dirichlet(family):
 		param_net_input = alpha;
 		return eta, param_net_input;
 
+	def log_p(self, X, params):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		alpha = params['alpha'];
+		dist = tf.contrib.distributions.Dirichlet(alpha)
+		assert(self.T == 1);
+		log_p_x = dist.log_prob(X[:,:,:,0]);
+		return log_p_x;
+
+	def log_p_np(self, X, params):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		alpha = params['alpha'];
+		dist = scipy.stats.dirichlet(np.float64(alpha));
+		X = np.float64(X);
+		X = X / np.expand_dims(np.sum(X, 1), 1);
+		log_p_x = dist.logpdf(X.T);
+		return log_p_x;
+
 	def approx_KL(self, log_Q, X, params):
 		"""Approximate KL(Q || P).
 
@@ -525,12 +689,7 @@ class dirichlet(family):
 			KL (np.float): KL(Q || P)
 		"""
 
-		batch_size = X.shape[0];
-		alpha = params['alpha'];
-		dist = scipy.stats.dirichlet(np.float64(alpha));
-		X = np.float64(X);
-		X = X / np.expand_dims(np.sum(X, 1), 1);
-		log_P = dist.logpdf(X.T);
+		log_P = self.log_p_np(X, params);
 		KL = np.mean(log_Q - log_P);
 		return KL;
 
@@ -574,6 +733,7 @@ class inv_wishart(family):
 		self.sqrtD = int(np.sqrt(D));
 		self.D_Z = int(self.sqrtD*(self.sqrtD+1)/2)
 		self.num_suff_stats = self.D_Z + 1;
+		self.has_log_p = True;
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
 		"""Returns EFN component dimensionalities for the family.
@@ -720,6 +880,24 @@ class inv_wishart(family):
 			param_net_input = eta;
 		return eta, param_net_input;
 
+	def log_p(self, X, params, ):
+		"""Computes log probability of X given params.
+
+		Args:
+			X (tf.tensor): density network samples
+			params (dict): Mean parameters.
+
+		Returns:
+			log_p (np.array): Ground truth probability of X for params.
+		"""
+
+		batch_size = X.shape[0];
+		Psi = params['Psi'];
+		m = params['m'];
+		X = np.reshape(X, [batch_size, self.sqrtD, self.sqrtD]);
+		log_p_x = scipy.stats.invwishart.logpdf(np.transpose(X, [1,2,0]), m, Psi);
+		return log_p_x;
+
 	def approx_KL(self, log_Q, X, params):
 		"""Approximate KL(Q || P).
 
@@ -732,11 +910,8 @@ class inv_wishart(family):
 			KL (np.float): KL(Q || P)
 		"""
 
-		batch_size = X.shape[0];
-		Psi = params['Psi'];
-		m = params['m'];
-		X = np.reshape(X, [batch_size, self.sqrtD, self.sqrtD]);
-		log_P = scipy.stats.invwishart.logpdf(np.transpose(X, [1,2,0]), m, Psi);
+		
+		log_P = self.log_p(X, params);
 		KL = np.mean(log_Q - log_P);
 		return KL;
 
@@ -1244,3 +1419,181 @@ class truncated_normal_poisson(posterior_family):
 			assert(x.shape[1] == 1 and N == 1);
 			param_net_input = x.T;
 		return eta, param_net_input;
+
+class surrogate_S_D(family):
+	"""Maximum entropy distribution with smoothness (S) and dim (D) constraints.
+
+	Attributes:
+		D (int): dimensionality of the exponential family
+		T (int): number of time points
+		D_Z (int): dimensionality of the density network
+		num_suff_stats (int): total number of suff stats
+		num_T_x_inputs (int): number of param-dependent inputs to suff stat comp.
+		                      (only necessary for hierarchical dirichlet)
+	"""
+
+	def __init__(self, D, T=1, T_s=.001):
+		"""multivariate_normal family constructor
+
+		Args:
+			D (int): dimensionality of the exponential family
+			T (int): number of time points. Defaults to 1.
+		"""
+		super().__init__(D, T);
+		self.name = 'S_D';
+		self.D_Z = D;
+		self.num_suff_stats = int(D+D*(D+1)/2)*T + D*int((T-1)*T/2);
+		self.T_s = T_s;
+		self.set_T_x_names();
+
+	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
+		"""Returns EFN component dimensionalities for the family.
+
+		Args:
+			param_net_input_type (str): specifies input to param network
+				'eta':        give full eta to parameter network
+			give_hint: (bool): Feed in covariance cholesky if true.
+
+		Returns:
+			D_Z (int): dimensionality of density network
+			num_suff_stats: dimensionality of eta
+			num_param_net_inputs: dimensionality of param net input
+			num_T_x_inputs: dimensionality of suff stat comp input
+		"""
+
+		num_param_net_inputs = None;
+		return self.D_Z, self.num_suff_stats, num_param_net_inputs, self.num_T_x_inputs;
+
+	def set_T_x_names(self,):
+		self.T_x_names = [];
+		self.T_x_names_tf = [];
+		self.T_x_group_names = [];
+		for d in range(self.D):
+			for t1 in range(self.T):
+				for t2 in range(t1+1,self.T):
+					self.T_x_names.append('$x_{%d,%d}$ $x_{%d,%d}$' % (d+1, t1+1, d+1, t2+1));
+					self.T_x_names_tf.append('x_%d,%d x_%d,%d' % (d+1, t1+1, d+1, t2+1));
+					self.T_x_group_names.append('$x_{%d,t}$ $x_{%d,t+%d}$' % (d+1, d+1, int(abs(t2-t1))));
+
+		for i in range(self.D):
+			for t in range(self.T):
+				self.T_x_names.append('$x_{%d,%d}$' % (i+1, t+1));
+				self.T_x_names_tf.append('x_%d,%d' % (i+1, t+1));
+				self.T_x_group_names.append('$x_{%d,t}$' % (i+1));
+
+		for i in range(self.D):
+			for j in range(i,self.D):
+				for t in range(self.T):
+					self.T_x_names.append('$x_{%d,%d}$ $x_{%d,%d}$' % (i+1, t+1, j+1, t+1));
+					self.T_x_names_tf.append('x_%d,%d x_%d,%d' % (i+1, t+1, j+1, t+1));
+					self.T_x_group_names.append('$x_{%d,t}$ $x_{%d,t}$' % (i+1, j+1));
+		return None;
+
+	def compute_suff_stats(self, X, Z_by_layer, T_x_input):
+		"""Compute sufficient statistics of density network samples.
+
+		Args:
+			X (tf.tensor): Density network samples.
+			Z_by_layer (list): List of layer activations in density network.
+			T_x_input (tf.tensor): Param-dependent input.
+
+		Returns:
+			T_x (tf.tensor): Sufficient statistics of samples.
+		"""
+		X_shape = tf.shape(X);
+		K = X_shape[0];
+		M = X_shape[1];
+
+		# compute the (S) suff stats
+		cov_con_mask_T = np.triu(np.ones((self.T,self.T), dtype=np.bool_), 1);
+		XXT_KMDTT = tf.matmul(tf.expand_dims(X, 4), tf.expand_dims(X, 3));
+		T_x_S_KMDTcov = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMDTT, [3,4,0,1,2]), cov_con_mask_T), [1, 2, 3, 0])
+		T_x_S = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(self.T*(self.T-1)/2)]);
+
+		# compute the (D) suff stats
+		cov_con_mask_D = np.triu(np.ones((self.D,self.D), dtype=np.bool_), 0);
+		T_x_mean = tf.reshape(X, [K,M,self.D*self.T]);
+
+		X_KMTD = tf.transpose(X, [0, 1, 3, 2]); # samps x D
+		XXT_KMTDD = tf.matmul(tf.expand_dims(X_KMTD, 4), tf.expand_dims(X_KMTD, 3));
+		T_x_cov_KMDcovT = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMTDD, [3,4,0,1,2]), cov_con_mask_D), [1, 2, 0, 3]);
+		T_x_cov = tf.reshape(T_x_cov_KMDcovT, [K,M,int(self.D*(self.D+1)/2)*self.T]);
+		T_x_D = tf.concat((T_x_mean, T_x_cov), axis=2);
+
+		print('T_x_S');
+		print(T_x_S.shape);
+		print('T_x_D');
+		print(T_x_D.shape);
+		# collect suff stats
+		T_x = tf.concat((T_x_S, T_x_D), axis=2);
+		print('T_x');
+		print(T_x.shape);
+
+		return T_x;
+
+	def compute_log_base_measure(self, X):
+		"""Compute log base measure of density network samples."""
+		X_shape = tf.shape(X);
+		K = X_shape[0];
+		M = X_shape[1];
+		log_h_x = tf.ones((K,M), dtype=tf.float64);
+		return log_h_x;
+
+	def compute_mu(self, params):
+		# compute (S) part of mu
+		kernel = params['kernel'];
+		mu = params['mu'];
+		Sigma = params['Sigma'];
+		mu_S = np.zeros((int(self.D*self.T*(self.T-1)/2),));
+		autocovs = np.zeros((self.D, self.T));
+		if (kernel == 'SE'): # squared exponential
+			taus = params['taus'];
+			steps = np.arange(self.T)*self.T_s;
+			for i in range(self.D):
+				autocovs[i,:] = Sigma[i,i]*np.exp(-np.square(steps) / (2*np.square(taus[i])));
+
+		elif (kernel == 'AR1'):
+			alphas = params['alphas'];
+			steps = np.arange(self.T);
+			autocovs = np.zeros((self.D, self.T));
+			for i in range(self.D):
+				autocovs[i,:] = Sigma[i,i]*(alphas[i]**steps);
+		else:
+			raise NotImplementedError();
+
+		ind = 0;
+		for i in range(self.D):
+			for t1 in range(self.T):
+				for t2 in range(t1+1,self.T):
+					mu_S[ind] = autocovs[i,t2-t1]
+					ind = ind + 1;
+		
+		print('mu_S');
+		print(mu_S.shape);
+
+		# compute (D) part of mu		
+		mu_mu = np.reshape(np.tile(mu, [1, self.T]), [self.D*self.T]);
+		mu_Sigma = np.zeros((int(self.D*(self.D+1)/2)),);
+		ind = 0;
+		for i in range(self.D):
+			for j in range(i,self.D):
+				mu_Sigma[ind] = Sigma[i,j] + mu[i]*mu[j];
+				ind += 1;
+		mu_Sigma = np.reshape(np.tile(np.expand_dims(mu_Sigma, 1), [1, self.T]), [int(self.D*(self.D+1)/2)*self.T]);
+
+		mu_D = np.concatenate((mu_mu, mu_Sigma), 0);
+
+		print('mu_D');
+		print(mu_D.shape);
+
+		mu = np.concatenate((mu_S, mu_D), 0);
+		print('mu');
+		print(mu.shape);
+		return mu;
+
+	def center_suff_stats_by_mu(self, T_x, mu):
+		"""Center sufficient statistics by the mean parameters mu."""
+		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
+
+
+
