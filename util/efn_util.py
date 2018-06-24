@@ -303,7 +303,7 @@ def get_flowdict(GP_reg_layers, fully_connected_layers, planar_layers, spinner_l
     flow_ids = [];
     flow_repeats = [];
     if (GP_reg_layers):
-        flow_ids.append('GPRegressionLayer');
+        flow_ids.append('GP_EP_ConditionalRegressionLayer');
         flow_repeats.append(1); # no reason to have more than one here
 
     if (fully_connected_layers):
