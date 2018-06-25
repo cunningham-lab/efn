@@ -1628,7 +1628,7 @@ class surrogate_S_D_C(family):
 			mu_S_len += int(Tps[i]*(Tps[i]-1)/2);
 			if (i > 0):
 				mu_S_len = mu_S_len - 1;
-		mu_S_len = 2*mu_S_len;
+		mu_S_len = self.D*mu_S_len;
 
 		T_no_EP = T - 2*(num_Tps-1);
 		mu_D_len = (D + (D*(D+1)/2))*T_no_EP;
