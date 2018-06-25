@@ -1598,6 +1598,7 @@ class surrogate_S_D(family):
 		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
 
 
+
 class surrogate_S_D_C(family):
 	"""Maximum entropy distribution with smoothness (S) and dim (D) constraints.
 
@@ -1618,7 +1619,7 @@ class surrogate_S_D_C(family):
 			T (int): number of time points. Defaults to 1.
 		"""
 		super().__init__(D, T);
-		self.name = 'S_D';
+		self.name = 'S_D_C';
 		self.D_Z = D;
 
 		num_Tps = len(Tps);
@@ -1632,7 +1633,9 @@ class surrogate_S_D_C(family):
 		T_no_EP = T - 2*(num_Tps-1);
 		mu_D_len = (D + (D*(D+1)/2))*T_no_EP;
 
-		self.num_suff_stats = int(mu_S_len + mu_D_len);
+		mu_C_len = D*int((num_Tps-1)*num_Tps/2)
+
+		self.num_suff_stats = int(mu_S_len + mu_D_len + mu_C_len);
 		self.Tps = Tps;
 		self.T_s = T_s;
 		self.set_T_x_names();
@@ -1699,6 +1702,16 @@ class surrogate_S_D_C(family):
 						self.T_x_names_tf.append('x_%d,%d,%d x_%d,%d,%d' % (i+1, d1+1, t+1, i+1, d2+1, t+1));
 						self.T_x_group_names.append('$x_{%d,%d,t}$ $x_{%d,%d,t}$' % (i+1, d1+1, i+1, d2+1));
 						count += 1;
+
+		for d in range(self.D):
+			for i in range(num_Tps):
+				for j in range(i+1, num_Tps):
+					self.T_x_names.append('$\sum_t x_{%d,%d,t}$ $x_{%d,%d,t}$' % (i+1, d+1, j+1, d+1));
+					self.T_x_names_tf.append('Sum_t x_%d,%d,t x_%d,%d,t' % (i+1, d+1, j+1, d+1));
+					self.T_x_group_names.append('$\sum_t x_{%d,%d,t}$ $x_{%d,%d,t}$' % (i+1, d+1, j+1, d+1));
+					count += 1;
+
+
 		print(count);
 		return None;
 
@@ -1733,7 +1746,6 @@ class surrogate_S_D_C(family):
 				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tp*(Tp-1)/2 - 1)]); # remove repeated endpoint correlation
 			else:
 				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tp*(Tp-1)/2)]);
-			print(i, T_x_S_i.shape);
 			T_x_Ss.append(T_x_S_i);
 		T_x_S = tf.concat(T_x_Ss, 2);
 
@@ -1749,12 +1761,36 @@ class surrogate_S_D_C(family):
 		T_x_cov = tf.reshape(T_x_cov_KMDcovT, [K,M,int(self.D*(self.D+1)/2)*T_no_EP]);
 		T_x_D = tf.concat((T_x_mean, T_x_cov), axis=2);
 
+		# compute the (C) suff stats
+		Tp0 = self.Tps[0];
+		cov_con_mask_C = np.triu(np.ones((num_Tps,num_Tps), dtype=np.bool_), 1);
+		T_x_cov_Cs = [];
+		for d in range(self.D):
+			X_d = X[:,:,d,:];
+			X_cs = []
+			t_ind = 0;
+			for i in range(num_Tps):
+				Tp = self.Tps[i];
+				X_d_i = tf.slice(X_d, [0, 0, t_ind], [K, M, Tp0]);
+				X_cs.append(tf.expand_dims(X_d_i, 2));
+				t_ind = t_ind + Tp;
+			X_KMCT_d = tf.concat(X_cs, 2)
+			print(X_KMCT_d.shape);
+			XXT_KMCC_d = tf.matmul(X_KMCT_d, tf.transpose(X_KMCT_d, [0,1,3,2]));
+			print(XXT_KMCC_d.shape);
+			T_x_cov_KMCcov = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMCC_d, [2,3,0,1]), cov_con_mask_C), [1, 2, 0]);
+			T_x_cov_Cs.append(T_x_cov_KMCcov);
+		T_x_C = tf.concat(T_x_cov_Cs, 2);
+
+
 		print('T_x_S');
 		print(T_x_S.shape);
 		print('T_x_D');
 		print(T_x_D.shape);
+		print('T_x_C');
+		print(T_x_C.shape);
 		# collect suff stats
-		T_x = tf.concat((T_x_S, T_x_D), axis=2);
+		T_x = tf.concat((T_x_S, T_x_D, T_x_C), axis=2);
 		print('T_x');
 		print(T_x.shape);
 
@@ -1800,9 +1836,9 @@ class surrogate_S_D_C(family):
 			raise NotImplementedError();
 
 		ind = 0;
-		for d in range(self.D):
-			for i in range(num_Tps):
-				Tp = self.Tps[i];
+		for i in range(num_Tps):
+			Tp = self.Tps[i];
+			for d in range(self.D):
 				for t1 in range(Tp):
 					for t2 in range(t1+1,Tp):
 						if (i > 0 and t1==0 and t2==(Tp-1)):
@@ -1829,7 +1865,12 @@ class surrogate_S_D_C(family):
 		print('mu_D');
 		print(mu_D.shape);
 
-		mu = np.concatenate((mu_S, mu_D), 0);
+		mu_C = params['mu_C'];
+
+		print('mu_C');
+		print(mu_C.shape);
+		
+		mu = np.concatenate((mu_S, mu_D, mu_C), 0);
 		print('mu');
 		print(mu.shape);
 		return mu;
