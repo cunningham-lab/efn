@@ -18,7 +18,7 @@ p_eps = 10e-6;
 def setup_IO(family, model_type_str, param_net_input_type, K, M, flow_dict, \
              param_net_hps, stochastic_eta, give_hint, random_seed):
     # set file I/O stuff
-    resdir = 'results/MK/';
+    resdir = 'results/June';
     eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
     give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
@@ -75,7 +75,7 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];
-        layer_name, param_names, param_dims = layer.get_layer_info();
+        layer_name, param_names, param_dims, _, _ = layer.get_layer_info();
         nparams = len(param_names);
         layer_i_params = [];
         # read each parameter out of the last layer.
@@ -101,29 +101,28 @@ def declare_theta(flow_layers):
     theta =[];
     for i in range(L_flow):
         layer = flow_layers[i];
-        layer_name, param_names, param_dims = layer.get_layer_info();
+        layer_name, param_names, param_dims, initializers, lock = layer.get_layer_info();
         nparams = len(param_names);
         layer_i_params = [];
         for j in range(nparams):
-            if (j < 1):
-                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                           dtype=tf.float64, \
-                                           initializer=tf.glorot_uniform_initializer());
-            elif (j==1):
-                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                           dtype=tf.float64, \
-                                           initializer=tf.glorot_uniform_initializer());
-            elif (j==2):
-                param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                           dtype=tf.float64, \
-                                           initializer=tf.glorot_uniform_initializer());
+            if (lock):
+                param_ij = initializers[j];
+            else:
+                if (isinstance(initializers[j], tf.Tensor)):
+                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], \
+                                               dtype=tf.float64, \
+                                               initializer=initializers[j]);
+                else:
+                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
+                                               dtype=tf.float64, \
+                                               initializer=initializers[j]);
             layer_i_params.append(param_ij);
         theta.append(layer_i_params);
     return theta;
 
 def count_layer_params(layer):
     num_params = 0;
-    name, param_names, dims = layer.get_layer_info();
+    name, param_names, dims, _, _ = layer.get_layer_info();
     nparams = len(dims);
     for j in range(nparams):
         num_params += np.prod(dims[j]);
