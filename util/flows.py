@@ -35,7 +35,7 @@ class Layer:
         self.param_network = False;
 
     def get_layer_info(self,):
-        return self.name, [], [], [];
+        return self.name, [], [], [], None;
 
     def get_params(self,):
         return [];
@@ -210,6 +210,7 @@ class StructuredSpinnerLayer(Layer):
         self.d2 = None;
         self.d3 = None;
         self.b = None;
+        self.lock = False;
         
     def get_layer_info(self,):
         d1_dim = (self.dim, 1);
@@ -219,7 +220,7 @@ class StructuredSpinnerLayer(Layer):
         dims = [d1_dim, d2_dim, d3_dim, b_dim];
         initializers = [tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer(), \
                         tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer()];
-        return self.name, self.param_names, dims, initializers;
+        return self.name, self.param_names, dims, initializers, self.lock;
 
     def get_params(self,):
         return self.d1, self.d2, self.d3, self.b;
@@ -342,11 +343,12 @@ class ShiftLayer(Layer):
         self.name = name;
         self.dim = dim;
         self.param_names = ['b'];
+        self.lock = False;
         
     def get_layer_info(self,):
         b_dim = (self.dim,1);
         dims = [b_dim];
-        return self.name, self.param_names, dims;
+        return self.name, self.param_names, dims, initializers, self.lock;
 
     def connect_parameter_network(self, theta_layer):
         self.b = theta_layer[1];
