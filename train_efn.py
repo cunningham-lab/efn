@@ -22,7 +22,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     upl_shape = 'linear';
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
     K_test_fac = 1;
-    wsize = 20;
+    wsize = 50;
     delta_thresh = 1e-10;
 
 
@@ -268,16 +268,21 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
 
-                if (check_it >= 2*wsize - 1):
+                if (check_it >= 2*wsize - 1 and (np.mod(i+1, wsize*check_rate)==0)):
+                    last_mean_test_R2 = np.mean(test_R2s[(check_it-(2*wsize)+1):(check_it-wsize+1),:]);
+                    cur_mean_test_R2 = np.mean(test_R2s[(check_it-wsize+1):(check_it+1),:]);
+                    delta_R2 = (cur_mean_test_R2 - last_mean_test_R2) / last_mean_test_R2;
+
                     last_mean_test_elbo = np.mean(test_elbos[(check_it-(2*wsize)+1):(check_it-wsize+1),:]);
                     cur_mean_test_elbo = np.mean(test_elbos[(check_it-wsize+1):(check_it+1),:]);
-                    delta = (last_mean_test_elbo - cur_mean_test_elbo) / last_mean_test_elbo;
-                    if (delta < delta_thresh):
+                    delta_elbo = (last_mean_test_elbo - cur_mean_test_elbo) / last_mean_test_elbo;
+                    if (delta_elbo < delta_thresh and delta_R2 < delta_thresh):
                         print('quitting opt:');
-                        print('delta = %f < %f' % (delta, delta_thresh));
+                        print('delta (elbo, r2) = (%f, %f) < %f' % (delta_elbo, delta_R2, delta_thresh));
                     else:
                         print('continue learning');
-                        print('delta = %f' % delta);
+                        print('delta_elbo = %f' % delta_elbo);
+                        print('delta_r2 = %f' % delta_R2);
 
                 check_it += 1;
             sys.stdout.flush();

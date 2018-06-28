@@ -23,13 +23,13 @@ print_flowdict(flow_dict);
 
 cost_type = 'KL';
 K_eta = 100;
-M_eta = 100;
+M_eta = 1000;
 stochastic_eta = True;
 L = 4;
 upl_tau = 0.5;
 
 lr_order = -3;
-max_iters = 20000;
+max_iters = 1000000;
 check_rate = 100;
 
 fam_class = family_from_str(exp_fam);
