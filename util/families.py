@@ -92,9 +92,9 @@ class family:
 		"""No comment yet."""
 		raise NotImplementedError();
 
-	def center_suff_stats_by_mu(self, T_x, params):
+	def center_suff_stats_by_mu(self, T_x, mu):
 		"""Center sufficient statistics by the mean parameters mu."""
-		raise NotImplementedError();
+		return T_x - tf.expand_dims(tf.expand_dims(mu, 0), 1);
 
 	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples."""
@@ -352,10 +352,6 @@ class multivariate_normal(family):
 		mu = np.concatenate((mu_mu, mu_Sigma), 0);
 		return mu;
 
-	def center_suff_stats_by_mu(self, T_x, mu):
-		"""Center sufficient statistics by the mean parameters mu."""
-		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
-
 
 	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples.
@@ -587,11 +583,6 @@ class dirichlet(family):
 		phi_0 = psi(alpha_0);
 		mu = psi(alpha) - phi_0;
 		return mu;
-
-	def center_suff_stats_by_mu(self, T_x, mu):
-		"""Center sufficient statistics by the mean parameters mu."""
-		print(T_x.shape, mu.shape);
-		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
 
 	def compute_log_base_measure(self, X):
 		"""Compute log base measure of density network samples.
@@ -1434,7 +1425,7 @@ class surrogate_S_D(family):
 		                      (only necessary for hierarchical dirichlet)
 	"""
 
-	def __init__(self, D, T=1, T_s=.001):
+	def __init__(self, D, T=1):
 		"""multivariate_normal family constructor
 
 		Args:
@@ -1443,9 +1434,9 @@ class surrogate_S_D(family):
 		"""
 		super().__init__(D, T);
 		self.name = 'S_D';
+		self.T = T;
 		self.D_Z = D;
 		self.num_suff_stats = int(D+D*(D+1)/2)*T + D*int((T-1)*T/2);
-		self.T_s = T_s;
 		self.set_T_x_names();
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
@@ -1470,6 +1461,7 @@ class surrogate_S_D(family):
 		self.T_x_names = [];
 		self.T_x_names_tf = [];
 		self.T_x_group_names = [];
+
 		for d in range(self.D):
 			for t1 in range(self.T):
 				for t2 in range(t1+1,self.T):
@@ -1505,21 +1497,25 @@ class surrogate_S_D(family):
 		X_shape = tf.shape(X);
 		K = X_shape[0];
 		M = X_shape[1];
-
+		T = X_shape[3];
+		_T = tf.cast(T, tf.int32);
 		# compute the (S) suff stats
-		cov_con_mask_T = np.triu(np.ones((self.T,self.T), dtype=np.bool_), 1);
+		#cov_con_mask_T = np.triu(np.ones((T,T), dtype=np.bool_), 1);
+		ones_mat = tf.ones((T, T));
+		mask_T = tf.matrix_band_part(ones_mat, 0, -1) - tf.matrix_band_part(ones_mat, 0, 0)
+		cov_con_mask_T = tf.cast(mask_T, dtype=tf.bool);
 		XXT_KMDTT = tf.matmul(tf.expand_dims(X, 4), tf.expand_dims(X, 3));
 		T_x_S_KMDTcov = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMDTT, [3,4,0,1,2]), cov_con_mask_T), [1, 2, 3, 0])
-		T_x_S = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(self.T*(self.T-1)/2)]);
+		T_x_S = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*tf.cast(T*(T-1)/2, tf.int32)]);
 
 		# compute the (D) suff stats
 		cov_con_mask_D = np.triu(np.ones((self.D,self.D), dtype=np.bool_), 0);
-		T_x_mean = tf.reshape(X, [K,M,self.D*self.T]);
+		T_x_mean = tf.reshape(X, [K,M,self.D*T]);
 
 		X_KMTD = tf.transpose(X, [0, 1, 3, 2]); # samps x D
 		XXT_KMTDD = tf.matmul(tf.expand_dims(X_KMTD, 4), tf.expand_dims(X_KMTD, 3));
 		T_x_cov_KMDcovT = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMTDD, [3,4,0,1,2]), cov_con_mask_D), [1, 2, 0, 3]);
-		T_x_cov = tf.reshape(T_x_cov_KMDcovT, [K,M,int(self.D*(self.D+1)/2)*self.T]);
+		T_x_cov = tf.reshape(T_x_cov_KMDcovT, [K,M,tf.cast(self.D*(self.D+1)/2, tf.int32)*T]);
 		T_x_D = tf.concat((T_x_mean, T_x_cov), axis=2);
 
 		print('T_x_S');
@@ -1546,13 +1542,13 @@ class surrogate_S_D(family):
 		kernel = params['kernel'];
 		mu = params['mu'];
 		Sigma = params['Sigma'];
-		mu_S = np.zeros((int(self.D*self.T*(self.T-1)/2),));
-		autocovs = np.zeros((self.D, self.T));
+		ts = params['ts'];
+		_T = ts.shape[0];
+		autocov_dim = int(_T*(_T-1)/2);
+		mu_S = np.zeros((int(self.D*autocov_dim),));
+		autocovs = np.zeros((self.D, _T));
 		if (kernel == 'SE'): # squared exponential
 			taus = params['taus'];
-			steps = np.arange(self.T)*self.T_s;
-			for i in range(self.D):
-				autocovs[i,:] = Sigma[i,i]*np.exp(-np.square(steps) / (2*np.square(taus[i])));
 
 		elif (kernel == 'AR1'):
 			alphas = params['alphas'];
@@ -1564,39 +1560,31 @@ class surrogate_S_D(family):
 			raise NotImplementedError();
 
 		ind = 0;
-		for i in range(self.D):
-			for t1 in range(self.T):
-				for t2 in range(t1+1,self.T):
-					mu_S[ind] = autocovs[i,t2-t1]
-					ind = ind + 1;
-		
-		print('mu_S');
-		print(mu_S.shape);
+		ds = np.zeros((autocov_dim,));
+		for t1 in range(_T):
+			for t2 in range(t1+1, _T):
+				ds[ind] = ts[t2] - ts[t1];
+				ind += 1;
 
+		for i in range(self.D):
+			if (kernel == 'SE'):
+				mu_S[(i*autocov_dim):((i+1)*autocov_dim)] = Sigma[i,i]*np.exp(-np.square(ds) / (2*np.square(taus[i])));
+		
 		# compute (D) part of mu		
-		mu_mu = np.reshape(np.tile(mu, [1, self.T]), [self.D*self.T]);
+		mu_mu = np.reshape(np.tile(mu, [1, _T]), [self.D*_T]);
 		mu_Sigma = np.zeros((int(self.D*(self.D+1)/2)),);
 		ind = 0;
 		for i in range(self.D):
 			for j in range(i,self.D):
 				mu_Sigma[ind] = Sigma[i,j] + mu[i]*mu[j];
 				ind += 1;
-		mu_Sigma = np.reshape(np.tile(np.expand_dims(mu_Sigma, 1), [1, self.T]), [int(self.D*(self.D+1)/2)*self.T]);
+		mu_Sigma = np.reshape(np.tile(np.expand_dims(mu_Sigma, 1), [1, _T]), [int(self.D*(self.D+1)/2)*_T]);
 
 		mu_D = np.concatenate((mu_mu, mu_Sigma), 0);
 
-		print('mu_D');
-		print(mu_D.shape);
-
 		mu = np.concatenate((mu_S, mu_D), 0);
-		print('mu');
-		print(mu.shape);
+
 		return mu;
-
-	def center_suff_stats_by_mu(self, T_x, mu):
-		"""Center sufficient statistics by the mean parameters mu."""
-		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
-
 
 
 class surrogate_S_D_C(family):
@@ -1874,10 +1862,6 @@ class surrogate_S_D_C(family):
 		print('mu');
 		print(mu.shape);
 		return mu;
-
-	def center_suff_stats_by_mu(self, T_x, mu):
-		"""Center sufficient statistics by the mean parameters mu."""
-		return T_x - np.expand_dims(np.expand_dims(mu, 0), 1);
 
 	def remove_extra_endpoints_tf(self, X):
 		X_shape = tf.shape(X);

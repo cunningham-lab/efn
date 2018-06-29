@@ -298,16 +298,20 @@ def get_GP_Sigma(tau, T, Ts):
                 K[j,i] = K[i,j];
     return K;
 
-def get_flowdict(GP_reg_layers, linear_layers, fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers):
+def get_flowdict(GP_reg_layers, scalar_layers, fully_connected_layers, planar_layers, spinner_layers, nonlin_spinner_layers):
     flow_ids = [];
     flow_repeats = [];
     if (GP_reg_layers):
-        flow_ids.append('GP_EP_ConditionalRegressionLayer');
+        #flow_ids.append('GP_EP_ConditionalRegressionLayer');
+        flow_ids.append('GP_Layer');
         flow_repeats.append(1); # no reason to have more than one here
 
-    if (linear_layers):
-        flow_ids.append('LinearFlowLayer');
+    if (scalar_layers):
+        flow_ids.append('ScalarFlowLayer');
         flow_repeats.append(1); # no reason to have more than one 
+    #if (linear_layers):
+    #    flow_ids.append('LinearFlowLayer');
+    #    flow_repeats.append(1); # no reason to have more than one 
 
     if (fully_connected_layers):
         flow_ids.append('FullyConnectedFlowLayer');
