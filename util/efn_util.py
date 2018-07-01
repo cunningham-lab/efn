@@ -302,8 +302,8 @@ def get_flowdict(GP_reg_layers, scalar_layers, fully_connected_layers, planar_la
     flow_ids = [];
     flow_repeats = [];
     if (GP_reg_layers):
-        #flow_ids.append('GP_EP_ConditionalRegressionLayer');
-        flow_ids.append('GP_Layer');
+        flow_ids.append('GP_EP_CondRegLayer');
+        #flow_ids.append('GP_Layer');
         flow_repeats.append(1); # no reason to have more than one here
 
     if (scalar_layers):
@@ -436,6 +436,7 @@ def log_grads(cost_grads, cost_grad_vals, ind):
             cgv_ind += 1;
     return None;
 
+"""
 def memory_extension(cost_grad_vals, array_cur_len):
     print('Doubling memory allocation for parameter logging.');
     #if (dynamics):
@@ -443,6 +444,17 @@ def memory_extension(cost_grad_vals, array_cur_len):
     #    sigma_epsilons = np.concatenate((sigma_epsilons, np.zeros((array_cur_len,sigma_epsilons.shape[1]))), axis=0);
     cost_grad_vals = np.concatenate((cost_grad_vals, np.zeros((array_cur_len, cost_grad_vals.shape[1]))), axis=0);
     return cost_grad_vals;
+"""
+
+def memory_extension(train_elbos, train_R2s, train_KLs, test_elbos, test_R2s, test_KLs, array_cur_len):
+    print('Doubling memory allocation for parameter logging.');
+    train_elbos = np.concatenate((train_elbos, np.zeros((array_cur_len, train_elbos.shape[1]))), axis=0);
+    train_R2s = np.concatenate((train_R2s, np.zeros((array_cur_len, train_R2s.shape[1]))), axis=0);
+    train_KLs = np.concatenate((train_KLs, np.zeros((array_cur_len, train_KLs.shape[1]))), axis=0);
+    test_elbos = np.concatenate((test_elbos, np.zeros((array_cur_len, test_elbos.shape[1]))), axis=0);
+    test_R2s = np.concatenate((test_R2s, np.zeros((array_cur_len, test_R2s.shape[1]))), axis=0);
+    test_KLs = np.concatenate((test_KLs, np.zeros((array_cur_len, test_KLs.shape[1]))), axis=0);
+    return train_elbos, train_R2s, train_KLs, test_elbos, test_R2s, test_KLs;
                 
 
 def autocovariance(X, tau_max, T, batch_size):
