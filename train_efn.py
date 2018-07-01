@@ -10,7 +10,7 @@ import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import connect_flow, construct_flow, setup_IO, construct_param_network, \
-                     cost_fn, check_convergence, \
+                     cost_fn, check_convergence, memory_extension, \
                      setup_param_logging, count_params, get_param_network_hyperparams
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
@@ -21,7 +21,6 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     upl_tau = None;
     upl_shape = 'linear';
     T = 1; # let's generalize to processes later (not within scope of NIPS submission)
-    K_test_fac = 1;
     wsize = 50;
     delta_thresh = 1e-10;
 
@@ -65,12 +64,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     _param_net_input_tests = [];
     _T_x_input_tests = [];
     eta_test_draw_params = [];
-    for i in range(K_test_fac):
-        _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_param = family.draw_etas(K, param_net_input_type, give_hint);
-        _eta_tests.append(_eta_test);
-        _param_net_input_tests.append(_param_net_input_test);
-        _T_x_input_tests.append(_T_x_input_test);
-        eta_test_draw_params.append(eta_test_draw_param);
+    _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
            
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
 
@@ -124,20 +118,18 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
     summary_op = tf.summary.merge_all();
 
-    opt_compress_fac = 16;
-    array_init_len = int(np.ceil(max_iters/opt_compress_fac));
-    if (dynamics):
-        As = np.zeros((array_init_len, K, D_Z, D_Z));
-        sigma_epsilons = np.zeros((array_init_len,D_Z));
+    opt_compress_fac = 128;
+    max_diagnostic_checks = (max_iters // check_rate) + 1;
+    array_init_len = int(np.ceil(max_diagnostic_checks/opt_compress_fac));
     array_cur_len = array_init_len;
+    print('array init len', array_init_len);
 
-    num_diagnostic_checks = (max_iters // check_rate) + 1;
-    train_elbos = np.zeros((num_diagnostic_checks, K));
-    test_elbos = np.zeros((num_diagnostic_checks, K_test_fac*K));
-    train_R2s = np.zeros((num_diagnostic_checks, K));
-    test_R2s = np.zeros((num_diagnostic_checks, K_test_fac*K));
-    train_KLs = np.zeros((num_diagnostic_checks, K));
-    test_KLs = np.zeros((num_diagnostic_checks, K_test_fac*K));
+    train_elbos = np.zeros((array_init_len, K));
+    test_elbos = np.zeros((array_init_len, K));
+    train_R2s = np.zeros((array_init_len, K));
+    test_R2s = np.zeros((array_init_len, K));
+    train_KLs = np.zeros((array_init_len, K));
+    test_KLs = np.zeros((array_init_len, K));
     check_it = 0;
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
@@ -151,11 +143,6 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         cost_i, summary = \
             sess.run([cost, summary_op], feed_dict);
 
-        if (dynamics):
-            A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
-            As[0,:,:,:] = A_i;
-            sigma_epsilons[0,:] = _sigma_epsilon_i[:,0];
-
         # compute R^2, KL, and elbo for training set
         z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
         feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
@@ -165,14 +152,12 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         train_KLs[check_it,:] = np.array(train_KLs_i);
 
         # compute R^2, KL, and elbo for static test set
-        for j in range(K_test_fac):
-            z_i_test = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
-            feed_dict_test = {Z0:z_i_test, eta:_eta_tests[j], param_net_input:_param_net_input_tests[j], T_x_input:_T_x_input_tests[j]};
-            test_costs_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params[j]);
+        feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
+        test_costs_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
 
-            test_elbos[check_it,(j*K):((j+1)*K)] = np.array(test_costs_i);
-            test_R2s[check_it,(j*K):((j+1)*K)] = np.array(test_R2s_i);
-            test_KLs[check_it,(j*K):((j+1)*K)] = np.array(test_KLs_i);
+        test_elbos[check_it,:] = np.array(test_costs_i);
+        test_R2s[check_it,:] = np.array(test_R2s_i);
+        test_KLs[check_it,:] = np.array(test_KLs_i);
 
         check_it += 1;
 
@@ -200,17 +185,9 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
             if (np.mod(i, check_rate)==0):
                 end_time = time.time();
                 print('iter %d took %f seconds' % (i+1, end_time-start_time));
-                
-            if (dynamics):
-                A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
-                As[i,:,:] = A_i;
-                sigma_epsilons[i,:] = _sigma_epsilon_i[:,0];
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
-
-            if (np.mod(i,model_save_every)==0):
-                saver.save(sess, savedir + 'model');
 
             if (np.mod(i+1, check_rate)==0):
                 print(42*'*');
@@ -229,14 +206,13 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 mean_train_KL = np.mean(train_KLs_i);
 
                 # compute R^2, KL, and elbo for static test set
-                for j in range(K_test_fac):
-                    z_i_test = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
-                    feed_dict_test = {Z0:z_i_test, eta:_eta_tests[j], param_net_input:_param_net_input_tests[j], T_x_input:_T_x_input_tests[j]};
-                    test_costs_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params[j]);
+                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
+                test_costs_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
 
-                    test_elbos[check_it,(j*K):((j+1)*K)] = np.array(test_costs_i);
-                    test_R2s[check_it,(j*K):((j+1)*K)] = np.array(test_R2s_i);
-                    test_KLs[check_it,(j*K):((j+1)*K)] = np.array(test_KLs_i);
+                test_elbos[check_it,:] = np.array(test_costs_i);
+                test_R2s[check_it,:] = np.array(test_R2s_i);
+                test_KLs[check_it,:] = np.array(test_KLs_i);
+
                 mean_test_elbo = np.mean(test_elbos[check_it,:]);
                 mean_test_R2 = np.mean(test_R2s[check_it,:]);
                 mean_test_KL = np.mean(test_KLs[check_it,:]);
@@ -279,14 +255,23 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                     if (delta_elbo < delta_thresh and delta_R2 < delta_thresh):
                         print('quitting opt:');
                         print('delta (elbo, r2) = (%f, %f) < %f' % (delta_elbo, delta_R2, delta_thresh));
+                        break;
                     else:
                         print('continue learning');
                         print('delta_elbo = %f' % delta_elbo);
                         print('delta_r2 = %f' % delta_R2);
 
                 check_it += 1;
+
+                if (check_it == array_cur_len):
+                    print('Extending log length from %d to %d' % (array_cur_len, 2*array_cur_len));
+                    train_elbos, train_R2s, train_KLs, test_elbos, test_R2s, test_KLs = \
+                        memory_extension(train_elbos, train_R2s, train_KLs, test_elbos, test_R2s, test_KLs, array_cur_len);
+                    array_cur_len = 2*array_cur_len;
             sys.stdout.flush();
             i += 1;
+        print('saving model before exitting');
+        saver.save(sess, savedir + 'model');
 
     #return _X, train_R2s, train_KLs, i;
     return _X, train_KLs, i;
