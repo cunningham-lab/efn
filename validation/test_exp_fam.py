@@ -10,15 +10,12 @@ os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
-linear_layers = int(sys.argv[3]);
-planar_layers = int(sys.argv[4]);
-spinner_layers = int(sys.argv[5]);
-nonlin_spinner_layers = int(sys.argv[6]);
-give_hint = not(int(sys.argv[7]) == 0);
-param_net_input_type = str(sys.argv[8]);
-random_seed = int(sys.argv[9]);
+planar_layers = int(sys.argv[3]);
+give_hint = not(int(sys.argv[4]) == 0);
+param_net_input_type = str(sys.argv[5]);
+random_seed = int(sys.argv[6]);
 
-flow_dict = get_flowdict(0, linear_layers, 0, planar_layers, spinner_layers, nonlin_spinner_layers);
+flow_dict = get_flowdict(0, 0, 0, planar_layers, 0, 0);
 print_flowdict(flow_dict);
 
 cost_type = 'KL';
