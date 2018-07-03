@@ -1599,7 +1599,7 @@ class surrogate_S_D_C(family):
 		                      (only necessary for hierarchical dirichlet)
 	"""
 
-	def __init__(self, D, T, Tps, T_s=.001):
+	def __init__(self, D, T, Tps, Tcs):
 		"""multivariate_normal family constructor
 
 		Args:
@@ -1610,22 +1610,22 @@ class surrogate_S_D_C(family):
 		self.name = 'S_D_C';
 		self.D_Z = D;
 
-		num_Tps = len(Tps);
+		C = len(Tcs);
 		mu_S_len = 0.0
-		for i in range(num_Tps):
-			mu_S_len += int(Tps[i]*(Tps[i]-1)/2);
+		for i in range(C):
+			mu_S_len += int(Tcs[i]*(Tcs[i]-1)/2);
 			if (i > 0):
 				mu_S_len = mu_S_len - 1;
 		mu_S_len = self.D*mu_S_len;
 
-		T_no_EP = T - 2*(num_Tps-1);
+		T_no_EP = T - 2*(C-1);
 		mu_D_len = (D + (D*(D+1)/2))*T_no_EP;
 
-		mu_C_len = D*int((num_Tps-1)*num_Tps/2)
+		mu_C_len = D*int((C-1)*C/2)
 
 		self.num_suff_stats = int(mu_S_len + mu_D_len + mu_C_len);
 		self.Tps = Tps;
-		self.T_s = T_s;
+		self.Tcs = Tcs;
 		self.set_T_x_names();
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
@@ -1650,14 +1650,14 @@ class surrogate_S_D_C(family):
 		self.T_x_names = [];
 		self.T_x_names_tf = [];
 		self.T_x_group_names = [];
-		num_Tps = len(self.Tps);
+		C = len(self.Tcs);
 		count = 0;
-		for i in range(num_Tps):
-			Tp = self.Tps[i];
+		for i in range(C):
+			Tc = self.Tcs[i];
 			for d in range(self.D):
-				for t1 in range(Tp):
-					for t2 in range(t1+1,Tp):
-						if (i > 0 and t1==0 and t2==(Tp-1)):
+				for t1 in range(Tc):
+					for t2 in range(t1+1,Tc):
+						if (i > 0 and t1==0 and t2==(Tc-1)):
 							continue;
 						self.T_x_names.append('$x_{%d,%d,%d}$ $x_{%d,%d,%d}$' % (i+1, d+1, t1+1, i+1, d+1, t2+1));
 						self.T_x_names_tf.append('x_%d,%d,%d x_%d,%d,%d' % (i+1, d+1, t1+1, i+1, d+1, t2+1));
@@ -1665,12 +1665,12 @@ class surrogate_S_D_C(family):
 						count += 1;
 		print(count);
 		for d in range(self.D):
-			for i in range(num_Tps):
-				Tp = self.Tps[i];
+			for i in range(C):
+				Tc = self.Tcs[i];
 				if (i==0):
-					ts = range(Tp);
+					ts = range(Tc);
 				else:
-					ts = range(1, Tp-1);
+					ts = range(1, Tc-1);
 				for t in ts:
 					self.T_x_names.append('$x_{%d,%d,%d}$' % (i+1,d+1, t+1));
 					self.T_x_names_tf.append('x_%d,%d,%d' % (i+1,d+1, t+1));
@@ -1679,12 +1679,12 @@ class surrogate_S_D_C(family):
 		print(count);
 		for d1 in range(self.D):
 			for d2 in range(d1,self.D):
-				for i in range(num_Tps):
-					Tp = self.Tps[i];
+				for i in range(C):
+					Tc = self.Tcs[i];
 					if (i==0):
-						ts = range(Tp);
+						ts = range(Tc);
 					else:
-						ts = range(1, Tp-1);
+						ts = range(1, Tc-1);
 					for t in ts:
 						self.T_x_names.append('$x_{%d,%d,%d}$ $x_{%d,%d,%d}$' % (i+1, d1+1, t+1, i+1, d2+1, t+1));
 						self.T_x_names_tf.append('x_%d,%d,%d x_%d,%d,%d' % (i+1, d1+1, t+1, i+1, d2+1, t+1));
@@ -1692,8 +1692,8 @@ class surrogate_S_D_C(family):
 						count += 1;
 
 		for d in range(self.D):
-			for i in range(num_Tps):
-				for j in range(i+1, num_Tps):
+			for i in range(C):
+				for j in range(i+1, C):
 					self.T_x_names.append('$\sum_t x_{%d,%d,t}$ $x_{%d,%d,t}$' % (i+1, d+1, j+1, d+1));
 					self.T_x_names_tf.append('Sum_t x_%d,%d,t x_%d,%d,t' % (i+1, d+1, j+1, d+1));
 					self.T_x_group_names.append('$\sum_t x_{%d,%d,t}$ $x_{%d,%d,t}$' % (i+1, d+1, j+1, d+1));
@@ -1719,26 +1719,26 @@ class surrogate_S_D_C(family):
 		M = X_shape[1];
 
 		# compute the (S) suff stats
-		num_Tps = len(self.Tps);
+		C = len(self.Tcs);
 		t_ind = 0;
 		T_x_Ss = [];
-		for i in range(num_Tps):
-			Tp = self.Tps[i];
-			X_Tp = tf.slice(X, [0,0,0,t_ind], [K,M,self.D,Tp]);
-			t_ind = t_ind + Tp;
-			cov_con_mask_T = np.triu(np.ones((Tp,Tp), dtype=np.bool_), 1);
-			XXT_KMDTT = tf.matmul(tf.expand_dims(X_Tp, 4), tf.expand_dims(X_Tp, 3));
+		for i in range(C):
+			Tc = self.Tcs[i];
+			X_Tc = tf.slice(X, [0,0,0,t_ind], [K,M,self.D,Tc]);
+			t_ind = t_ind + Tc;
+			cov_con_mask_T = np.triu(np.ones((Tc,Tc), dtype=np.bool_), 1);
+			XXT_KMDTT = tf.matmul(tf.expand_dims(X_Tc, 4), tf.expand_dims(X_Tc, 3));
 			T_x_S_KMDTcov = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMDTT, [3,4,0,1,2]), cov_con_mask_T), [1, 2, 3, 0])
 			if (i > 0):
-				T_x_S_KMDTcov = tf.concat((T_x_S_KMDTcov[:,:,:,:(Tp-2)], T_x_S_KMDTcov[:,:,:,(Tp-1):]), 3);
-				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tp*(Tp-1)/2 - 1)]); # remove repeated endpoint correlation
+				T_x_S_KMDTcov = tf.concat((T_x_S_KMDTcov[:,:,:,:(Tc-2)], T_x_S_KMDTcov[:,:,:,(Tc-1):]), 3);
+				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tc*(Tc-1)/2 - 1)]); # remove repeated endpoint correlation
 			else:
-				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tp*(Tp-1)/2)]);
+				T_x_S_i = tf.reshape(T_x_S_KMDTcov, [K, M, self.D*int(Tc*(Tc-1)/2)]);
 			T_x_Ss.append(T_x_S_i);
 		T_x_S = tf.concat(T_x_Ss, 2);
 
 		X_no_EP = self.remove_extra_endpoints_tf(X);
-		T_no_EP = self.T - 2*(num_Tps-1);
+		T_no_EP = self.T - 2*(C-1);
 		# compute the (D) suff stats
 		cov_con_mask_D = np.triu(np.ones((self.D,self.D), dtype=np.bool_), 0);
 		T_x_mean = tf.reshape(X_no_EP, [K,M,self.D*T_no_EP]);
@@ -1750,22 +1750,20 @@ class surrogate_S_D_C(family):
 		T_x_D = tf.concat((T_x_mean, T_x_cov), axis=2);
 
 		# compute the (C) suff stats
-		Tp0 = self.Tps[0];
-		cov_con_mask_C = np.triu(np.ones((num_Tps,num_Tps), dtype=np.bool_), 1);
+		Tc0 = self.Tcs[0];
+		cov_con_mask_C = np.triu(np.ones((C,C), dtype=np.bool_), 1);
 		T_x_cov_Cs = [];
 		for d in range(self.D):
 			X_d = X[:,:,d,:];
 			X_cs = []
 			t_ind = 0;
-			for i in range(num_Tps):
-				Tp = self.Tps[i];
-				X_d_i = tf.slice(X_d, [0, 0, t_ind], [K, M, Tp0]);
+			for i in range(C):
+				Tc = self.Tcs[i];
+				X_d_i = tf.slice(X_d, [0, 0, t_ind], [K, M, Tc0]);
 				X_cs.append(tf.expand_dims(X_d_i, 2));
-				t_ind = t_ind + Tp;
+				t_ind = t_ind + Tc;
 			X_KMCT_d = tf.concat(X_cs, 2)
-			print(X_KMCT_d.shape);
-			XXT_KMCC_d = tf.matmul(X_KMCT_d, tf.transpose(X_KMCT_d, [0,1,3,2]));
-			print(XXT_KMCC_d.shape);
+			XXT_KMCC_d = tf.div(tf.matmul(X_KMCT_d, tf.transpose(X_KMCT_d, [0,1,3,2])), Tc0);
 			T_x_cov_KMCcov = tf.transpose(tf.boolean_mask(tf.transpose(XXT_KMCC_d, [2,3,0,1]), cov_con_mask_C), [1, 2, 0]);
 			T_x_cov_Cs.append(T_x_cov_KMCcov);
 		T_x_C = tf.concat(T_x_cov_Cs, 2);
@@ -1797,48 +1795,34 @@ class surrogate_S_D_C(family):
 		kernel = params['kernel'];
 		mu = params['mu'];
 		Sigma = params['Sigma'];
-		num_Tps = len(self.Tps);
+		ts = params['ts'];
+		C = len(self.Tcs);
 		max_Tp = max(self.Tps);
 		mu_S_len = 0;
-		for i in range(num_Tps):
-			mu_S_len += int(self.Tps[i]*(self.Tps[i]-1)/2);
+		for i in range(C):
+			mu_S_len += int(self.Tcs[i]*(self.Tcs[i]-1)/2);
 			if (i > 0):
 				mu_S_len = mu_S_len - 1;
 
 		mu_S = np.zeros((self.D*mu_S_len,));
-		autocovs = np.zeros((self.D, max_Tp));
 		if (kernel == 'SE'): # squared exponential
 			taus = params['taus'];
-			
-			steps = np.arange(max_Tp)*self.T_s;
-			for i in range(self.D):
-				autocovs[i,:] = Sigma[i,i]*np.exp(-np.square(steps) / (2*np.square(taus[i])));
-
-		elif (kernel == 'AR1'):
-			alphas = params['alphas'];
-			steps = np.arange(self.T);
-			autocovs = np.zeros((self.D, self.T));
-			for i in range(self.D):
-				autocovs[i,:] = Sigma[i,i]*(alphas[i]**steps);
-		else:
-			raise NotImplementedError();
 
 		ind = 0;
-		for i in range(num_Tps):
+		for i in range(C):
+			Tc = self.Tcs[i];
 			Tp = self.Tps[i];
+			ts_i = np.concatenate(ts[:(i+1)]);
+			ts_i = np.concatenate([np.array([0.0]), ts_i, np.array([Tp])]);
 			for d in range(self.D):
-				for t1 in range(Tp):
-					for t2 in range(t1+1,Tp):
-						if (i > 0 and t1==0 and t2==(Tp-1)):
+				for t1 in range(Tc):
+					for t2 in range(t1+1,Tc):
+						if (i > 0 and t1==0 and t2==(Tc-1)):
 							continue;
-						mu_S[ind] = autocovs[d,t2-t1]
+						mu_S[ind] = Sigma[i,i]*np.exp(-np.square(ts_i[t2]-ts_i[t1]) / (2*np.square(taus[i])));
 						ind = ind + 1;
-		
-		print('mu_S');
-		print(mu_S.shape);
-
 		# compute (D) part of mu
-		T_no_EP = self.T - 2*(num_Tps-1);
+		T_no_EP = self.T - 2*(C-1);
 		mu_mu = np.reshape(np.tile(mu, [1, T_no_EP]), [self.D*T_no_EP]);
 		mu_Sigma = np.zeros((int(self.D*(self.D+1)/2)),);
 		ind = 0;
@@ -1850,33 +1834,25 @@ class surrogate_S_D_C(family):
 
 		mu_D = np.concatenate((mu_mu, mu_Sigma), 0);
 
-		print('mu_D');
-		print(mu_D.shape);
-
 		mu_C = params['mu_C'];
-
-		print('mu_C');
-		print(mu_C.shape);
 		
 		mu = np.concatenate((mu_S, mu_D, mu_C), 0);
-		print('mu');
-		print(mu.shape);
 		return mu;
 
 	def remove_extra_endpoints_tf(self, X):
 		X_shape = tf.shape(X);
 		K = X_shape[0];
 		M = X_shape[1];
-		num_Tps = len(self.Tps);
+		C = len(self.Tcs);
 		Xs = [];
 		t_ind = 0;
-		for i in range(num_Tps):
-			Tp = self.Tps[i];
+		for i in range(C):
+			Tc = self.Tcs[i];
 			if (i==0):
-				X_i = tf.slice(X, [0, 0, 0, 0], [K, M, self.D, Tp]);
+				X_i = tf.slice(X, [0, 0, 0, 0], [K, M, self.D, Tc]);
 			else:
-				X_i = tf.slice(X, [0, 0, 0, t_ind+1], [K, M, self.D, Tp-2]);
-			t_ind = t_ind + Tp;
+				X_i = tf.slice(X, [0, 0, 0, t_ind+1], [K, M, self.D, Tc-2]);
+			t_ind = t_ind + Tc;
 			Xs.append(X_i);
 		X_no_EP = tf.concat(Xs, 3);
 		return X_no_EP;

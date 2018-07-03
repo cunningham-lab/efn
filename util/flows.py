@@ -288,7 +288,7 @@ class LinearFlowLayer(Layer):
             b = tf.expand_dims(tf.expand_dims(self.b, 0), 0);
             z = tf.tensordot(A, z, [[1], [2]]);
             z = tf.transpose(z, [1, 2, 0, 3]) + b;
-            log_det_jacobian = tf.multiply(tf.log(tf.abs(tf.matrix_determinant(A))), tf.ones((K*M,), dtype=tf.float64));
+            log_det_jacobian = tf.multiply(tf.log(tf.abs(tf.matrix_determinant(A))), tf.ones((K*M,), dtype=tf.float64)) + 0.0*tf.reduce_sum(b);
         else:
             z_KD_MTvec = tf.reshape(tf.transpose(z, [0,2,1,3]), [K,D,M*T]);
             Az_KD_MTvec = tf.matmul(self.A, z_KD_MTvec);
@@ -401,69 +401,7 @@ class ElemMultLayer(Layer):
         sum_log_det_jacobians += log_det_jacobian; 
         return z, sum_log_det_jacobians;
 
-class GP_EP_RegressionLayer(Layer):
-    def __init__(self, name, dim, T, T_s, tau_init, lock):
-        self.name = name;
-        self.D = dim;
-        self.T = T;
-        self.T_s = T_s;
-        self.tau_init = tau_init;
-        self.lock = lock;
-        self.param_names = ['log_tau'];
-        
-    def get_layer_info(self,):
-        log_tau_dim = (self.D,);
-        dims = [log_tau_dim];
-        print('tau initialization:');
-        print(self.tau_init);
-        initializers = [tf.constant(np.log(self.tau_init))];
-        return self.name, self.param_names, dims, initializers, self.lock;
-
-    def connect_parameter_network(self, theta_layer):
-        self.log_tau = theta_layer[0];
-        # params will have batch dimension if result of parameter network
-        self.param_network = (len(self.log_tau.shape) == 2);
-        return None;
-            
-    def forward_and_jacobian(self, z, sum_log_det_jacobians):
-        # TODO: his isn't going to work in an EFN yet
-        K, M, D, T = efn_tensor_shape(z);
-        eps = .00001;
-        tau = tf.exp(self.log_tau);
-        z_first = tf.expand_dims(z[:,:,:,0], 3);
-        z_last = tf.expand_dims(z[:,:,:,self.T-1], 3);
-        z_EP = tf.concat((z_first, z_last), 3);
-        z_middle = tf.slice(z, [0, 0, 0, 1], [K, M, D, self.T-2]);
-        z_out_middles = [];
-        log_det_jacobian = 0.0;
-        for i in range(self.D):
-            K = compute_K_tf(tau[i], self.T, self.T_s);
-            EP_inds = [0,int(self.T-1)];
-            pred_inds = range(1,self.T-1);
-            K_allEP = tf.transpose(tf.convert_to_tensor((K[:,0], K[:,self.T-1])));
-            K_EPEP = tf.convert_to_tensor((K_allEP[0,:], K_allEP[self.T-1]));
-            K_EPEP_inv = tf.matrix_inverse(K_EPEP);
-            K_predEP = tf.slice(K_allEP, [1, 0], [self.T-2, 2]);
-
-            A_mu = tf.matmul(K_predEP, K_EPEP_inv);
-            z_GP_mu = tf.transpose(tf.tensordot(A_mu, z_EP[:,:,i], [1, 2]), [1,2,0]);
-
-            K_EPpred = tf.transpose(K_predEP);
-            K_predpred = tf.slice(K, [1, 1], [self.T-2, self.T-2]);
-            z_GP_Sigma = K_predpred - tf.matmul(K_predEP, tf.matmul(K_EPEP_inv, K_EPpred));
-            z_GP_Sigma = z_GP_Sigma + eps*tf.eye(T-2, dtype=tf.float64); # add regularization
-            print(z_GP_Sigma.shape);
-            L = tf.cholesky(z_GP_Sigma);
-            log_det_jacobian = log_det_jacobian + tf.log(tf.abs(tf.reduce_prod(tf.matrix_diag_part(L))))
-
-            z_out_middle = z_GP_mu + tf.transpose(tf.tensordot(L, z_middle[:,:,i,:], [1, 2]), [1,2,0]);
-            z_out_middles.append(tf.expand_dims(z_out_middle, 2));
-        z_out_middle = tf.concat(z_out_middles, 2);
-        z_out = tf.concat((z_first, z_out_middle, z_last), 3);
-        sum_log_det_jacobians += log_det_jacobian;
-        return z_out, sum_log_det_jacobians;
-
-
+"""
 class GP_EP_ConditionalRegressionLayer(Layer):
     def __init__(self, name, dim, T, T_s, Tps, tau_init, lock):
         self.name = name;
@@ -541,7 +479,7 @@ class GP_EP_ConditionalRegressionLayer(Layer):
         #print(z_out.shape);
         sum_log_det_jacobians += log_det_jacobian;
         return z_out, sum_log_det_jacobians;
-
+"""
 
 class GP_Layer(Layer):
     def __init__(self, name, dim, T, Tps, tau_init, lock):
@@ -588,6 +526,182 @@ class GP_Layer(Layer):
         #print(z_out.shape);
         sum_log_det_jacobians += log_det_jacobian;
         return z_out, sum_log_det_jacobians;
+
+
+
+class GP_EP_CondRegLayer(Layer):
+    def __init__(self, name, dim, T, Tps, tau_init, lock):
+        self.name = name;
+        self.D = dim;
+        self.Tps = Tps;
+        self.C = len(Tps);
+        self.tau_init = tau_init;
+        self.lock = lock;
+        self.param_names = ['log_tau'];
+        
+    def get_layer_info(self,):
+        log_tau_dim = (self.D,);
+        dims = [log_tau_dim];
+        print('tau initialization:');
+        print(self.tau_init);
+        initializers = [tf.constant(np.log(self.tau_init))];
+        return self.name, self.param_names, dims, initializers, self.lock;
+
+    def connect_parameter_network(self, theta_layer):
+        self.log_tau = theta_layer[0];
+        # params will have batch dimension if result of parameter network
+        self.param_network = (len(self.log_tau.shape) == 2);
+        return None;
+            
+    def forward_and_jacobian(self, z, sum_log_det_jacobians, ts):
+        # TODO: this isn't going to work in an EFN yet
+        _K, M, D, T = efn_tensor_shape(z);
+        eps = 0.0;
+
+        tau = tf.exp(self.log_tau);
+        ts_0 = ts[0];
+        middle_len = tf.shape(ts_0)[0];
+
+        # get endpoints
+        z_first = tf.expand_dims(z[:,:,:,0], 3);
+        z_last = tf.expand_dims(z[:,:,:,1], 3);
+        z_EP = tf.concat((z_first, z_last), 3);
+
+
+        z_outs = [];
+        log_det_jacobian = 0.0;
+        for i in range(self.D):
+            z_i = z[:,:,i,:];
+            z_EP_i = z_EP[:,:,i,:];
+            t_ind = 2;
+            z_out_is = [];
+            for j in range(self.C):
+                Tp_j = self.Tps[j];
+                ts = tf.concat([tf.constant(np.array([0.0]), dtype=tf.float64), tf.constant(np.array([Tp_j]), tf.float64), ts_0], axis=0);
+                ds = tf.expand_dims(ts, 1) - tf.expand_dims(ts, 0);
+                K = tf.exp(-(tf.square(ds) / (2*tf.square(tau[i]))));
+
+                #z_middle = tf.slice(z_i, [0, 0, t_ind], [_K, M, middle_len]);
+                z_middle = z_i[:,:,t_ind:(t_ind+middle_len)];
+                t_ind = t_ind + middle_len;
+            
+                EP_inds = [0,1];
+                K_allEP = K[:,:2];
+                K_EPEP = K_allEP[:2, :];
+                K_EPEP_inv = tf.matrix_inverse(K_EPEP);
+                K_predEP = K_allEP[2:, :];
+                A_mu = tf.matmul(K_predEP, K_EPEP_inv);
+                z_GP_mu = tf.transpose(tf.tensordot(A_mu, z_EP_i, [1, 2]), [1,2,0]);
+                #print(z_GP_mu.shape);
+                K_EPpred = tf.transpose(K_predEP);
+                K_predpred = K[2:,2:];
+                z_GP_Sigma = K_predpred - tf.matmul(K_predEP, tf.matmul(K_EPEP_inv, K_EPpred));
+                z_GP_Sigma = z_GP_Sigma + eps*tf.eye(middle_len, dtype=tf.float64); 
+                L = tf.cholesky(z_GP_Sigma);
+                log_det_jacobian = log_det_jacobian + tf.log(tf.abs(tf.reduce_prod(tf.matrix_diag_part(L))))
+
+                z_GP_hat = z_GP_mu + tf.transpose(tf.tensordot(L, z_middle, [1,2]), [1,2,0]);
+                z_out_ij = tf.expand_dims(tf.concat((z_first[:,:,i,:], z_GP_hat, z_last[:,:,i,:]), 2), 2);
+                z_out_is.append(z_out_ij);
+
+            z_out_i = tf.concat(z_out_is, 2);
+            z_outs.append(tf.expand_dims(z_out_i, 3));
+
+        z_out = tf.concat(z_outs, 3); # will be K x M x C x D x T
+
+        sum_log_det_jacobians += log_det_jacobian;
+        return z_out, z[:,:,:,t_ind:], sum_log_det_jacobians;
+
+
+
+class GP_EP_CondRegFillLayer(Layer):
+    def __init__(self, name, dim, T, Tps):
+        self.name = name;
+        self.D = dim;
+        self.Tps = Tps;
+        self.C = len(Tps);
+        self.param_names = [];
+        self.lock = False;
+        
+    def get_layer_info(self,):
+        dims = [];
+        initializers = None;
+        return self.name, self.param_names, dims, initializers, self.lock;
+
+    def connect_parameter_network(self, log_tau):
+        self.log_tau = log_tau;
+        # params will have batch dimension if result of parameter network
+        self.param_network = (len(self.log_tau.shape) == 2);
+        return None;
+            
+    def forward_and_jacobian(self, z, z0, sum_log_det_jacobians, ts):
+        # TODO: this isn't going to work in an EFN yet
+        z_shape = tf.shape(z);
+        _K = z_shape[0];
+        M = z_shape[1];
+        D = z_shape[2];
+        C = z_shape[3];
+        T0 = z_shape[4];
+        eps = 0.0
+
+        tau = tf.exp(self.log_tau);
+        ts_0 = ts[0];
+
+        ts_1 = ts[1];
+        ts_preds = [ts_1];
+        ts_i = ts_1;
+        for i in range(2,len(ts)):
+            ts_i = tf.concat((ts_i, ts[i]), 0);
+            ts_preds.append(ts_i);
+
+        print('ts_preds', ts_preds);
+        z_outs = [];
+        log_det_jacobian = 0.0;
+        for d in range(self.D):
+            z_d = z[:,:,d,:,:];
+            t_ind = 0;
+            z_out_ds = [z_d[:,:,0,:]];
+            t_ind = 0;
+            for j in range(1,self.C):
+                Tp_j = self.Tps[j];
+                ts_data = tf.concat([tf.constant(np.array([0.0]), dtype=tf.float64), ts_0, tf.constant(np.array([Tp_j]), tf.float64)], axis=0);
+                ts_pred = ts_preds[j-1];
+                T_pred_j = tf.shape(ts_pred)[0];
+                ts_all = tf.concat((ts_data, ts_pred), 0);
+                ds = tf.expand_dims(ts_all, 1) - tf.expand_dims(ts_all, 0);
+
+                K = tf.exp(-(tf.square(ds) / (2*tf.square(tau[d]))));
+            
+                K_data = K[:T0,:T0];
+                K_data_inv = tf.matrix_inverse(K_data);
+                K_pred_data = K[T0:,:T0];
+                A_mu = tf.matmul(K_pred_data, K_data_inv);
+                z_GP_mu = tf.transpose(tf.tensordot(A_mu, z_d[:,:,j,:], [1, 2]), [1,2,0]);
+                #print(z_GP_mu.shape);
+                K_data_pred = tf.transpose(K_pred_data);
+                K_pred = K[T0:,T0:];
+                z_GP_Sigma = K_pred - tf.matmul(K_pred_data, tf.matmul(K_data_inv, K_data_pred));
+                z_GP_Sigma = z_GP_Sigma + eps*tf.eye(T_pred_j, dtype=tf.float64); 
+                L = tf.cholesky(z_GP_Sigma);
+                log_det_jacobian = log_det_jacobian + tf.log(tf.abs(tf.reduce_prod(tf.matrix_diag_part(L))))
+
+                z0_dj = z0[:,:,d,t_ind:(t_ind+T_pred_j)];
+                Lz = tf.transpose(tf.tensordot(L, z0_dj, [1,2]), [1,2,0]);
+
+                z_out_ds.append(z_d[:,:,j,:-1]);
+                z_out_ds.append(z_GP_mu + Lz);
+                z_out_ds.append(tf.expand_dims(z_d[:,:,j,-1], 2));
+                t_ind = t_ind + T_pred_j;
+
+            z_out_d = tf.concat(z_out_ds, 2);
+            z_outs.append(tf.expand_dims(z_out_d, 2));
+
+        z_out = tf.concat(z_outs, 2); # will be K x M x D x CT
+
+        sum_log_det_jacobians += log_det_jacobian;
+        return z_out, sum_log_det_jacobians;
+
+
 
 
 

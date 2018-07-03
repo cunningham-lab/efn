@@ -51,7 +51,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     # save tensorboard summary in intervals
     tb_save_every = 50;
     model_save_every = max_iters-1;
-    tb_save_params = True;
+    tb_save_params = False;
 
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats));
     param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs));
