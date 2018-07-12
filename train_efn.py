@@ -72,7 +72,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     if not os.path.exists(savedir):
         print('Making directory %s' % savedir );
         os.makedirs(savedir);
-    exit();
+
     # construct the parameter network
     theta = construct_param_network(param_net_input, K, flow_layers, param_net_hps);
 
