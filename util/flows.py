@@ -240,7 +240,7 @@ class StructuredSpinnerLayer(Layer):
         return z, sum_log_det_jacobians;
 
 
-class LinearFlowLayer(Layer):
+class AffineFlowLayer(Layer):
     def __init__(self, name, dim):
         self.name = name;
         self.dim = dim;

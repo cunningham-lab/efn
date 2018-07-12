@@ -20,7 +20,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     dropout = False;
     upl_tau = None;
     upl_shape = 'linear';
-    T = 1; # let's generalize to processes later (not within scope of NIPS submission)
+    T = 1; 
     wsize = 50;
     delta_thresh = 1e-10;
 
@@ -36,12 +36,10 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     tf.set_random_seed(random_seed);
     np.random.seed(random_seed);
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_dict, D_Z, T);
+    flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, T);
     flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
     Z0_shape = tf.shape(Z0);
     batch_size = tf.multiply(Z0_shape[0], Z0_shape[1]);
-
-    dynamics = P > 0;
 
     n = K*M;
 
@@ -70,10 +68,11 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
     savedir = setup_IO(family, 'EFN', param_net_input_type, K, M, flow_dict, \
                        param_net_hps, stochastic_eta, give_hint, random_seed);
+
     if not os.path.exists(savedir):
         print('Making directory %s' % savedir );
         os.makedirs(savedir);
-
+    exit();
     # construct the parameter network
     theta = construct_param_network(param_net_input, K, flow_layers, param_net_hps);
 
@@ -135,7 +134,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 
-        z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
         if (stochastic_eta):
             _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
         feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
@@ -144,7 +143,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
             sess.run([cost, summary_op], feed_dict);
 
         # compute R^2, KL, and elbo for training set
-        z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
         feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
         train_costs_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
         train_elbos[check_it,:] = np.array(train_costs_i);
@@ -172,7 +171,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
         print('starting opt');
         while (i < max_iters):
-            z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
+            z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
             if (stochastic_eta): 
                 _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
 
@@ -195,7 +194,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 start_time = time.time();
                 
                 # compute R^2, KL, and elbo for training set
-                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
+                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
                 train_costs_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
                 train_elbos[check_it,:] = np.array(train_costs_i);
@@ -229,20 +228,12 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                     print('test KL: %f' % mean_test_KL);
 
                 _X = sess.run(X, feed_dict);
-                if (dynamics):
-                    np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, check_rate=check_rate, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
-                                                      T_x_input=_T_x_input, \
-                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
-                else:
-                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                      X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
-                                                      T_x_input=_T_x_input, \
-                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
+                np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                                                  X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                  T_x_input=_T_x_input, \
+                                                  train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                  train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
 
                 if (check_it >= 2*wsize - 1 and (np.mod(i+1, wsize*check_rate)==0)):
                     last_mean_test_R2 = np.mean(test_R2s[(check_it-(2*wsize)+1):(check_it-wsize+1),:]);

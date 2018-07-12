@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from efn_util import count_layer_params, truncated_multivariate_normal_rvs, get_GP_Sigma, \
                      drawPoissonCounts
-from flows import LinearFlowLayer, StructuredSpinnerLayer, PlanarFlowLayer, \
+from flows import AffineFlowLayer, StructuredSpinnerLayer, PlanarFlowLayer, \
                   TanhLayer, SimplexBijectionLayer, CholProdLayer, SoftPlusLayer
 import scipy.stats
 from scipy.special import gammaln, psi
