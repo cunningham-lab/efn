@@ -11,7 +11,8 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import connect_flow, construct_flow, setup_IO, construct_param_network, \
                      cost_fn, check_convergence, memory_extension, \
-                     setup_param_logging, count_params, get_param_network_hyperparams
+                     setup_param_logging, count_params, get_param_network_hyperparams, \
+                     test_convergence
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, random_seed=0, \
@@ -230,27 +231,15 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 _X = sess.run(X, feed_dict);
                 np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                   X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
-                                                  T_x_input=_T_x_input, \
+                                                  T_x_input=_T_x_input, converged=False, \
                                                   train_elbos=train_elbos, test_elbos=test_elbos, \
                                                   train_R2s=train_R2s, test_R2s=test_R2s, \
                                                   train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
 
-                if (check_it >= 2*wsize - 1 and (np.mod(i+1, wsize*check_rate)==0)):
-                    last_mean_test_R2 = np.mean(test_R2s[(check_it-(2*wsize)+1):(check_it-wsize+1),:]);
-                    cur_mean_test_R2 = np.mean(test_R2s[(check_it-wsize+1):(check_it+1),:]);
-                    delta_R2 = (cur_mean_test_R2 - last_mean_test_R2) / last_mean_test_R2;
-
-                    last_mean_test_elbo = np.mean(test_elbos[(check_it-(2*wsize)+1):(check_it-wsize+1),:]);
-                    cur_mean_test_elbo = np.mean(test_elbos[(check_it-wsize+1):(check_it+1),:]);
-                    delta_elbo = (last_mean_test_elbo - cur_mean_test_elbo) / last_mean_test_elbo;
-                    if (delta_elbo < delta_thresh and delta_R2 < delta_thresh):
-                        print('quitting opt:');
-                        print('delta (elbo, r2) = (%f, %f) < %f' % (delta_elbo, delta_R2, delta_thresh));
+                if (check_it >= 2*wsize - 1):
+                    mean_test_elbos = np.mean(test_elbos, 1);
+                    if (test_convergence(mean_test_elbos, check_it, wsize, delta_thresh)):
                         break;
-                    else:
-                        print('continue learning');
-                        print('delta_elbo = %f' % delta_elbo);
-                        print('delta_r2 = %f' % delta_R2);
 
                 check_it += 1;
 
@@ -263,7 +252,14 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
             i += 1;
         print('saving model before exitting');
         saver.save(sess, savedir + 'model');
+    if (i < max_iters):
+        np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                                      X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                      T_x_input=_T_x_input, converged=True, \
+                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
 
-    #return _X, train_R2s, train_KLs, i;
+
     return _X, train_KLs, i;
 

@@ -135,30 +135,21 @@ class RadialFlowLayer(Layer):
     def forward_and_jacobian(self, z, sum_log_det_jacobians, reuse=False):
         z0, alpha, beta = self.get_params();
         K, M, D, T = efn_tensor_shape(z);
-        print('z', z.shape);
 
         alpha = tf.expand_dims(alpha, 1);
         beta = tf.expand_dims(beta, 1);
-        print('pre z0', z0.shape);
         z0 = tf.expand_dims(z0,1);
-        print('z0', z0.shape);
 
 
         d = z - z0
-        print('d', d.shape);
         r = tf.expand_dims(tf.linalg.norm(d, ord='euclidean', axis=2), 2);
         h = tf.divide(1.0, alpha + r);
         h_prime = tf.divide(-1.0, tf.square(alpha + r));
-        print('r', r.shape);
-        print('hprime', h_prime.shape);
 
         z_out = z + beta*h*d;
         log_det_jacobian = tf.cast(D-1, tf.float64)*tf.log(tf.abs(1.0 + tf.multiply(beta,h))) +  \
                                 tf.log(tf.abs(1.0 + tf.multiply(beta,h) + tf.multiply(beta,tf.multiply(h_prime,r))));
-        print('ldj');
-        print(log_det_jacobian.shape);
         log_det_jacobian = tf.reduce_sum(log_det_jacobian, [2,3]);
-        print(log_det_jacobian.shape);
         sum_log_det_jacobians += log_det_jacobian;
 
         return z_out, sum_log_det_jacobians;
