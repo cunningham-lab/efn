@@ -16,6 +16,10 @@ random_seed = int(sys.argv[6]);
 
 if (flow_type_str == 'P'):
 	TIF_flow_type = 'PlanarFlowLayer';
+elif (flow_type_str == 'R'):
+	TIF_flow_type = 'RadialFlowLayer';
+elif (flow_type_str == 'S'):
+	TIF_flow_type = 'StructuredSpinnerTanhLayer';
 elif (flow_type_str == 'A'):
 	TIF_flow_type = 'AffineFlowLayer';
 
@@ -29,7 +33,7 @@ family = fam_class(D);
 cost_type = 'KL';
 param_net_input_type = 'eta';
 K_eta = 100;
-M_eta = 100;
+M_eta = 1000;
 stochastic_eta = True;
 lr_order = -3;
 max_iters = 1000000;

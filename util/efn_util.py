@@ -6,8 +6,8 @@ from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart, truncnorm
 import statsmodels.sandbox.distributions.mv_normal as mvd
 import matplotlib.pyplot as plt
-from flows import AffineFlowLayer, PlanarFlowLayer, SimplexBijectionLayer, \
-                  CholProdLayer, StructuredSpinnerLayer, TanhLayer, ExpLayer, \
+from flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, SimplexBijectionLayer, \
+                  CholProdLayer, StructuredSpinnerLayer, StructuredSpinnerTanhLayer, TanhLayer, ExpLayer, \
                   SoftPlusLayer, GP_EP_CondRegLayer, GP_EP_CondRegFillLayer, GP_Layer, AR_Layer, VAR_Layer, \
                   FullyConnectedFlowLayer, ElemMultLayer
 import scipy.io as sio
@@ -25,7 +25,7 @@ def setup_IO(family, model_type_str, param_net_input_type, K, M, flow_dict, \
     flowstring = get_flowstring(flow_dict);
     if (model_type_str == 'EFN'):
         if (param_net_input_type == 'eta'):
-            substr = '';
+            substr = '' ;
         elif (param_net_input_type == 'prior'):
             substr = 'a';
         elif (param_net_input_type == 'likelihood'):
@@ -139,9 +139,17 @@ def construct_time_invariant_flow(flow_dict, D_Z, T):
         flow_class = StructuredSpinnerLayer
         name_prefix = 'StructuredSpinner_Layer';
 
+    elif (TIF_flow_type == 'StructuredSpinnerTanhLayer'):
+        flow_class = StructuredSpinnerTanhLayer
+        name_prefix = 'StructuredSpinnerTanh_Layer';
+
     elif (TIF_flow_type == 'PlanarFlowLayer'):
         flow_class = PlanarFlowLayer
         name_prefix = 'PlanarFlow_Layer';
+
+    elif (TIF_flow_type == 'RadialFlowLayer'):
+        flow_class = RadialFlowLayer
+        name_prefix = 'RadialFlow_Layer';
 
     elif (TIF_flow_type == 'TanhLayer'):
         flow_class = TanhLayer;

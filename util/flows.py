@@ -93,6 +93,76 @@ class PlanarFlowLayer(Layer):
 
         return z, sum_log_det_jacobians;
 
+
+class RadialFlowLayer(Layer):
+
+    def __init__(self, name='RadialFlow', dim=1):
+        # TODO this entire class needs to be compatible with the parameter network
+        self.name = name;
+        self.dim = dim;
+        self.param_names = ['z0', 'log_alpha', 'beta'];
+        self.param_network = False;
+        self.z0 = None;
+        self.beta_hat = None;
+        self.log_alpha = None;
+        self.beta = None;
+        self.lock = False;
+
+    def get_layer_info(self,):
+        z0_dim = (self.dim,1);
+        log_alpha_dim = (1,1);
+        beta_dim = (1,1);
+        dims = [z0_dim, log_alpha_dim, beta_dim];
+        initializers = [tf.ones(z0_dim, dtype=tf.float64), tf.ones(log_alpha_dim, dtype=tf.float64), \
+                        tf.zeros(beta_dim, dtype=tf.float64)];
+        return self.name, self.param_names, dims, initializers, self.lock;
+
+    def get_params(self,):
+        if (not self.param_network):
+            print('not param network');
+            return tf.expand_dims(self.z0, 0), tf.expand_dims(self.log_alpha, 0), tf.expand_dims(self.beta_hat, 0);
+        else:
+            print('using param network');
+            return self.z0, self.log_alpha, self.beta_hat;
+        
+    def connect_parameter_network(self, theta_layer):
+        self.z0, self.log_alpha, self.beta = theta_layer;
+        alpha = tf.exp(self.log_alpha);
+        self.param_network = (len(self.z0.shape) == 3);
+        self.beta_hat = -alpha + tf.log(1 + tf.exp(self.beta));
+        return None;
+            
+    def forward_and_jacobian(self, z, sum_log_det_jacobians, reuse=False):
+        z0, alpha, beta = self.get_params();
+        K, M, D, T = efn_tensor_shape(z);
+        print('z', z.shape);
+
+        alpha = tf.expand_dims(alpha, 1);
+        beta = tf.expand_dims(beta, 1);
+        print('pre z0', z0.shape);
+        z0 = tf.expand_dims(z0,1);
+        print('z0', z0.shape);
+
+
+        d = z - z0
+        print('d', d.shape);
+        r = tf.expand_dims(tf.linalg.norm(d, ord='euclidean', axis=2), 2);
+        h = tf.divide(1.0, alpha + r);
+        h_prime = tf.divide(-1.0, tf.square(alpha + r));
+        print('r', r.shape);
+        print('hprime', h_prime.shape);
+
+        z_out = z + beta*h*d;
+        log_det_jacobian = tf.cast(D-1, tf.float64)*tf.log(tf.abs(1.0 + tf.multiply(beta,h))) +  \
+                                tf.log(tf.abs(1.0 + tf.multiply(beta,h) + tf.multiply(beta,tf.multiply(h_prime,r))));
+        print('ldj');
+        print(log_det_jacobian.shape);
+        log_det_jacobian = tf.reduce_sum(log_det_jacobian, [2,3]);
+        print(log_det_jacobian.shape);
+        sum_log_det_jacobians += log_det_jacobian;
+
+        return z_out, sum_log_det_jacobians;
+
 class SimplexBijectionLayer(Layer):
     def __init__(self, name='SimplexBijectionLayer'):
         self.name = name;
@@ -218,11 +288,17 @@ class StructuredSpinnerLayer(Layer):
         Hmat = scipy.linalg.hadamard(D_np, dtype=np.float64) / np.sqrt(D_np);
         H = tf.constant(Hmat , tf.float64);
         d1, d2 ,d3, b = self.get_params();
-        D1 = tf.diag(d1[:,0]);
-        D2 = tf.diag(d2[:,0]);
-        D3 = tf.diag(d3[:,0]);
-        A = tf.matmul(H, tf.matmul(D3, tf.matmul(H, tf.matmul(D2, tf.matmul(H, D1)))));
+        if (not self.param_network):
+            D1 = tf.matrix_diag(d1[:,0]);
+            D2 = tf.matrix_diag(d2[:,0]);
+            D3 = tf.matrix_diag(d3[:,0]);
+        else:
+            H = tf.tile(tf.expand_dims(H,0), [K,1,1]);
+            D1 = tf.matrix_diag(d1[:,:,0]);
+            D2 = tf.matrix_diag(d2[:,:,0]);
+            D3 = tf.matrix_diag(d3[:,:,0]);
 
+        A = tf.matmul(H, tf.matmul(D3, tf.matmul(H, tf.matmul(D2, tf.matmul(H, D1)))));
         if (not self.param_network):
             b = tf.expand_dims(tf.expand_dims(b, 0), 0);
             z = tf.tensordot(A, z, [[1], [2]]);
@@ -238,6 +314,15 @@ class StructuredSpinnerLayer(Layer):
             log_det_jacobian = tf.tile(tf.expand_dims(log_det_jacobian, 1), [1, M]) + 0.0*tf.reduce_sum(b);
         sum_log_det_jacobians += tf.cast(T, tf.float64)*log_det_jacobian;
         return z, sum_log_det_jacobians;
+
+
+class StructuredSpinnerTanhLayer(StructuredSpinnerLayer):
+    def forward_and_jacobian(self, z, sum_log_det_jacobians):
+        z, sum_log_det_jacobians = super().forward_and_jacobian(z, sum_log_det_jacobians);
+        z_out = tf.tanh(z);
+        log_det_jacobian = tf.reduce_sum(tf.log(1.0 - (z_out**2)), [2,3]);
+        sum_log_det_jacobians += log_det_jacobian;
+        return z_out, sum_log_det_jacobians;
 
 
 class AffineFlowLayer(Layer):
