@@ -15,7 +15,7 @@ def family_from_str(exp_fam_str):
 		return inv_wishart;
 	elif (exp_fam_str in ['hierarchical_dirichlet', 'dir_dir']):
 		return hierarchical_dirichlet;
-	elif (exp_fam_str in ['dirichlet_multinomial']):
+	elif (exp_fam_str in ['dirichlet_multinomial', 'dir_mult']):
 		return dirichlet_multinomial;
 	elif (exp_fam_str in ['truncated_normal_poisson', 'prp_tn']):
 		return truncated_normal_poisson;
@@ -725,7 +725,7 @@ class inv_wishart(family):
 		"""
 
 		super().__init__(D, T);
-		self.name = 'dirichlet';
+		self.name = 'inv_wishart';
 		self.sqrtD = int(np.sqrt(D));
 		self.D_Z = int(self.sqrtD*(self.sqrtD+1)/2)
 		self.num_suff_stats = self.D_Z + 1;
@@ -1007,14 +1007,13 @@ class hierarchical_dirichlet(posterior_family):
 		eta = np.zeros((K, self.num_suff_stats));
 		param_net_inputs = np.zeros((K, num_param_net_inputs));
 		T_x_input = np.zeros((K, self.num_T_x_inputs));
-		Nmax = 15;
 		Nmean = 5;
 		x_eps = 1e-16;
 		params = [];
 		for k in range(K):
 			alpha_0_k = np.random.uniform(1.0, 10.0, (self.D,));
 			beta_k = np.random.uniform(self.D, 2*self.D);
-			N = int(min(np.random.poisson(Nmean), Nmax));
+			N = np.random.poisson(Nmean);
 			dist1 = scipy.stats.dirichlet(alpha_0_k);
 			z = dist1.rvs(1);
 			dist2 = scipy.stats.dirichlet(beta_k*z[0]);
