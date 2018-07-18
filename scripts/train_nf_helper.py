@@ -12,6 +12,7 @@ D = int(sys.argv[2]);
 give_inverse_hint = int(sys.argv[3]) == 1;
 dist_seed = int(sys.argv[4]);
 random_seed = int(sys.argv[5]);
+dir_str = str(sys.argv[6]);
 
 if (exp_fam == 'inv_wishart'):
 	sqrtD = int(np.sqrt(D));
@@ -34,7 +35,6 @@ stochastic_eta = True;
 lr_order = -3;
 max_iters = 100000;
 check_rate = 100;
-dir_str = 'bias_var_tradeoff';
 
 param_net_input_type = 'eta';  # I should generalize this draw_etas function to accept a None
 
