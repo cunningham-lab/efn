@@ -16,10 +16,10 @@ import re
 
 p_eps = 10e-6;
 
-def setup_IO(family, model_type_str, param_net_input_type, K, M, flow_dict, \
-             param_net_hps, stochastic_eta, give_hint, random_seed):
+def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_dict, \
+             param_net_hps, stochastic_eta, give_hint, random_seed, dist_info={}):
     # set file I/O stuff
-    resdir = 'results/June';
+    resdir = 'results/%s/' % dir_str;
     eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
     give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
@@ -34,10 +34,11 @@ def setup_IO(family, model_type_str, param_net_input_type, K, M, flow_dict, \
             substr = 'c';
         else:
             raise NotImplementedError();
-        savedir = resdir + '/tb/' + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
+        savedir = resdir + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
                   % (substr, family.name, eta_str, give_hint_str, family.D, K, M, flowstring, param_net_hps['L'], random_seed);
     else:
-        savedir = resdir + '/tb/' + '%s_%s_D=%d_flow=%s_rs=%d/' % (model_type_str, family.name, family.D, flowstring, random_seed);
+        dist_seed = dist_info['dist_seed'];
+        savedir = resdir + '%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % (model_type_str, family.name, family.D, flowstring, dist_seed, random_seed);
     return savedir
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
@@ -706,9 +707,14 @@ def check_convergence(to_check, cur_ind, lag, thresh, criteria='lag_diff', wsize
     return has_converged;
 
 def test_convergence(mean_test_elbos, ind, wsize, delta_thresh):
+    print('testing convergence');
     cur_mean_test_elbo = np.mean(mean_test_elbos[(ind-wsize+1):(ind+1)]);
     prev_mean_test_elbo = np.mean(mean_test_elbos[(ind-2*wsize+1):(ind-wsize+1)]);
+    print('prev, cur');
+    print(prev_mean_test_elbo, cur_mean_test_elbo);
     delta_elbo = (prev_mean_test_elbo - cur_mean_test_elbo) / prev_mean_test_elbo;
+    print('delta elbo',delta_elbo);
+    print('ret val', delta_elbo < delta_thresh)
     return delta_elbo < delta_thresh;
 
 def find_convergence(mean_test_elbos, last_ind, wsize, delta_thresh):

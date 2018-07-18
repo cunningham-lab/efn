@@ -1,17 +1,17 @@
-from train_efn import train_efn
+from train_nf import train_nf
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
-from families import family_from_str
 import os, sys
+from families import family_from_str
 
 os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
 give_inverse_hint = int(sys.argv[3]) == 1;
-random_seed = int(sys.argv[4]);
-dir_str = str(sys.argv[5]);
+dist_seed = int(sys.argv[4]);
+random_seed = int(sys.argv[5]);
 
 if (exp_fam == 'inv_wishart'):
 	sqrtD = int(np.sqrt(D));
@@ -28,15 +28,20 @@ flow_dict = {'latent_dynamics':None, \
 fam_class = family_from_str(exp_fam);
 family = fam_class(D);
 
-param_net_input_type = 'eta';
 cost_type = 'KL';
-K_eta = 100;
 M_eta = 1000;
 stochastic_eta = True;
 lr_order = -3;
 max_iters = 100000;
 check_rate = 100;
+dir_str = 'bias_var_tradeoff';
 
-X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K_eta, M_eta, \
-	                         stochastic_eta, give_inverse_hint, lr_order, random_seed, \
-	                         max_iters, check_rate, dir_str);
+param_net_input_type = 'eta';  # I should generalize this draw_etas function to accept a None
+
+np.random.seed(dist_seed);
+eta, param_net_input, Tx_input, params = family.draw_etas(1, param_net_input_type, give_inverse_hint);
+params = params[0];
+params.update({'dist_seed':dist_seed});
+
+log_p_zs, X, train_R2s, train_KLs, it = train_nf(family, params, flow_dict, cost_type, M_eta, lr_order, \
+	                         					 random_seed, max_iters, check_rate, dir_str);

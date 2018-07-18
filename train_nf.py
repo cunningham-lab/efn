@@ -10,13 +10,14 @@ import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import connect_flow, construct_flow, setup_IO, log_grads, declare_theta, \
-                     cost_fn, check_convergence, memory_extension, setup_param_logging, \
+                     cost_fn, test_convergence, memory_extension, setup_param_logging, \
                      count_params
 
 def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_seed=0, \
-             max_iters=10000, check_rate=1000):
-
-    P = 0;
+             max_iters=20000, check_rate=1000, dir_str='general'):
+    print('max iters', max_iters);
+    T = 1;
+    wsize = 50;
     delta_thresh = 1e-10;
  
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims('eta', False);
@@ -24,11 +25,10 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, P, num_zi, num_theta_params, num_dyn_param_vals = construct_flow(flow_dict, D_Z, family.T);
+    flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, family.T);
     flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
     Z0_shape = tf.shape(Z0);
     batch_size = tf.multiply(Z0_shape[0], Z0_shape[1]);
-    dynamics = P > 0;
 
     K = 1;
     n = K*M;
@@ -44,7 +44,8 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
     np.random.seed(0);
     tf.set_random_seed(random_seed);
 
-    savedir = setup_IO(family, 'NF1', '', K, M, flow_dict, {}, False, False, random_seed);
+    dist_info = {'dist_seed':params['dist_seed']};
+    savedir = setup_IO(family, 'NF1', dir_str, '', K, M, flow_dict, {}, False, False, random_seed, dist_info);
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats), name='eta');
     T_x_input = tf.placeholder(tf.float64, shape=(None, num_T_x_inputs), name='T_x_input');
 
@@ -104,9 +105,6 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
 
     opt_compress_fac = 16;
     array_init_len = int(np.ceil(max_iters/opt_compress_fac));
-    if (dynamics):
-        As = np.zeros((array_init_len, K, D_Z, D_Z));
-        sigma_epsilons = np.zeros((array_init_len,D_Z));
     array_cur_len = array_init_len;
 
     num_diagnostic_checks = (max_iters // check_rate) + 1;
@@ -121,18 +119,13 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 
-        z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
         feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
 
         cost_i, summary = \
-            sess.run([cost,f summary_op], feed_dict);
+            sess.run([cost, summary_op], feed_dict);
 
-        if (dynamics):
-            A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
-            As[0,:,:,:] = A_i;
-            sigma_epsilons[0,:] = _sigma_epsilon_i[:,0];
-
-        z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
         feed_dict_train = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
         feed_dict_test = {Z0:z_i, eta:_eta_test, T_x_input:_T_x_input_test};
         train_elbos_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
@@ -157,22 +150,17 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
 
         has_converged = False;
         while (i < max_iters):
-            z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
+            z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
             feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
 
             if (np.mod(i, check_rate)==0):
                 start_time = time.time();
-            ts, cost_i, _X, _cost_grads, _R2s, _T_x, _log_h_x, summary = \
-                    sess.run([train_step, cost, X, cost_grad, R2s, T_x, log_h_x, summary_op], feed_dict);
+            ts, cost_i, _cost_grads, _R2s, _T_x, _log_h_x, summary = \
+                    sess.run([train_step, cost, cost_grad, R2s, T_x, log_h_x, summary_op], feed_dict);
 
             if (np.mod(i, check_rate)==0):
                 end_time = time.time();
                 print('iter %d took %f seconds' % (i+1, end_time-start_time));
-
-            if (dynamics):
-                A_i, _sigma_epsilon_i = sess.run([A, sigma_eps]);
-                As[i,:,:] = A_i;
-                sigma_epsilons[i,:] = _sigma_epsilon_i[:,0];
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
@@ -186,7 +174,7 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
                 saver.save(sess, savedir + 'model');
 
             if (np.mod(i+1, check_rate)==0):
-                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, num_zi)), 1.0);
+                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
                 feed_dict_test = {Z0:z_i, eta:_eta_test, T_x_input:_T_x_input_test};
                 train_elbos_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
@@ -203,37 +191,32 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
                 mean_train_KL = np.mean(train_KLs_i);
 
                 print(42*'*');
+                print(savedir);
                 print('it = %d ' % (i+1));
                 print('cost = %f ' % cost_i);
                 print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
-                if (dynamics):
-                    np.savez(savedir + 'results.npz', As=As, sigma_epsilons=sigma_epsilons, autocov_targ=autocov_targ,  \
-                                                      it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
-                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs);
-                else:
-                    np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
-                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs);
+                
+                z_i = np.random.normal(np.zeros((K, int(1e4), D_Z, T)), 1.0);
+                feed_dict_X = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
+                _X = sess.run(X, feed_dict_X);
 
-                last_mean_test_elbo = np.mean(test_elbos[check_it-1,:]);
-                delta = (last_mean_test_elbo - mean_test_elbo) / last_mean_test_elbo;
-                if (delta < delta_thresh):
-                    print('quitting opt:');
-                    print('%f < %f' % (delta, delta_thresh));
-                    break;
-                else:
-                    print('continue learning');
-                    print('delta = %f' % delta);
+                np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
+                                                  train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                  train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cos=cost_i);
+
+                if (check_it >= 2*wsize - 1):
+                    mean_test_elbos = np.mean(test_elbos, 1);
+                    if (test_convergence(mean_test_elbos, check_it, wsize, delta_thresh)):
+                        print('converged!');
+                        break;
                 
                 check_it += 1;
 
             sys.stdout.flush();
             i += 1;
 
-        z_i = np.random.normal(np.zeros((K, M, D_Z, num_zi)), 1.0);
+        z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
         feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
 

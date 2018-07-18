@@ -16,7 +16,7 @@ from efn_util import connect_flow, construct_flow, setup_IO, construct_param_net
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, random_seed=0, \
-              max_iters=10000, check_rate=200):
+              max_iters=10000, check_rate=200, dir_str='general'):
     batch_norm = False;
     dropout = False;
     upl_tau = None;
@@ -67,7 +67,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
            
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
 
-    savedir = setup_IO(family, 'EFN', param_net_input_type, K, M, flow_dict, \
+    savedir = setup_IO(family, 'EFN', dir_str, param_net_input_type, K, M, flow_dict, \
                        param_net_hps, stochastic_eta, give_hint, random_seed);
 
     if not os.path.exists(savedir):
@@ -188,6 +188,9 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
+
+            if (np.mod(i,model_save_every)==0):
+                saver.save(sess, savedir + 'model');
 
             if (np.mod(i+1, check_rate)==0):
                 print(42*'*');
