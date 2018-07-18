@@ -194,6 +194,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
             if (np.mod(i+1, check_rate)==0):
                 print(42*'*');
+                print(savedir);
                 print('it = %d ' % (i+1));
                 start_time = time.time();
                 
