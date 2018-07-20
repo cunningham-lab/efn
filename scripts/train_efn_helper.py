@@ -19,7 +19,10 @@ if (exp_fam == 'inv_wishart'):
 else:
 	nlayers = D;
 
-TIF_flow_type = 'PlanarFlowLayer';
+if (exp_fam == 'normal'):
+	TIF_flow_type = 'AffineFlowLayer';
+else:
+	TIF_flow_type = 'PlanarFlowLayer';
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \

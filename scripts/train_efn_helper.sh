@@ -10,4 +10,4 @@
 module load cuda90/toolkit/9.0.176 cuda90/blas/9.0.176 cudnn/7.0
 source activate ARMEFN
 
-python3 train_efn_helper.py dirichlet 3 0 $1 bias_var_tradeoff
+python3 train_efn_helper.py $1 $2 $3 $4 $5
