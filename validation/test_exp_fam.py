@@ -3,20 +3,22 @@ import numpy as np
 from matplotlib import pyplot as plt
 import scipy.stats
 import os, sys
-from efn_util import get_flowdict, print_flowdict
 from families import family_from_str
 
 os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
-planar_layers = int(sys.argv[3]);
+nlayers = int(sys.argv[3]);
 give_hint = not(int(sys.argv[4]) == 0);
 param_net_input_type = str(sys.argv[5]);
 random_seed = int(sys.argv[6]);
 
-flow_dict = get_flowdict(0, 0, 0, planar_layers, 0, 0);
-print_flowdict(flow_dict);
+TIF_flow_type = 'PlanarFlowLayer';
+
+flow_dict = {'latent_dynamics':None, \
+             'TIF_flow_type':TIF_flow_type, \
+             'repeats':nlayers};
 
 cost_type = 'KL';
 K_eta = 100;
