@@ -203,13 +203,15 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
                 np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
                                                   train_elbos=train_elbos, test_elbos=test_elbos, \
                                                   train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cos=cost_i);
+                                                  train_KLs=train_KLs, test_KLs=test_KLs, \
+                                                  converged=False, final_cos=cost_i);
 
                 if (check_it >= 2*wsize - 1):
                     mean_test_elbos = np.mean(test_elbos, 1);
-                    if (test_convergence(mean_test_elbos, check_it, wsize, delta_thresh)):
-                        print('converged!');
-                        break;
+                    if (i >= min_iters):
+                        if (test_convergence(mean_test_elbos, check_it, wsize, delta_thresh)):
+                            print('converged!');
+                            break;
                 
                 check_it += 1;
 
@@ -219,6 +221,13 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
         z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
         feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
+
+    if (i < max_iters):
+        np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
+                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                      train_KLs=train_KLs, test_KLs=test_KLs, \
+                                      converged=True, final_cos=cost_i);
 
     if (len(_X.shape) > 2):
         assert(len(_X.shape) == 4);

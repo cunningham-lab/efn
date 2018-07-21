@@ -14,13 +14,18 @@ dist_seed = int(sys.argv[4]);
 random_seed = int(sys.argv[5]);
 dir_str = str(sys.argv[6]);
 
-if (exp_fam == 'inv_wishart'):
-	sqrtD = int(np.sqrt(D));
-	nlayers = int(sqrtD*(sqrtD+1)/2);
+if (exp_fam == 'normal'):
+	TIF_flow_type = 'AffineFlowLayer';
+	nlayers = 1;
 else:
-	nlayers = D;
-
-TIF_flow_type = 'PlanarFlowLayer';
+	TIF_flow_type = 'PlanarFlowLayer';
+	if (exp_fam == 'dirichlet'):
+		nlayers = D;
+	elif (exp_fam == 'inv_wishart'):
+		sqrtD = int(np.sqrt(D));
+		nlayers = int(sqrtD*(sqrtD+1)/2);
+	if (nlayers < 20):
+		nlayers = 20;
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
@@ -33,7 +38,7 @@ cost_type = 'KL';
 M_eta = 1000;
 stochastic_eta = True;
 lr_order = -3;
-max_iters = 100000;
+max_iters = 1000000;
 check_rate = 100;
 
 param_net_input_type = 'eta';  # I should generalize this draw_etas function to accept a None
