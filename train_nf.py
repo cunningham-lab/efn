@@ -25,7 +25,7 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
     # good practice
     tf.reset_default_graph();
 
-    flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, family.T);
+    flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, family.T, random_seed);
     flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
     Z0_shape = tf.shape(Z0);
     batch_size = tf.multiply(Z0_shape[0], Z0_shape[1]);
@@ -64,7 +64,7 @@ def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_se
     theta = declare_theta(flow_layers);
 
     # connect time-invariant flow
-    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta);
+    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta, random_seed);
     log_p_zs = base_log_p_z - sum_log_det_jacobian;
 
     # generative model is fully specified

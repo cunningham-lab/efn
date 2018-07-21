@@ -31,10 +31,11 @@ class Layer:
         
 class PlanarFlowLayer(Layer):
 
-    def __init__(self, name='PlanarFlow', dim=1):
+    def __init__(self, name='PlanarFlow', dim=1, seed=1):
         # TODO this entire class needs to be compatible with the parameter network
         self.name = name;
         self.dim = dim;
+        self.seed = seed;
         self.param_names = ['u', 'w', 'b'];
         self.param_network = False;
         self.u = None;
@@ -48,7 +49,7 @@ class PlanarFlowLayer(Layer):
         w_dim = (self.dim,1);
         b_dim = (1,1);
         dims = [u_dim, w_dim, b_dim];
-        initializers = [tf.constant(np.zeros(u_dim)), tf.glorot_uniform_initializer(), \
+        initializers = [tf.constant(np.zeros(u_dim)), tf.glorot_uniform_initializer(seed=self.seed), \
                         tf.constant(np.zeros(b_dim))];
         return self.name, self.param_names, dims, initializers, self.lock;
 
@@ -96,7 +97,7 @@ class PlanarFlowLayer(Layer):
 
 class RadialFlowLayer(Layer):
 
-    def __init__(self, name='RadialFlow', dim=1):
+    def __init__(self, name='RadialFlow', dim=1, seed=None):
         # TODO this entire class needs to be compatible with the parameter network
         self.name = name;
         self.dim = dim;
@@ -244,9 +245,10 @@ class SoftPlusLayer(Layer):
 
 
 class StructuredSpinnerLayer(Layer):
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, seed=1):
         self.name = name;
         self.dim = dim;
+        self.seed = seed;
         self.param_names = ['d1', 'd2', 'd3', 'b'];
         self.d1 = None;
         self.d2 = None;
@@ -260,8 +262,8 @@ class StructuredSpinnerLayer(Layer):
         d3_dim = (self.dim, 1);
         b_dim = (self.dim,1);
         dims = [d1_dim, d2_dim, d3_dim, b_dim];
-        initializers = [tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer(), \
-                        tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer()];
+        initializers = [tf.glorot_uniform_initializer(seed=self.seed), tf.glorot_uniform_initializer(seed=self.seed), \
+                        tf.glorot_uniform_initializer(seed=self.seed), tf.glorot_uniform_initializer(seed=self.seed)];
         return self.name, self.param_names, dims, initializers, self.lock;
 
     def get_params(self,):
@@ -317,9 +319,10 @@ class StructuredSpinnerTanhLayer(StructuredSpinnerLayer):
 
 
 class AffineFlowLayer(Layer):
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, seed=1):
         self.name = name;
         self.dim = dim;
+        self.seed = seed;
         self.param_names = ['A', 'b'];
         self.lock = False;
         
@@ -327,7 +330,7 @@ class AffineFlowLayer(Layer):
         A_dim = (self.dim, self.dim);
         b_dim = (self.dim,1);
         dims = [A_dim, b_dim];
-        initializers = [tf.glorot_uniform_initializer(), tf.glorot_uniform_initializer()];
+        initializers = [tf.glorot_uniform_initializer(seed=self.seed), tf.glorot_uniform_initializer(seed=self.seed)];
         return self.name, self.param_names, dims, initializers, self.lock;
 
     def connect_parameter_network(self, theta_layer):
@@ -356,8 +359,8 @@ class AffineFlowLayer(Layer):
         return z, sum_log_det_jacobians;
 
 
-class FullyConnectedFlowLayer(Layer):
-    def __init__(self, name, dim, A_init, lock):
+class FullyConnectedFlowLayer(Layer,):
+    def __init__(self, name, dim, A_init, lock, seed=1):
         self.name = name;
         self.dim = dim;
         self.param_names = ['A'];
@@ -397,16 +400,17 @@ class FullyConnectedFlowLayer(Layer):
 
 
 class ShiftLayer(Layer):
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, seed=1):
         self.name = name;
         self.dim = dim;
+        self.seed = seed;
         self.param_names = ['b'];
         self.lock = False;
         
     def get_layer_info(self,):
         b_dim = (self.dim,1);
         dims = [b_dim];
-        initializers = [tf.glorot_uniform_initializer()]
+        initializers = [tf.glorot_uniform_initializer(seed=self.seed)]
         return self.name, self.param_names, dims, initializers, self.lock;
 
     def connect_parameter_network(self, theta_layer):
@@ -428,16 +432,17 @@ class ShiftLayer(Layer):
         return z, sum_log_det_jacobians;
 
 class ElemMultLayer(Layer):
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, seed=1):
         self.name = name;
         self.dim = dim;
+        self.seed = seed;
         self.param_names = ['a'];
         self.lock = False;
         
     def get_layer_info(self,):
         a_dim = (self.dim,1);
         dims = [a_dim];
-        initializers = [tf.glorot_uniform_initializer()];
+        initializers = [tf.glorot_uniform_initializer(seed=self.seed)];
         return self.name, self.param_names, dims, initializers, self.lock;
 
     def connect_parameter_network(self, theta_layer):

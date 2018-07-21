@@ -41,7 +41,7 @@ stochastic_eta = True;
 lr_order = -3;
 dist_seed = 0;
 max_iters = 1000000;
-check_rate = 100;
+check_rate = 1;
 
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K_eta, M_eta, \
 	                         stochastic_eta, give_inverse_hint, lr_order, dist_seed, random_seed, \
