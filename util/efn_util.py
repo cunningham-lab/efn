@@ -24,7 +24,7 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
     give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
 
-    if (param_net_input_type == 'eta'):
+    if (param_net_input_type in ['eta', '']):
         substr = '' ;
     elif (param_net_input_type == 'prior'):
         substr = 'a';

@@ -19,6 +19,7 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
     T = 1;
     wsize = 50;
     delta_thresh = 1e-10;
+    min_iters = 50000;
  
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims('eta', False);
 
