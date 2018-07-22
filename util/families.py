@@ -1016,7 +1016,8 @@ class hierarchical_dirichlet(posterior_family):
 		for k in range(K):
 			alpha_0_k = np.random.uniform(1.0, 10.0, (self.D,));
 			beta_k = np.random.uniform(self.D, 2*self.D);
-			N = np.random.poisson(Nmean);
+			N = 1;
+			#N = np.random.poisson(Nmean);
 			dist1 = scipy.stats.dirichlet(alpha_0_k);
 			z = dist1.rvs(1);
 			dist2 = scipy.stats.dirichlet(beta_k*z[0]);
