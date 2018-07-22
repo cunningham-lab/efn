@@ -19,11 +19,11 @@ if (exp_fam == 'normal'):
 	nlayers = 1;
 else:
 	TIF_flow_type = 'PlanarFlowLayer';
-	if (exp_fam == 'dirichlet'):
-		nlayers = D;
-	elif (exp_fam == 'inv_wishart'):
+	if (exp_fam == 'inv_wishart'):	
 		sqrtD = int(np.sqrt(D));
 		nlayers = int(sqrtD*(sqrtD+1)/2);
+	else:
+		nlayers = D;
 	if (nlayers < 20):
 		nlayers = 20;
 
