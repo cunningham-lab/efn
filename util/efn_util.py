@@ -67,11 +67,11 @@ def model_opt_hps(exp_fam, D):
         if (exp_fam == 'dirichlet' or exp_fam == 'dir_dir'):
             if (D >= 15):
                 lr_order = -4;
-        elif (exp_fam == 'dir_mult')
+        elif (exp_fam == 'dir_mult'):
             if (D >= 10):
                 lr_order = -4;
-                
-    return exp_fam, D;
+
+    return TIF_flow_type, nlayers, lr_order;
 
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
