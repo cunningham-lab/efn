@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
 from families import family_from_str
+from efn_util import model_opt_hps
 import os, sys
 
 os.chdir('../');
@@ -13,18 +14,7 @@ give_inverse_hint = int(sys.argv[3]) == 1;
 random_seed = int(sys.argv[4]);
 dir_str = str(sys.argv[5]);
 
-if (exp_fam == 'normal'):
-	TIF_flow_type = 'AffineFlowLayer';
-	nlayers = 1;
-else:
-	TIF_flow_type = 'PlanarFlowLayer';
-	if (exp_fam == 'inv_wishart'):	
-		sqrtD = int(np.sqrt(D));
-		nlayers = int(sqrtD*(sqrtD+1)/2);
-	else:
-		nlayers = D;
-	if (nlayers < 20):
-		nlayers = 20;
+TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
@@ -38,7 +28,6 @@ cost_type = 'KL';
 K_eta = 100;
 M_eta = 1000;
 stochastic_eta = True;
-lr_order = -3;
 dist_seed = 0;
 max_iters = 1000000;
 check_rate = 100;

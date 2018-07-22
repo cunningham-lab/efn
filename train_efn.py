@@ -72,7 +72,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
     dist_info = {'dist_seed':dist_seed};
     efn_str = 'EFN1' if (K ==1) else 'EFN';
-    savedir = setup_IO(family, 'EFN', dir_str, param_net_input_type, K, M, flow_dict, \
+    savedir = setup_IO(family, efn_str, dir_str, param_net_input_type, K, M, flow_dict, \
                        param_net_hps, stochastic_eta, give_hint, random_seed, dist_info);
 
     if not os.path.exists(savedir):

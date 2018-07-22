@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
 import os, sys
 from families import family_from_str
+from efn_util import model_opt_hps
 
 os.chdir('../');
 
@@ -14,18 +15,7 @@ dist_seed = int(sys.argv[4]);
 random_seed = int(sys.argv[5]);
 dir_str = str(sys.argv[6]);
 
-if (exp_fam == 'normal'):
-	TIF_flow_type = 'AffineFlowLayer';
-	nlayers = 1;
-else:
-	TIF_flow_type = 'PlanarFlowLayer';
-	if (exp_fam == 'inv_wishart'):	
-		sqrtD = int(np.sqrt(D));
-		nlayers = int(sqrtD*(sqrtD+1)/2);
-	else:
-		nlayers = D;
-	if (nlayers < 20):
-		nlayers = 20;
+TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
@@ -36,12 +26,10 @@ family = fam_class(D);
 
 cost_type = 'KL';
 M_eta = 1000;
-lr_order = -3;
 max_iters = 1000000;
 check_rate = 100;
 
 param_net_input_type = 'eta';  # I should generalize this draw_etas function to accept a None
-
 np.random.seed(dist_seed);
 eta, param_net_input, Tx_input, params = family.draw_etas(1, param_net_input_type, give_inverse_hint);
 params = params[0];

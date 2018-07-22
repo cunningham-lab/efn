@@ -23,22 +23,24 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
     eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
     give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
+
+    if (param_net_input_type == 'eta'):
+        substr = '' ;
+    elif (param_net_input_type == 'prior'):
+        substr = 'a';
+    elif (param_net_input_type == 'likelihood'):
+        substr = 'b';
+    elif (param_net_input_type == 'data'):
+        substr = 'c';
+    else:
+        raise NotImplementedError();
+
     if (model_type_str == 'EFN'):
-        if (param_net_input_type == 'eta'):
-            substr = '' ;
-        elif (param_net_input_type == 'prior'):
-            substr = 'a';
-        elif (param_net_input_type == 'likelihood'):
-            substr = 'b';
-        elif (param_net_input_type == 'data'):
-            substr = 'c';
-        else:
-            raise NotImplementedError();
         savedir = resdir + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
                   % (substr, family.name, eta_str, give_hint_str, family.D, K, M, flowstring, param_net_hps['L'], random_seed);
     else:
         dist_seed = dist_info['dist_seed'];
-        savedir = resdir + '%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % (model_type_str, family.name, family.D, flowstring, dist_seed, random_seed);
+        savedir = resdir + '%s%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % (model_type_str, substr, family.name, family.D, flowstring, dist_seed, random_seed);
     return savedir
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
