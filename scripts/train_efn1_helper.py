@@ -39,9 +39,9 @@ M = 1000;
 param_net_input_type = 'eta';
 cost_type = 'KL'
 stochastic_eta = False;
-lr_order = 1e-3;
+lr_order = -3;
 max_iters = 1000000;
-check_rate = 100;
+check_rate = 1;
 
 np.random.seed(0);
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
