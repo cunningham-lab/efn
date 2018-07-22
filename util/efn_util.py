@@ -64,9 +64,9 @@ def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl
     param_net_hps = {'L':L, 'upl':upl_param_net};
     return param_net_hps;
 
-def construct_flow(flow_dict, D_Z, T, random_seed):
-    latent_layers = construct_latent_dynamics(flow_dict, D_Z, T, random_seed);
-    time_invariant_layers = construct_time_invariant_flow(flow_dict, D_Z, T, random_seed);
+def construct_flow(flow_dict, D_Z, T):
+    latent_layers = construct_latent_dynamics(flow_dict, D_Z, T);
+    time_invariant_layers = construct_time_invariant_flow(flow_dict, D_Z, T);
 
     layers = latent_layers + time_invariant_layers;
     nlayers = len(layers);
@@ -86,7 +86,7 @@ def construct_flow(flow_dict, D_Z, T, random_seed):
     Z_AR = Z0;
     return layers, Z0, Z_AR, base_log_q_x, num_theta_params;
 
-def construct_latent_dynamics(flow_dict, D_Z, T, random_seed):
+def construct_latent_dynamics(flow_dict, D_Z, T):
     latent_dynamics = flow_dict['latent_dynamics'];
 
     if (latent_dynamics is None):
@@ -118,7 +118,7 @@ def construct_latent_dynamics(flow_dict, D_Z, T, random_seed):
     return [layer];
 
 
-def construct_time_invariant_flow(flow_dict, D_Z, T, random_seed):
+def construct_time_invariant_flow(flow_dict, D_Z, T):
     layer_ind = 1;
     layers = [];
     TIF_flow_type = flow_dict['TIF_flow_type'];
@@ -160,12 +160,12 @@ def construct_time_invariant_flow(flow_dict, D_Z, T, random_seed):
         raise NotImplementedError();
 
     for i in range(repeats):
-        layers.append(flow_class('%s%d' % (name_prefix, layer_ind), D_Z, random_seed));
+        layers.append(flow_class('%s%d' % (name_prefix, layer_ind), D_Z));
         layer_ind += 1;
         
     return layers;
 
-def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps, random_seed):
+def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     L_theta = param_net_hps['L']
     upl_theta = param_net_hps['upl'];
     L_flow = len(flow_layers);
@@ -186,10 +186,10 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps, 
             b_shape = (1, num_elems);
             A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
                                        dtype=tf.float64, \
-                                       initializer=tf.glorot_uniform_initializer(seed=random_seed));
+                                       initializer=tf.glorot_uniform_initializer());
             b_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_b', shape=b_shape, \
                                        dtype=tf.float64, \
-                                       initializer=tf.glorot_uniform_initializer(seed=random_seed));
+                                       initializer=tf.glorot_uniform_initializer());
             param_ij = tf.matmul(h, A_ij) + b_ij;
             #param_ij = tf.reshape(param_ij, (K,) + param_dims[j]);
             param_ij = tf.reshape(param_ij, (K_eta,) + param_dims[j]);
