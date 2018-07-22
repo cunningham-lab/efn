@@ -33,6 +33,7 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
     elif (param_net_input_type == 'data'):
         substr = 'c';
     else:
+        print(param_net_input_type);
         raise NotImplementedError();
 
     if (model_type_str == 'EFN'):
@@ -42,6 +43,36 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
         dist_seed = dist_info['dist_seed'];
         savedir = resdir + '%s%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % (model_type_str, substr, family.name, family.D, flowstring, dist_seed, random_seed);
     return savedir
+
+def model_opt_hps(exp_fam, D):
+    if (exp_fam == 'normal'):
+        TIF_flow_type = 'AffineFlowLayer';
+        nlayers = 1;
+        lr_order = -3;
+    else:
+        # flow type
+        TIF_flow_type = 'PlanarFlowLayer';
+
+        # number of layers
+        if (exp_fam == 'inv_wishart'):  
+            sqrtD = int(np.sqrt(D));
+            nlayers = int(sqrtD*(sqrtD+1)/2);
+        else:
+            nlayers = D;
+        if (nlayers < 20):
+            nlayers = 20;
+
+        # learning rate
+        lr_order = -3;
+        if (exp_fam == 'dirichlet' or exp_fam == 'dir_dir'):
+            if (D >= 15):
+                lr_order = -4;
+        elif (exp_fam == 'dir_mult')
+            if (D >= 10):
+                lr_order = -4;
+                
+    return exp_fam, D;
+
 
 def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
     if (shape=='linear'):
