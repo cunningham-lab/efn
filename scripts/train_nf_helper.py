@@ -36,7 +36,6 @@ family = fam_class(D);
 
 cost_type = 'KL';
 M_eta = 1000;
-stochastic_eta = True;
 lr_order = -3;
 max_iters = 1000000;
 check_rate = 100;

@@ -25,8 +25,6 @@ else:
 	if (nlayers < 20):
 		nlayers = 20;
 
-nlayers = 2;
-
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
              'repeats':nlayers};
@@ -39,11 +37,10 @@ M = 1000;
 param_net_input_type = 'eta';
 cost_type = 'KL'
 stochastic_eta = False;
-lr_order = 1e-3;
+lr_order = -3;
 max_iters = 1000000;
 check_rate = 100;
 
-np.random.seed(0);
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 	                         stochastic_eta, give_inverse_hint, lr_order, dist_seed, random_seed, \
 	                         max_iters, check_rate);

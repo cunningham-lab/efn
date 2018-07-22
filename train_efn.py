@@ -16,7 +16,7 @@ from efn_util import connect_flow, construct_flow, setup_IO, construct_param_net
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \
-              max_iters=10000, check_rate=200, dir_str='general'):
+              max_iters=1000000, check_rate=100, dir_str='general'):
     batch_norm = False;
     dropout = False;
     upl_tau = None;
@@ -35,8 +35,8 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     # good practice
     tf.reset_default_graph();
     # seed RNGs
-    tf.set_random_seed(0);
-    np.random.seed(0);
+    tf.set_random_seed(random_seed);
+    np.random.seed(dist_seed);
 
     flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, T);
     flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
@@ -59,10 +59,10 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
     if (not stochastic_eta):
         # get etas based on constraint_id
-        np.random.seed(0);
         _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
-        print("eta for this EFN1");
-        print(_eta);
+    else:
+        np.random.seed(0);
+
     _eta_tests = [];
     _param_net_input_tests = [];
     _T_x_input_tests = [];
@@ -203,46 +203,6 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 # compute R^2, KL, and elbo for training set
                 z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
-
-                # debugging stuff
-                """[_theta, _Z1, _Z2, _X, _T_x, _log_h_x, _log_p_zs, _cost, _costs] = sess.run([theta, Z_by_layer[1], Z_by_layer[2], X, T_x, log_h_x, log_p_zs, cost, costs], feed_dict);
-                print('cost', _cost);
-                print('costs', _costs);
-                print('theta');
-                print(_theta);
-                Z1_num_nans = np.count_nonzero(np.isnan(_Z1));
-                Z1_num_infs = np.count_nonzero(np.isinf(_Z1));
-                print(_Z1[0,:10,:,0]);
-                print('Z1 nans = %d' % Z1_num_nans);
-                print('Z1 infs = %d' % Z1_num_infs);
-                Z2_num_nans = np.count_nonzero(np.isnan(_Z2));
-                Z2_num_infs = np.count_nonzero(np.isinf(_Z2));
-                print(_Z2[0,:10,:,0]);
-                print('Z2 nans = %d' % Z2_num_nans);
-                print('Z2 infs = %d' % Z2_num_infs);
-                X_num_nans = np.count_nonzero(np.isnan(_X));
-                X_num_infs = np.count_nonzero(np.isinf(_X));
-                print('X nans = %d' % X_num_nans);
-                print('X infs = %d' % X_num_infs);
-                print(_X[0,:10,:,0]);
-                T_x_num_nans = np.count_nonzero(np.isnan(_T_x));
-                T_x_num_infs = np.count_nonzero(np.isinf(_T_x));
-                print('T(x) nans = %d' % T_x_num_nans);
-                print('T(x) infs = %d' % T_x_num_infs);
-                log_h_x_num_nans = np.count_nonzero(np.isnan(_log_h_x));
-                log_h_x_num_infs = np.count_nonzero(np.isinf(_log_h_x));
-                print('log h(x) nans = %d' % log_h_x_num_nans);
-                print('log h(x) infs = %d' % log_h_x_num_infs);
-                log_p_z_num_nans = np.count_nonzero(np.isnan(_log_p_zs));
-                log_p_z_num_posinfs = np.count_nonzero(np.isposinf(_log_p_zs));
-                log_p_z_num_neginfs = np.count_nonzero(np.isneginf(_log_p_zs));
-                print('log p(z) nans = %d' % log_p_z_num_nans);
-                print('log p(z) pos infs = %d' % log_p_z_num_posinfs);
-                print('log p(z) neg infs = %d' % log_p_z_num_neginfs);
-                if (i==2):
-                    exit();
-                """
-
 
                 train_costs_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
                 train_elbos[check_it,:] = np.array(train_costs_i);

@@ -13,8 +13,8 @@ from efn_util import connect_flow, construct_flow, setup_IO, log_grads, declare_
                      cost_fn, test_convergence, memory_extension, setup_param_logging, \
                      count_params
 
-def train_nf(family, params, flow_dict, cost_type, M=100, lr_order=-3, random_seed=0, \
-             max_iters=20000, check_rate=1000, dir_str='general'):
+def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_seed=0, \
+             max_iters=1000000, check_rate=100, dir_str='general'):
     print('max iters', max_iters);
     T = 1;
     wsize = 50;
