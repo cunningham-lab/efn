@@ -24,7 +24,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     T = 1; 
     wsize = 50;
     delta_thresh = 1e-10;
-    min_iters = 50000;
+    min_iters = 100000;
 
 
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims(param_net_input_type, give_hint);
