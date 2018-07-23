@@ -60,14 +60,13 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     if (not stochastic_eta):
         # get etas based on constraint_id
         _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        _eta_test = _eta
+        _param_net_input_test = _param_net_input;
+        _T_x_input_test = _T_x_input;
+        eta_test_draw_params = eta_draw_params;
     else:
         np.random.seed(0);
-
-    _eta_tests = [];
-    _param_net_input_tests = [];
-    _T_x_input_tests = [];
-    eta_test_draw_params = [];
-    _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
            
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
     dist_info = {'dist_seed':dist_seed};
