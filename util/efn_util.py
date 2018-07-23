@@ -5,7 +5,6 @@ from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart, truncnorm
 import statsmodels.sandbox.distributions.mv_normal as mvd
-import matplotlib.pyplot as plt
 from flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, SimplexBijectionLayer, \
                   CholProdLayer, StructuredSpinnerLayer, StructuredSpinnerTanhLayer, TanhLayer, ExpLayer, \
                   SoftPlusLayer, GP_EP_CondRegLayer, GP_EP_CondRegFillLayer, GP_Layer, AR_Layer, VAR_Layer, \

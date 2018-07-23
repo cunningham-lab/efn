@@ -1,6 +1,5 @@
 from train_efn import train_efn
 import numpy as np
-from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal
 from families import family_from_str
 from efn_util import model_opt_hps
