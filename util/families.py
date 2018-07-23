@@ -1419,11 +1419,6 @@ class truncated_normal_poisson(posterior_family):
 			param_net_input = x.T;
 		return eta, param_net_input;
 
-
-
-
-
-
 class log_gaussian_cox(posterior_family):
 	"""Log gaussian Cox family.
 
@@ -1612,10 +1607,6 @@ class log_gaussian_cox(posterior_family):
 			assert(x.shape[1] == 1 and N == 1);
 			param_net_input = x.T;
 		return eta, param_net_input;
-
-
-
-
 
 class surrogate_S_D(family):
 	"""Maximum entropy distribution with smoothness (S) and dim (D) constraints.
@@ -2060,7 +2051,6 @@ class surrogate_S_D_C(family):
 		X_no_EP = tf.concat(Xs, 3);
 		return X_no_EP;
 
-
 class GP_Dirichlet(family):
 	"""Maximum entropy distribution with smoothness (S) and dim (D) constraints.
 
@@ -2227,8 +2217,6 @@ class GP_Dirichlet(family):
 		num_theta_params += count_layer_params(support_layer);
 		layers.append(support_layer);
 		return layers, num_theta_params;
-
-
 
 class NoTimeCon_GP_Dirichlet(family):
 	"""Maximum entropy distribution with smoothness (S) and dim (D) constraints.

@@ -740,14 +740,9 @@ def check_convergence(to_check, cur_ind, lag, thresh, criteria='lag_diff', wsize
     return has_converged;
 
 def test_convergence(mean_test_elbos, ind, wsize, delta_thresh):
-    print('testing convergence');
     cur_mean_test_elbo = np.mean(mean_test_elbos[(ind-wsize+1):(ind+1)]);
     prev_mean_test_elbo = np.mean(mean_test_elbos[(ind-2*wsize+1):(ind-wsize+1)]);
-    print('prev, cur');
-    print(prev_mean_test_elbo, cur_mean_test_elbo);
     delta_elbo = (prev_mean_test_elbo - cur_mean_test_elbo) / prev_mean_test_elbo;
-    print('delta elbo',delta_elbo);
-    print('ret val', delta_elbo < delta_thresh)
     return delta_elbo < delta_thresh;
 
 def find_convergence(mean_test_elbos, last_ind, wsize, delta_thresh):
