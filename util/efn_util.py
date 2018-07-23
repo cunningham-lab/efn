@@ -64,10 +64,10 @@ def model_opt_hps(exp_fam, D):
 
         # learning rate
         lr_order = -3;
-        if (exp_fam == 'dirichlet' or exp_fam == 'dir_dir'):
+        if (exp_fam == 'dirichlet'):
             if (D >= 15):
                 lr_order = -4;
-        elif (exp_fam == 'dir_mult'):
+        elif (exp_fam == 'dir_dir' or exp_fam == 'dir_mult'):
             if (D >= 10):
                 lr_order = -4;
 
