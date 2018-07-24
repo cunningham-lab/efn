@@ -5,6 +5,7 @@ from efn_util import count_layer_params, truncated_multivariate_normal_rvs, get_
 from flows import SimplexBijectionLayer, CholProdLayer, SoftPlusLayer
 import scipy.stats
 from scipy.special import gammaln, psi
+import scipy.io as sio
 
 def family_from_str(exp_fam_str):
 	if (exp_fam_str in ['normal', 'multivariate_normal']):
@@ -1544,24 +1545,28 @@ class log_gaussian_cox(posterior_family):
 		return log_h_x;
 
 	def draw_etas(self, K, param_net_input_type='eta', give_hint=False):
+		datadir = 'data/responses/';
 		_, _, num_param_net_inputs, _ = self.get_efn_dims(param_net_input_type, give_hint);
 		eta = np.zeros((K, self.num_suff_stats));
 		param_net_inputs = np.zeros((K, num_param_net_inputs));
 		T_x_input = np.zeros((K, self.num_T_x_inputs));
-		Nmax = 50;
+		nneurons = 83;
+		noris = 12;
 		Ts = .02;
-		mean_FR = 0.2;
-		mean_FR = np.random.uniform(.1, 1, (1,));
-		mu = mean_FR*np.ones((self.D_Z,));
+		mean_log_FR = -2.5892;
+		var_log_FR = 0.4424;
+		mu = mean_log_FR*np.ones((self.D_Z,));
 		tau = .025;
-		var_z = np.random.uniform(.2, .3, (1,));
-		Sigma = var_z*get_GP_Sigma(tau, self.D_Z, Ts)
+		Sigma = var_log_FR*get_GP_Sigma(tau, self.D_Z, Ts)
 		params = [];
+		data_sets = np.random.choice(nneurons*noris, K, False);
 		for k in range(K):
-			N = np.random.randint(1,Nmax+1);
-			z = truncated_multivariate_normal_rvs(mu, Sigma);
-			x = drawPoissonCounts(z, N);
-			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'z':z, 'N':N};
+			neuron = (data_sets[k] // noris) + 1;
+			ori = np.mod(data_sets[k], noris) + 1;
+			M = sio.loadmat(datadir + 'spike_counts_neuron%d_ori%d.mat' % (neuron, ori));
+			x = M['x'][:,:self.D_Z].T;
+			N = x.shape[1];
+			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'N':N};
 			params.append(params_k);
 			eta[k,:], param_net_inputs[k,:] = self.mu_to_eta(params_k, param_net_input_type, give_hint);
 			T_x_input[k,:] = self.mu_to_T_x_input(params_k);
@@ -1583,7 +1588,6 @@ class log_gaussian_cox(posterior_family):
 		mu = params['mu'];
 		Sigma = params['Sigma'];
 		x = params['x'];
-		z = params['z'];
 		N = params['N'];
 		assert(N == x.shape[1]);
 
