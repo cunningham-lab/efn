@@ -1550,9 +1550,12 @@ class log_gaussian_cox(posterior_family):
 		T_x_input = np.zeros((K, self.num_T_x_inputs));
 		Nmax = 50;
 		Ts = .02;
-		mu = 0.2*np.ones((self.D_Z,));
+		mean_FR = 0.2;
+		mean_FR = np.random.uniform(.1, 1, (1,));
+		mu = mean_FR*np.ones((self.D_Z,));
 		tau = .025;
-		Sigma = 0.26*get_GP_Sigma(tau, self.D_Z, Ts)
+		var_z = np.random.uniform(.2, .3, (1,));
+		Sigma = var_z*get_GP_Sigma(tau, self.D_Z, Ts)
 		params = [];
 		for k in range(K):
 			N = np.random.randint(1,Nmax+1);
