@@ -66,9 +66,25 @@ def model_opt_hps(exp_fam, D):
         if (exp_fam == 'dirichlet'):
             if (D >= 15):
                 lr_order = -4;
-        elif (exp_fam == 'dir_dir' or exp_fam == 'dir_mult'):
+            if (D >= 50):
+                lr_order = -5;
+
+        elif (exp_fam == 'lgc'):
+            lr_order = -4;
+            if (D >= 10):
+                lr_order = -5;
+
+        elif (exp_fam == 'dir_dir'):
             if (D >= 10):
                 lr_order = -4;
+            elif (D >= 25):
+                lr_order = -5;
+
+        elif (exp_fam == 'dir_mult'):
+            if (D >= 10):
+                lr_order = -4;
+
+
 
     return TIF_flow_type, nlayers, lr_order;
 
