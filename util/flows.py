@@ -406,7 +406,7 @@ class ShiftLayer(Layer):
     def get_layer_info(self,):
         b_dim = (self.dim,1);
         dims = [b_dim];
-        initializers = [tf.glorot_uniform_initializer()]
+        initializers = [tf.constant(-np.ones((self.dim,1)))]
         return self.name, self.param_names, dims, initializers, self.lock;
 
     def connect_parameter_network(self, theta_layer):

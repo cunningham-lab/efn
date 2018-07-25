@@ -16,6 +16,7 @@ from efn_util import connect_flow, construct_flow, setup_IO, construct_param_net
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \
               max_iters=1000000, check_rate=100, dir_str='general'):
+    print('lr_order', lr_order);
     batch_norm = False;
     dropout = False;
     upl_tau = None;
@@ -49,7 +50,8 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     lr = 10**lr_order
     # save tensorboard summary in intervals
     tb_save_every = 50;
-    model_save_every = max_iters-1;
+    model_save_every = 5000;
+    #model_save_every = max_iters-1;
     tb_save_params = False;
 
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats));
@@ -65,8 +67,12 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         eta_test_draw_params = eta_draw_params;
     else:
         np.random.seed(0);
-        _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
-           
+        if (family.name == 'log_gaussian_cox'):
+            _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint, False);
+        else:
+            _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+       
+
     param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
     dist_info = {'dist_seed':dist_seed};
     efn_str = 'EFN1' if (K ==1) else 'EFN';
@@ -233,12 +239,21 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                     print('test KL: %f' % mean_test_KL);
 
                 _X = sess.run(X, feed_dict);
-                np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                if (family.name == 'lgc'):
+                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
                                                   X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
                                                   T_x_input=_T_x_input, converged=False, \
                                                   train_elbos=train_elbos, test_elbos=test_elbos, \
                                                   train_R2s=train_R2s, test_R2s=test_R2s, \
                                                   train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
+                else:
+                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                                                  X=_X, eta=_eta, param_net_input=_param_net_input, params=eta_draw_params, \
+                                                  T_x_input=_T_x_input, converged=False, \
+                                                  train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                  train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i, \
+                                                  test_set=family.test_set, train_set=family.train_set);
 
                 if (check_it >= 2*wsize - 1):
                     mean_test_elbos = np.mean(test_elbos, 1);

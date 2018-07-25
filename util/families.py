@@ -2,10 +2,11 @@ import tensorflow as tf
 import numpy as np
 from efn_util import count_layer_params, truncated_multivariate_normal_rvs, get_GP_Sigma, \
                      drawPoissonCounts
-from flows import SimplexBijectionLayer, CholProdLayer, SoftPlusLayer
+from flows import SimplexBijectionLayer, CholProdLayer, SoftPlusLayer, ShiftLayer
 import scipy.stats
 from scipy.special import gammaln, psi
 import scipy.io as sio
+from itertools import compress
 
 def family_from_str(exp_fam_str):
 	if (exp_fam_str in ['normal', 'multivariate_normal']):
@@ -18,7 +19,7 @@ def family_from_str(exp_fam_str):
 		return hierarchical_dirichlet;
 	elif (exp_fam_str in ['dirichlet_multinomial', 'dir_mult']):
 		return dirichlet_multinomial;
-	elif (exp_fam_str in ['truncated_normal_poisson', 'prp_tn']):
+	elif (exp_fam_str in ['truncated_normal_poisson', 'prp_tn', 'tnp']):
 		return truncated_normal_poisson;
 	elif (exp_fam_str in ['log_gaussian_cox', 'lgc']):
 		return log_gaussian_cox;
@@ -1355,22 +1356,30 @@ class truncated_normal_poisson(posterior_family):
 		log_h_x = tf.zeros((K,M), dtype=tf.float64);
 		return log_h_x;
 
+
 	def draw_etas(self, K, param_net_input_type='eta', give_hint=False):
 		_, _, num_param_net_inputs, _ = self.get_efn_dims(param_net_input_type, give_hint);
 		eta = np.zeros((K, self.num_suff_stats));
 		param_net_inputs = np.zeros((K, num_param_net_inputs));
 		T_x_input = np.zeros((K, self.num_T_x_inputs));
-		Nmax = 50;
+		nneurons = 83;
+		noris = 12;
 		Ts = .02;
-		mu = 0.2*np.ones((self.D_Z,));
+		mean_FR = 0.1169;
+		var_FR = 0.0079;
+		mu = mean_FR*np.ones((self.D_Z,));
 		tau = .025;
-		Sigma = 0.26*get_GP_Sigma(tau, self.D_Z, Ts)
+		#Sigma = var_FR*np.eye(self.D_Z);
+		Sigma = var_FR*get_GP_Sigma(tau, self.D_Z, Ts)
 		params = [];
+		data_sets = np.random.choice(nneurons*noris, K, False);
 		for k in range(K):
-			N = np.random.randint(1,Nmax+1);
-			z = truncated_multivariate_normal_rvs(mu, Sigma);
-			x = drawPoissonCounts(z, N);
-			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'z':z, 'N':N};
+			neuron = (data_sets[k] // noris) + 1;
+			ori = np.mod(data_sets[k], noris) + 1;
+			M = sio.loadmat(datadir + 'spike_counts_neuron%d_ori%d.mat' % (neuron, ori));
+			x = M['x'][:,:self.D_Z].T;
+			N = x.shape[1];
+			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'N':N, 'monkey':1, 'neuron':neuron, 'ori':ori};
 			params.append(params_k);
 			eta[k,:], param_net_inputs[k,:] = self.mu_to_eta(params_k, param_net_input_type, give_hint);
 			T_x_input[k,:] = self.mu_to_T_x_input(params_k);
@@ -1392,7 +1401,6 @@ class truncated_normal_poisson(posterior_family):
 		mu = params['mu'];
 		Sigma = params['Sigma'];
 		x = params['x'];
-		z = params['z'];
 		N = params['N'];
 		assert(N == x.shape[1]);
 
@@ -1450,6 +1458,9 @@ class log_gaussian_cox(posterior_family):
 		self.num_suff_stats = self.num_prior_suff_stats + self.num_likelihood_suff_stats;
 		self.num_T_x_inputs = 0;
 		self.prior_family = multivariate_normal(D, T);
+		self.data_num_resps = None;
+		self.train_set = None;
+		self.test_set = None;
 
 	def get_efn_dims(self, param_net_input_type='eta', give_hint=False):
 		"""Returns EFN component dimensionalities for the family.
@@ -1486,6 +1497,7 @@ class log_gaussian_cox(posterior_family):
 
 		return self.D_Z, self.num_suff_stats, num_param_net_inputs, self.num_T_x_inputs;
 
+
 	def map_to_support(self, layers, num_theta_params):
 		"""Augment density network with bijective mapping to support.
 
@@ -1497,10 +1509,11 @@ class log_gaussian_cox(posterior_family):
 			layers (list): layers augmented with final support mapping layer.
 			num_theta_params (int): Updated count of density network parameters.
 		"""
-		support_layer = SoftPlusLayer();
+		support_layer = ShiftLayer(name='ShiftLayer', dim=self.D_Z);
 		num_theta_params += count_layer_params(support_layer);
 		layers.append(support_layer);
 		return layers, num_theta_params;
+
 
 	def compute_suff_stats(self, X, Z_by_layer, T_x_input):
 		"""Compute sufficient statistics of density network samples.
@@ -1544,14 +1557,67 @@ class log_gaussian_cox(posterior_family):
 		log_h_x = tf.zeros((K,M), dtype=tf.float64);
 		return log_h_x;
 
-	def draw_etas(self, K, param_net_input_type='eta', give_hint=False):
+
+	def load_data(self,):
+		datadir = 'data/responses/';
+		num_monkeys = 3;
+		num_neurons = [83, 59, 105]
+		num_oris = 12;
+		num_trials = 200;
+		N = sum(num_neurons*num_oris);
+		X = np.zeros((N,self.D_Z,num_trials));
+		ind = 0;
+		for i in range(num_monkeys):
+			monkey = i+1;
+			neurons = num_neurons[i];
+			for j in range(neurons):
+				neuron = j+1;
+				for k in range(num_oris):
+					ori = k+1;
+					M = sio.loadmat(datadir + 'spike_counts_monkey%d_neuron%d_ori%d.mat' % (monkey, neuron, ori));
+					X[ind,:,:] = M['x'][:,:self.D_Z].T;
+					resp_info = {'monkey':monkey, 'neuron':neuron, 'ori':ori};
+					assert(ind == self.resp_info_to_ind(resp_info));
+					ind = ind + 1;
+		self.data = X;
+		self.data_num_resps = X.shape[0];
+		return X;
+
+	def select_train_test_sets(self, num_test):
+		if (not (isinstance(num_test, int) and num_test >= 0)):
+			print('Number of test set samples must be a non-negative integer.');
+			exit();
+		elif (num_test > self.data_num_resps):
+			print('Asked for %d samples in test set, but only %d total responses.' % (num_test, self.data_num_resps));
+			exit();
+
+		if (num_test == 0):
+			self.test_set = [];
+			self.train_set = range(self.data_num_resps);
+		else:
+			self.test_set = np.sort(np.random.choice(self.data_num_resps, num_test, False)).tolist();
+			inds = range(self.data_num_resps);
+			test_set_inds = [i in self.test_set for i in inds];
+			train_set_inds = [not i for i in test_set_inds];
+			self.train_set = list(compress(inds,train_set_inds));
+
+		return self.train_set, self.test_set;
+
+	def resp_info_to_ind(self, resp_info):
+		monkey = resp_info['monkey'];
+		neuron = resp_info['neuron'];
+		ori = resp_info['ori'];
+		num_neurons = [83, 59, 105]
+		num_oris = 12;
+		ind = sum(num_neurons[:(monkey-1)])*num_oris + (neuron-1)*num_oris + (ori-1);
+		return ind;
+
+	def draw_etas(self, K, param_net_input_type='eta', give_hint=False, train=True, resp_info=None):
 		datadir = 'data/responses/';
 		_, _, num_param_net_inputs, _ = self.get_efn_dims(param_net_input_type, give_hint);
 		eta = np.zeros((K, self.num_suff_stats));
 		param_net_inputs = np.zeros((K, num_param_net_inputs));
 		T_x_input = np.zeros((K, self.num_T_x_inputs));
-		nneurons = 83;
-		noris = 12;
 		Ts = .02;
 		mean_log_FR = -2.5892;
 		var_log_FR = 0.4424;
@@ -1559,14 +1625,15 @@ class log_gaussian_cox(posterior_family):
 		tau = .025;
 		Sigma = var_log_FR*get_GP_Sigma(tau, self.D_Z, Ts)
 		params = [];
-		data_sets = np.random.choice(nneurons*noris, K, False);
+		if (K==1 and (resp_info is not None)):
+			data_sets = [self.resp_info_to_ind(resp_info)]
+		else:
+			data_set_inds = np.random.choice(len(self.train_set), K, False);
+			data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
 		for k in range(K):
-			neuron = (data_sets[k] // noris) + 1;
-			ori = np.mod(data_sets[k], noris) + 1;
-			M = sio.loadmat(datadir + 'spike_counts_neuron%d_ori%d.mat' % (neuron, ori));
-			x = M['x'][:,:self.D_Z].T;
+			x = self.data[data_sets[k]];
 			N = x.shape[1];
-			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'N':N};
+			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'N':N, 'data_ind':data_sets[k]};
 			params.append(params_k);
 			eta[k,:], param_net_inputs[k,:] = self.mu_to_eta(params_k, param_net_input_type, give_hint);
 			T_x_input[k,:] = self.mu_to_T_x_input(params_k);
@@ -2219,7 +2286,6 @@ class GP_Dirichlet(family):
 			layers (list): layers augmented with final support mapping layer.
 			num_theta_params (int): Updated count of density network parameters.
 		"""
-		print('IN THE FUNC mapping using simplex bijection!');
 		support_layer = SimplexBijectionLayer();
 		num_theta_params += count_layer_params(support_layer);
 		layers.append(support_layer);
