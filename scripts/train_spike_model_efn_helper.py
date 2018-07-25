@@ -14,7 +14,7 @@ random_seed = int(sys.argv[4]);
 dir_str = str(sys.argv[5]);
 
 TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
-nlayers = 5;
+nlayers = 20;
 lr_order = -3;
 
 flow_dict = {'latent_dynamics':None, \
@@ -30,10 +30,10 @@ family.select_train_test_sets(1000);
 param_net_input_type = 'eta';
 cost_type = 'KL';
 K_eta = 100;
-M_eta = 1000;
+M_eta = 100;
 stochastic_eta = True;
 dist_seed = 0;
-max_iters = 10000;
+max_iters = 1000000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K_eta, M_eta, \

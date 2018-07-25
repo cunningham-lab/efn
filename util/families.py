@@ -1628,8 +1628,12 @@ class log_gaussian_cox(posterior_family):
 		if (K==1 and (resp_info is not None)):
 			data_sets = [self.resp_info_to_ind(resp_info)]
 		else:
-			data_set_inds = np.random.choice(len(self.train_set), K, False);
-			data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
+			if (train):
+				data_set_inds = np.random.choice(len(self.train_set), K, False);
+				data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
+			else:
+				data_set_inds = np.random.choice(len(self.test_set), K, False);
+				data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
 		for k in range(K):
 			x = self.data[data_sets[k]];
 			N = x.shape[1];
