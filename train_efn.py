@@ -15,7 +15,7 @@ from efn_util import connect_flow, construct_flow, setup_IO, construct_param_net
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \
-              max_iters=1000000, check_rate=100, dir_str='general'):
+              min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general'):
     print('lr_order', lr_order);
     batch_norm = False;
     dropout = False;
@@ -24,7 +24,6 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     T = 1; 
     wsize = 50;
     delta_thresh = 1e-10;
-    min_iters = 100000;
 
 
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims(param_net_input_type, give_hint);

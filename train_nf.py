@@ -14,12 +14,10 @@ from efn_util import connect_flow, construct_flow, setup_IO, log_grads, declare_
                      count_params
 
 def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_seed=0, \
-             max_iters=1000000, check_rate=100, dir_str='general'):
-    print('max iters', max_iters);
+             min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general'):
     T = 1;
     wsize = 50;
     delta_thresh = 1e-10;
-    min_iters = 1000;
  
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims('eta', False);
 
@@ -129,8 +127,8 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
         z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
         feed_dict_train = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
         feed_dict_test = {Z0:z_i, eta:_eta_test, T_x_input:_T_x_input_test};
-        train_elbos_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
-        test_elbos_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, [params]);
+        train_elbos_i, train_R2s_i, train_KLs_i, train_X = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
+        test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, [params]);
 
         train_elbos[check_it,:] = np.array(train_elbos_i);
         test_elbos[check_it,:] = np.array(test_elbos_i);
@@ -178,8 +176,8 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
                 z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
                 feed_dict_test = {Z0:z_i, eta:_eta_test, T_x_input:_T_x_input_test};
-                train_elbos_i, train_R2s_i, train_KLs_i = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
-                test_elbos_i, test_R2s_i, test_KLs_i = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, [params]);
+                train_elbos_i, train_R2s_i, train_KLs_i, train_X = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, [params], True);
+                test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, [params]);
 
                 train_elbos[check_it,:] = np.array(train_elbos_i);
                 test_elbos[check_it,:] = np.array(test_elbos_i);
@@ -197,11 +195,8 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
                 print('cost = %f ' % cost_i);
                 print('train elbo %.3f, train R2: %.3f, train KL %.3f' % (mean_train_elbo, mean_train_R2, mean_train_KL));
                 
-                z_i = np.random.normal(np.zeros((K, int(1e4), D_Z, T)), 1.0);
-                feed_dict_X = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
-                _X = sess.run(X, feed_dict_X);
-
-                np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
+                np.savez(savedir + 'results.npz', it=i, X=train_X, eta=_eta, \
+                                                  T_x_input=_T_x_input, params=params, check_rate=check_rate, \
                                                   train_elbos=train_elbos, test_elbos=test_elbos, \
                                                   train_R2s=train_R2s, test_R2s=test_R2s, \
                                                   train_KLs=train_KLs, test_KLs=test_KLs, \
@@ -224,13 +219,10 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
 
     if (i < max_iters):
-        np.savez(savedir + 'results.npz', it=i, X=_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
+        np.savez(savedir + 'results.npz', it=i, X=train_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                       train_KLs=train_KLs, test_KLs=test_KLs, \
                                       converged=True, final_cos=cost_i);
 
-    if (len(_X.shape) > 2):
-        assert(len(_X.shape) == 4);
-        _X = _X[0, :, :, 0];
-    return _log_p_zs, _X, train_R2s, train_KLs, i;
+    return _log_p_zs, train_X, train_R2s, train_KLs, i;

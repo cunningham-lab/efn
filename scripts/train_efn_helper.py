@@ -28,9 +28,10 @@ K_eta = 100;
 M_eta = 1000;
 stochastic_eta = True;
 dist_seed = 0;
+min_iters = 100000;
 max_iters = 1000000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K_eta, M_eta, \
 	                         stochastic_eta, give_inverse_hint, lr_order, dist_seed, random_seed, \
-	                         max_iters, check_rate, dir_str);
+	                         min_iters, max_iters, check_rate, dir_str);

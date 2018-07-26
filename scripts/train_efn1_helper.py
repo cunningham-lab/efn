@@ -30,9 +30,10 @@ M = 1000;
 param_net_input_type = 'eta';
 cost_type = 'KL'
 stochastic_eta = False;
+min_iters = 100000;
 max_iters = 1000000;
 check_rate = 100;
 
 X, train_KLs, it = train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 	                         stochastic_eta, give_inverse_hint, lr_order, dist_seed, random_seed, \
-	                         max_iters, check_rate, dir_str);
+	                         min_iters, max_iters, check_rate, dir_str);

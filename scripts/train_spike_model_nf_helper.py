@@ -32,11 +32,12 @@ flow_dict = {'latent_dynamics':None, \
 
 T = 1;
 cost_type = 'KL';
-M_eta = 1000;
-give_inverse_hint = True;
+M_eta = 100;
+give_inverse_hint = False;
 random_seed = 0;
 check_rate = 100;
-max_iters = 10000;
+min_iters = 100000;
+max_iters = 100000;
 
 fam_class = family_from_str(exp_fam);
 family = fam_class(D);
@@ -51,6 +52,6 @@ print(params);
 params.update({'dist_seed':dist_seed});
 
 log_P, X, R2s, KLs, it = train_nf(family, params, flow_dict, cost_type, M_eta, lr_order, \
-	                              random_seed, max_iters, check_rate, dir_str);
+	                              random_seed, min_iters, max_iters, check_rate, dir_str);
 
 

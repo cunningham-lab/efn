@@ -25,6 +25,7 @@ family = fam_class(D);
 
 cost_type = 'KL';
 M_eta = 1000;
+min_iters = 100000;
 max_iters = 1000000;
 check_rate = 100;
 
@@ -35,4 +36,4 @@ params = params[0];
 params.update({'dist_seed':dist_seed});
 
 log_p_zs, X, train_R2s, train_KLs, it = train_nf(family, params, flow_dict, cost_type, M_eta, lr_order, \
-	                         					 random_seed, max_iters, check_rate, dir_str);
+	                         					 random_seed, min_iters, max_iters, check_rate, dir_str);

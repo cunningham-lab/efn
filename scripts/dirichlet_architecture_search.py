@@ -10,7 +10,6 @@ os.chdir('../');
 
 exp_fam = 'dirichlet';
 D = int(sys.argv[1]);
-fully_connected_layers = int(sys.argv[2]);
 planar_layers = int(sys.argv[3]);
 spinner_layers = int(sys.argv[4]);
 nonlin_spinner_layers = int(sys.argv[5]);
@@ -24,10 +23,10 @@ flowstring = get_flowstring(flow_dict);
 
 cost_type = 'KL';
 M_eta = 1000;
-lr_order = -3;
+lr_order = -2;
 random_seed = 0;
-check_rate = 200;
-max_iters = 20000;
+check_rate = 100;
+max_iters = 10000;
 
 
 fname = 'dirichlet_architecture_%s.npz' % flowstring;
