@@ -1667,7 +1667,7 @@ class log_gaussian_cox(posterior_family):
 		N = params['N'];
 		x = x[:,:N];
 
-		alpha, alpha_param_net_input = self.prior_family.mu_to_eta(params, param_net_input_type, give_hint);
+		alpha, alpha_param_net_input = self.prior_family.mu_to_eta(params, 'eta', give_hint);
 		mu = np.expand_dims(mu, 1);
 		log_A_0 = 0.5*(np.dot(mu.T, np.dot(np.linalg.inv(Sigma), mu)) + np.log(np.linalg.det(Sigma)));
 		sumx = np.sum(x, 1);
