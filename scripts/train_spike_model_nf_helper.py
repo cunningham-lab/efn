@@ -3,7 +3,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 import sys
-from plot_utils import plotMefnTraining
 from efn_util import model_opt_hps
 from families import dirichlet, multivariate_normal, inv_wishart, hierarchical_dirichlet, \
                      dirichlet_multinomial, truncated_normal_poisson, family_from_str
@@ -38,7 +37,7 @@ M_eta = 100;
 random_seed = 0;
 check_rate = 100;
 min_iters = 100000;
-max_iters = 100000;
+max_iters = 1000000;
 
 fam_class = family_from_str(exp_fam);
 family = fam_class(D, T, prior);

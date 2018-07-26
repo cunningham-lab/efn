@@ -32,7 +32,6 @@ train, test = family.select_train_test_sets(0);
 
 K = 1;
 M = 1000;
-param_net_input_type = 'eta';
 cost_type = 'KL'
 stochastic_eta = False;
 min_iters = 100000;
