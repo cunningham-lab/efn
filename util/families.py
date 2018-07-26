@@ -173,7 +173,7 @@ class family:
 			KLs.append(KL_k);
 			if (checkEntropy):
 				self.check_entropy(log_p_x_k, params_k);
-		return _elbos, _R2s, KLs;
+		return _elbos, _R2s, KLs, _X;
 
 	def approx_KL(self, log_Q, X, params):
 		"""Approximate KL(Q || P)."""
@@ -1633,7 +1633,7 @@ class log_gaussian_cox(posterior_family):
 				data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
 			else:
 				data_set_inds = np.random.choice(len(self.test_set), K, False);
-				data_sets = [self.train_set[data_set_inds[i]] for i in range(K)];
+				data_sets = [self.test_set[data_set_inds[i]] for i in range(K)];
 		for k in range(K):
 			x = self.data[data_sets[k]];
 			N = x.shape[1];
