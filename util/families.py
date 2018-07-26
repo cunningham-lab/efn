@@ -1442,7 +1442,7 @@ class log_gaussian_cox(posterior_family):
 		                      (only necessary for hierarchical dirichlet)
 	"""
 
-	def __init__(self, D, T=1):
+	def __init__(self, D, T=1, prior=[]):
 		"""truncated_normal_poisson family constructor
 
 		Args:
@@ -1458,6 +1458,7 @@ class log_gaussian_cox(posterior_family):
 		self.num_suff_stats = self.num_prior_suff_stats + self.num_likelihood_suff_stats;
 		self.num_T_x_inputs = 0;
 		self.prior_family = multivariate_normal(D, T);
+		self.prior = prior;
 		self.data_num_resps = None;
 		self.train_set = None;
 		self.test_set = None;
@@ -1624,7 +1625,12 @@ class log_gaussian_cox(posterior_family):
 		mu = mean_log_FR*np.ones((self.D_Z,));
 		tau = .025;
 		Sigma = var_log_FR*get_GP_Sigma(tau, self.D_Z, Ts)
+		if (isinstance(self.prior, dict)):
+			N = self.prior['N'];
+		else:
+			N = 200;
 		params = [];
+
 		if (K==1 and (resp_info is not None)):
 			data_sets = [self.resp_info_to_ind(resp_info)]
 		else:
@@ -1636,7 +1642,6 @@ class log_gaussian_cox(posterior_family):
 				data_sets = [self.test_set[data_set_inds[i]] for i in range(K)];
 		for k in range(K):
 			x = self.data[data_sets[k]];
-			N = x.shape[1];
 			params_k = {'mu':mu, 'Sigma':Sigma, 'x':x, 'N':N, 'data_ind':data_sets[k]};
 			params.append(params_k);
 			eta[k,:], param_net_inputs[k,:] = self.mu_to_eta(params_k, param_net_input_type, give_hint);
@@ -1660,7 +1665,7 @@ class log_gaussian_cox(posterior_family):
 		Sigma = params['Sigma'];
 		x = params['x'];
 		N = params['N'];
-		assert(N == x.shape[1]);
+		x = x[:,:N];
 
 		alpha, alpha_param_net_input = self.prior_family.mu_to_eta(params, param_net_input_type, give_hint);
 		mu = np.expand_dims(mu, 1);
