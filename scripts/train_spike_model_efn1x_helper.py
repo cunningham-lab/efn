@@ -10,9 +10,10 @@ os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
-give_inverse_hint = int(sys.argv[3]) == 1;
-dist_seed = int(sys.argv[4]);
-dir_str = str(sys.argv[5]);
+param_net_input_type = str(sys.argv[3]);
+give_inverse_hint = int(sys.argv[4]) == 1;
+dist_seed = int(sys.argv[5]);
+dir_str = str(sys.argv[6]);
 
 T=1;
 prior = {'N':1};

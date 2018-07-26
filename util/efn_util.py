@@ -84,6 +84,12 @@ def model_opt_hps(exp_fam, D):
             if (D >= 10):
                 lr_order = -4;
 
+        elif (exp_fam == 'lgc'):
+            if (D >= 15):
+                lr_order = -4;
+            else:
+                lr_order = -3;
+
 
 
     return TIF_flow_type, nlayers, lr_order;

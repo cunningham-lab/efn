@@ -13,40 +13,41 @@ os.chdir('../');
 
 exp_fam = str(sys.argv[1]);
 D = int(sys.argv[2]);
-monkey = int(sys.argv[3]);
-neuron = int(sys.argv[4]);
-ori = int(sys.argv[5]);
+give_inverse_hint = int(sys.argv[3]) == 1;
+dist_seed = int(sys.argv[4]);
+dir_str = str(sys.argv[5]);
+#monkey = int(sys.argv[3]);
+#neuron = int(sys.argv[4]);
+#ori = int(sys.argv[5]);
 
-resp_info = {'monkey':monkey, \
-			 'neuron':neuron, \
-             'ori':ori};
+#resp_info = {'monkey':monkey, \
+#			 'neuron':neuron, \
+#             'ori':ori};
 
-dir_str = exp_fam;
+TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
 
-TIF_flow_type = 'PlanarFlowLayer';
-lr_order = -3;
-nlayers = 20;
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
              'repeats':nlayers};
 
 T = 1;
+prior = {'N':1};
+
 cost_type = 'KL';
 M_eta = 100;
-give_inverse_hint = False;
 random_seed = 0;
 check_rate = 100;
 min_iters = 100000;
 max_iters = 100000;
 
 fam_class = family_from_str(exp_fam);
-family = fam_class(D);
+family = fam_class(D, T, prior);
 
 family.load_data();
 train, test = family.select_train_test_sets(0);
 
-dist_seed = family.resp_info_to_ind(resp_info);
-_, _, _, params = family.draw_etas(1, 'eta', give_inverse_hint, True, resp_info);
+np.random.seed(dist_seed);
+_, _, _, params = family.draw_etas(1, 'eta', give_inverse_hint);
 params = params[0];
 print(params);
 params.update({'dist_seed':dist_seed});
