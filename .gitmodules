@@ -1,0 +1,3 @@
+[submodule "lib/tf_util"]
+	path = lib/tf_util
+	url = https://srbittner@bitbucket.org/srbittner/tf_util.git

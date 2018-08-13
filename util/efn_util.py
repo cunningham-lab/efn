@@ -118,106 +118,6 @@ def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl
     param_net_hps = {'L':L, 'upl':upl_param_net};
     return param_net_hps;
 
-def construct_flow(flow_dict, D_Z, T):
-    latent_layers = construct_latent_dynamics(flow_dict, D_Z, T);
-    time_invariant_layers = construct_time_invariant_flow(flow_dict, D_Z, T);
-
-    layers = latent_layers + time_invariant_layers;
-    nlayers = len(layers);
-
-    num_theta_params = 0;
-    for i in range(nlayers):
-        layer = layers[i];
-        print(i, layer);
-        num_theta_params += count_layer_params(layer);
-
-    Z0 = tf.placeholder(tf.float64, shape=(None, None, D_Z, None), name='Z0');
-    K = tf.shape(Z0)[0];
-    M = tf.shape(Z0)[1];
-
-    p0 = tf.reduce_prod(tf.exp((-tf.square(Z0))/2.0)/np.sqrt(2.0*np.pi), axis=[2,3]); 
-    base_log_q_x = tf.log(p0[:,:]);
-    Z_AR = Z0;
-    return layers, Z0, Z_AR, base_log_q_x, num_theta_params;
-
-def construct_latent_dynamics(flow_dict, D_Z, T):
-    latent_dynamics = flow_dict['latent_dynamics'];
-
-    if (latent_dynamics is None):
-        return [];
-
-    inits = flow_dict['inits'];
-    if ('lock' in flow_dict):
-        lock = flow_dict['lock'];
-    else:
-        lock = False;
-
-    if (latent_dynamics == 'GP'):
-        layer = GP_Layer('GP_Layer', dim=D_Z, \
-                         inits=inits, lock=lock);
-
-    elif (latent_dynamics == 'AR'):
-        param_init = {'alpha_init':inits['alpha_init'], 'sigma_init':inits['sigma_init']};
-        layer = AR_Layer('AR_Layer', dim=D_Z, T=T, P=flow_dict['P'], \
-                      inits=inits, lock=lock);
-
-    elif (latent_dynamics == 'VAR'):
-        param_init = {'A_init':inits['A_init'], 'sigma_init':inits['sigma_init']};
-        layer = VAR_Layer('VAR_Layer', dim=D_Z, T=T, P=flow_dict['P'], \
-                      inits=inits, lock=lock);
-
-    else:
-        raise NotImplementedError();
-
-    return [layer];
-
-
-def construct_time_invariant_flow(flow_dict, D_Z, T):
-    layer_ind = 1;
-    layers = [];
-    TIF_flow_type = flow_dict['TIF_flow_type'];
-    repeats = flow_dict['repeats'];
-
-    if (TIF_flow_type == 'ScalarFlowLayer'):
-        flow_class = ElemMultLayer;
-        name_prefix = 'ScalarFlow_Layer';
-
-    elif (TIF_flow_type == 'FullyConnectedFlowLayer'):
-        flow_class = FullyConnectedFlowLayer;
-        name_prefix = FullyConnectedFlow_Layer;
-
-    elif (TIF_flow_type == 'AffineFlowLayer'):
-        flow_class = AffineFlowLayer;
-        name_prefix = 'AffineFlow_Layer';
-
-    elif (TIF_flow_type == 'StructuredSpinnerLayer'):
-        flow_class = StructuredSpinnerLayer
-        name_prefix = 'StructuredSpinner_Layer';
-
-    elif (TIF_flow_type == 'StructuredSpinnerTanhLayer'):
-        flow_class = StructuredSpinnerTanhLayer
-        name_prefix = 'StructuredSpinnerTanh_Layer';
-
-    elif (TIF_flow_type == 'PlanarFlowLayer'):
-        flow_class = PlanarFlowLayer
-        name_prefix = 'PlanarFlow_Layer';
-
-    elif (TIF_flow_type == 'RadialFlowLayer'):
-        flow_class = RadialFlowLayer
-        name_prefix = 'RadialFlow_Layer';
-
-    elif (TIF_flow_type == 'TanhLayer'):
-        flow_class = TanhLayer;
-        name_prefix = 'Tanh_Layer';
-
-    else:
-        raise NotImplementedError();
-
-    for i in range(repeats):
-        layers.append(flow_class('%s%d' % (name_prefix, layer_ind), D_Z));
-        layer_ind += 1;
-        
-    return layers;
 
 def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     L_theta = param_net_hps['L']
@@ -251,30 +151,6 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
         theta.append(layer_i_params);
     return theta;
 
-def declare_theta(flow_layers):
-    L_flow = len(flow_layers);
-    theta =[];
-    for i in range(L_flow):
-        layer = flow_layers[i];
-        layer_name, param_names, param_dims, initializers, lock = layer.get_layer_info();
-        nparams = len(param_names);
-        layer_i_params = [];
-        for j in range(nparams):
-            if (lock):
-                param_ij = initializers[j];
-            else:
-                if (isinstance(initializers[j], tf.Tensor)):
-                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], \
-                                               dtype=tf.float64, \
-                                               initializer=initializers[j]);
-                else:
-                    param_ij = tf.get_variable(layer_name+'_'+param_names[j], shape=param_dims[j], \
-                                               dtype=tf.float64, \
-                                               initializer=initializers[j]);
-            layer_i_params.append(param_ij);
-        theta.append(layer_i_params);
-    return theta;
-
 def count_layer_params(layer):
     num_params = 0;
     name, param_names, dims, _, _ = layer.get_layer_info();
@@ -283,59 +159,6 @@ def count_layer_params(layer):
         num_params += np.prod(dims[j]);
     return num_params;
 
-def latent_dynamics(Z0, A, sigma_eps, T):
-    P = A.shape[0];
-    D = tf.shape(A)[1];
-    K = tf.shape(Z0)[0];
-    M = tf.shape(Z0)[1];
-    batch_size = tf.multiply(K,M);
-    Z_AR = Z0;
-    for t in range(1, T):
-        Z_AR_pred_t = tf.zeros((K, M, D), dtype=tf.float64);
-        for i in range(P):
-            if (t-(i+1) >= 0):
-                Z_AR_pred_t += tf.transpose(tf.tensordot(A[i,:,:], Z_AR[:,:,:,t-(i+1)], [[1], [2]]), [1,2,0]);
-        epsilon = tf.transpose(tf.multiply(sigma_eps, tf.random_normal((D,K,M),0,1)), [1,2,0]);
-        Z_AR_t = Z_AR_pred_t + epsilon;
-
-        Z_AR = tf.concat((Z_AR, tf.expand_dims(Z_AR_t, 3)), axis=3);
-
-    Sigma_eps = tf.diag(tf.square(sigma_eps[:,0]));
-    Sigma_Z_AR = compute_VAR_cov_tf(A, Sigma_eps, D, P, T);
-    Sigma_Z_AR = Sigma_Z_AR;
-    
-    Z_AR_dist = tf.contrib.distributions.MultivariateNormalFullCovariance(tf.zeros((D*T,), dtype=tf.float64), Sigma_Z_AR);
-
-    Z_AR_dist_shaped = tf.reshape(tf.transpose(Z_AR, [0, 1, 3, 2]), (K,M,D*T));
-    log_p_Z_AR = Z_AR_dist.log_prob(Z_AR_dist_shaped);
-    return Z_AR, log_p_Z_AR, Sigma_Z_AR;
-
-def connect_flow(Z, layers, theta, ts=None):
-    Z_shape = tf.shape(Z);
-    K = Z_shape[0];
-    M = Z_shape[1];
-    D_Z = Z_shape[2];
-    T = Z_shape[3];
-
-    sum_log_det_jacobians = tf.zeros((K,M), dtype=tf.float64);
-    nlayers = len(layers);
-    Z_by_layer = [];
-    Z_by_layer.append(Z);
-    print('zshapes in');
-    print('connect flow');
-    for i in range(nlayers):
-        print(Z.shape);
-        layer = layers[i];
-        print(i, layer.name);
-        theta_layer = theta[i];
-        layer.connect_parameter_network(theta_layer);
-        if (isinstance(layer, GP_Layer) or isinstance(layer, GP_EP_CondRegLayer)):
-            Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians, ts);
-        else:
-            Z, sum_log_det_jacobians = layer.forward_and_jacobian(Z, sum_log_det_jacobians);
-        Z_by_layer.append(Z);
-    print(Z.shape);
-    return Z, sum_log_det_jacobians, Z_by_layer;
 
 def cost_fn(eta, log_p_zs, T_x, log_h_x, K_eta, cost_type):
     y = log_p_zs;
