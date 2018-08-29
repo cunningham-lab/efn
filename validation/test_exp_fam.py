@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import scipy.stats
 import os, sys
-from families import family_from_str
+from tf_util.families import family_from_str
 from efn_util import model_opt_hps
 
 os.chdir('../');

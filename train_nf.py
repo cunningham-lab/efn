@@ -9,9 +9,9 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import connect_flow, construct_flow, setup_IO, log_grads, declare_theta, \
-                     cost_fn, test_convergence, memory_extension, setup_param_logging, \
-                     count_params
+from efn_util import setup_IO, log_grads, cost_fn, test_convergence, \
+                     memory_extension, setup_param_logging
+from tf_util.tf_util import connect_flow, construct_flow, declare_theta, count_params
 
 def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_seed=0, \
              min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general'):

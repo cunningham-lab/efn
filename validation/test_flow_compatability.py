@@ -5,7 +5,7 @@ import os
 import sys
 from plot_utils import plotMefnTraining
 from efn_util import model_opt_hps
-from families import dirichlet, multivariate_normal, inv_wishart, hierarchical_dirichlet, \
+from tf_util.families import dirichlet, multivariate_normal, inv_wishart, hierarchical_dirichlet, \
                      dirichlet_multinomial, truncated_normal_poisson, family_from_str
 
 os.chdir('../');
@@ -16,7 +16,6 @@ dist_seed = int(sys.argv[3]);
 
 TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
 lr_order = -3;
-nlayers = 30;
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
              'repeats':nlayers};
