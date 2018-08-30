@@ -8,10 +8,11 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import connect_flow, construct_flow, setup_IO, construct_param_network, \
+from efn_util import setup_IO, construct_param_network, \
                      cost_fn, check_convergence, memory_extension, \
-                     setup_param_logging, count_params, get_param_network_hyperparams, \
+                     setup_param_logging, get_param_network_hyperparams, \
                      test_convergence
+from tf_util.tf_util import connect_flow, construct_flow, count_params
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \

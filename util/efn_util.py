@@ -5,11 +5,11 @@ from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
 from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart, truncnorm
 import statsmodels.sandbox.distributions.mv_normal as mvd
-from flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, SimplexBijectionLayer, \
+from tf_util.flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, SimplexBijectionLayer, \
                   CholProdLayer, StructuredSpinnerLayer, StructuredSpinnerTanhLayer, TanhLayer, ExpLayer, \
                   SoftPlusLayer, GP_EP_CondRegLayer, GP_EP_CondRegFillLayer, GP_Layer, AR_Layer, VAR_Layer, \
                   FullyConnectedFlowLayer, ElemMultLayer
-import scipy.io as sio
+import scipy.io as soio
 import os
 import re
 
@@ -151,14 +151,6 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
         theta.append(layer_i_params);
     return theta;
 
-def count_layer_params(layer):
-    num_params = 0;
-    name, param_names, dims, _, _ = layer.get_layer_info();
-    nparams = len(dims);
-    for j in range(nparams):
-        num_params += np.prod(dims[j]);
-    return num_params;
-
 
 def cost_fn(eta, log_p_zs, T_x, log_h_x, K_eta, cost_type):
     y = log_p_zs;
@@ -188,38 +180,6 @@ def cost_fn(eta, log_p_zs, T_x, log_h_x, K_eta, cost_type):
     return cost, elbos, R2s;
 
 
-def drawPoissonRates(D, ratelim):
-    return np.random.uniform(0.1, ratelim, (D,));
-
-def drawPoissonCounts(z, N):
-    D = z.shape[0];
-    x = np.zeros((D,N));
-    for i in range(D):
-        x[i,:] = np.random.poisson(z[i], (N,));
-    return x;
-
-def truncated_multivariate_normal_rvs(mu, Sigma):
-    D = mu.shape[0];
-    L = np.linalg.cholesky(Sigma);
-    rejected = True;
-    count = 1;
-    while (rejected):
-        z0 = np.random.normal(0,1,(D));
-        z = np.dot(L, z0) + mu;
-        rejected = 1 - np.prod((np.sign(z)+1)/2);
-        count += 1;
-    return z;
-
-def get_GP_Sigma(tau, T, Ts):
-    K = np.zeros((T, T));
-    for i in range(T):
-        for j in range(i,T):
-            diff = (i-j)*Ts;
-            K[i,j] = np.exp(-(np.abs(diff)**2) / (2*(tau**2)));
-            if (i != j):
-                K[j,i] = K[i,j];
-    return K;
-    
 def get_flowstring(flow_dict):
     latent_dynamics = flow_dict['latent_dynamics'];
     tif_flow_type = flow_dict['TIF_flow_type'];
@@ -243,14 +203,6 @@ def setup_param_logging(all_params):
                     tf.summary.scalar('%s_%d%d' % (param.name[:-2], ii+1, jj+1), param[ii, jj]);
     return None;
 
-def count_params(all_params):
-    nparams = len(all_params);
-    nparam_vals = 0;
-    for i in range(nparams):
-        param = all_params[i];
-        param_shape = tuple(param.get_shape().as_list());
-        nparam_vals += np.prod(param_shape);
-    return nparam_vals;
 
 def log_grads(cost_grads, cost_grad_vals, ind):
     cgv_ind = 0;
