@@ -1,6 +1,5 @@
 from train_nf import train_nf
 import numpy as np
-from matplotlib import pyplot as plt
 import os
 import sys
 from efn_util import model_opt_hps
@@ -22,7 +21,7 @@ resp_info = {'monkey':monkey, \
              'ori':ori};
 
 TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
-lr_order = -5;
+lr_order = -3;
 nlayers = 30;
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
@@ -32,8 +31,8 @@ cost_type = 'KL';
 M_eta = 200;
 random_seed = 0;
 check_rate = 100;
-min_iters = 100000;
-max_iters = 1000000;
+min_iters = 50000;
+max_iters = 50000;
 
 fam_class = family_from_str(exp_fam);
 family = fam_class(D);
