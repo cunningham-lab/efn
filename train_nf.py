@@ -44,7 +44,7 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
     tf.set_random_seed(random_seed);
 
     dist_info = {'dist_seed':params['dist_seed']};
-    savedir = setup_IO(family, 'NF1', dir_str, '', K, M, flow_dict, {}, False, False, random_seed, dist_info);
+    savedir = setup_IO(family, 'NF1', dir_str, '', K, M, flow_dict, {}, False, random_seed, dist_info);
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats), name='eta');
     T_x_input = tf.placeholder(tf.float64, shape=(None, num_T_x_inputs), name='T_x_input');
 
@@ -162,6 +162,7 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
                 print('iter %d took %f seconds' % (i+1, end_time-start_time));
 
             if (np.mod(i,tb_save_every)==0):
+                print('saving summary', i);
                 summary_writer.add_summary(summary, i);
 
             if (np.mod(i,model_save_every) == 0):

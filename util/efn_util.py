@@ -9,6 +9,7 @@ from tf_util.flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, Sim
                   CholProdLayer, StructuredSpinnerLayer, StructuredSpinnerTanhLayer, TanhLayer, ExpLayer, \
                   SoftPlusLayer, GP_EP_CondRegLayer, GP_EP_CondRegFillLayer, GP_Layer, AR_Layer, VAR_Layer, \
                   FullyConnectedFlowLayer, ElemMultLayer
+from tf_util.stat_util import get_dist_str
 import scipy.io as soio
 import os
 import re
@@ -16,10 +17,10 @@ import re
 p_eps = 10e-6;
 
 def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_dict, \
-             param_net_hps, stochastic_eta, give_hint, random_seed, dist_info={}):
+             param_net_hps, give_hint, random_seed, dist_info={}):
     # set file I/O stuff
     resdir = 'results/%s/' % dir_str;
-    eta_str = 'stochasticEta' if stochastic_eta else 'fixedEta';
+    eta_str = get_dist_str(family.eta_dist);
     give_hint_str = 'giveHint_' if give_hint else '';
     flowstring = get_flowstring(flow_dict);
 
@@ -90,8 +91,6 @@ def model_opt_hps(exp_fam, D):
             else:
                 lr_order = -3;
 
-
-
     return TIF_flow_type, nlayers, lr_order;
 
 
@@ -102,6 +101,12 @@ def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl
         upl_i = min(num_theta_params, num_param_net_inputs);
         for i in range(L):
             upl_i += upl_inc;
+            upl_param_net.append(upl_i);
+    elif (shape=='overparam'):
+        print('overparameterizing the theta network');
+        upl_param_net = [];
+        upl_i = 30;
+        for i in range(L):
             upl_param_net.append(upl_i);
     elif (shape=='exp'):
         A = abs(num_theta_params-num_param_net_inputs);

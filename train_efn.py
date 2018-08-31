@@ -21,7 +21,8 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     batch_norm = False;
     dropout = False;
     upl_tau = None;
-    upl_shape = 'linear';
+    #upl_shape = 'linear';
+    upl_shape = 'overparam'
     T = 1; 
     wsize = 50;
     delta_thresh = 1e-10;
@@ -77,7 +78,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     dist_info = {'dist_seed':dist_seed};
     efn_str = 'EFN1' if (K ==1) else 'EFN';
     savedir = setup_IO(family, efn_str, dir_str, param_net_input_type, K, M, flow_dict, \
-                       param_net_hps, stochastic_eta, give_hint, random_seed, dist_info);
+                       param_net_hps, give_hint, random_seed, dist_info);
 
     if not os.path.exists(savedir):
         print('Making directory %s' % savedir );
