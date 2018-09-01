@@ -105,7 +105,7 @@ def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl
     elif (shape=='overparam'):
         print('overparameterizing the theta network');
         upl_param_net = [];
-        upl_i = 30;
+        upl_i = 20;
         for i in range(L):
             upl_param_net.append(upl_i);
     elif (shape=='exp'):

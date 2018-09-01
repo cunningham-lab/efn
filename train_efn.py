@@ -241,21 +241,23 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
                 if (family.name == 'lgc'):
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                  train_X=train_X, test_X=test_X, eta=_eta, param_net_input=_param_net_input, \
-                                                  train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                                  T_x_input=_T_x_input, converged=False, \
-                                                  train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                  train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i, \
-                                                  test_set=family.test_set, train_set=family.train_set);
+                                                      train_X=train_X, test_X=test_X, eta=_eta, eta_dist=family.eta_dist, \
+                                                      param_net_input=_param_net_input, \
+                                                      train_params=eta_draw_params, test_params=eta_test_draw_params, \
+                                                      T_x_input=_T_x_input, converged=False, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i, \
+                                                      test_set=family.test_set, train_set=family.train_set);
                 else:
                     np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                  train_X=train_X, test_X=test_X, eta=_eta, param_net_input=_param_net_input, \
-                                                  train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                                  T_x_input=_T_x_input, converged=False, \
-                                                  train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                  train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                  train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
+                                                      train_X=train_X, test_X=test_X, eta=_eta, eta_dist=family.eta_dist, \
+                                                      param_net_input=_param_net_input, \
+                                                      train_params=eta_draw_params, test_params=eta_test_draw_params, \
+                                                      T_x_input=_T_x_input, converged=False, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
 
                 if (check_it >= 2*wsize - 1):
                     mean_test_elbos = np.mean(test_elbos, 1);

@@ -37,7 +37,7 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
     # save tensorboard summary in intervals
     model_save_every = max_iters-1;
     tb_save_every = 50;
-    tb_save_params = True;
+    tb_save_params = False;
 
     # seed RNGs
     np.random.seed(0);
