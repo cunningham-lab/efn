@@ -5,7 +5,7 @@ from tf_util.families import family_from_str
 from efn_util import model_opt_hps
 import os, sys
 
-os.chdir('../');
+os.chdir('../../');
 
 random_seed = int(sys.argv[1]);
 
