@@ -14,10 +14,11 @@ give_hint = not(int(sys.argv[3]) == 0);
 param_net_input_type = str(sys.argv[4]);
 random_seed = int(sys.argv[5]);
 
-TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
+TIF_flow_type, nlayers, scale_layer, lr_order = model_opt_hps(exp_fam, D);
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
+             'scale_layer':scale_layer, \
              'repeats':nlayers};
 
 cost_type = 'KL';

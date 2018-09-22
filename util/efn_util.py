@@ -38,13 +38,18 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
 
     if (model_type_str == 'EFN'):
         savedir = resdir + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
-                  % (substr, family.name, eta_str, give_hint_str, family.D, K, M, flowstring, param_net_hps['L'], random_seed);
+                           % (substr, family.name, eta_str, give_hint_str, family.D, \
+                     K, M, flowstring, param_net_hps['L'], random_seed);
     else:
         dist_seed = dist_info['dist_seed'];
-        savedir = resdir + '%s%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % (model_type_str, substr, family.name, family.D, flowstring, dist_seed, random_seed);
+        savedir = resdir + '%s%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % \
+                           (model_type_str, substr, family.name, \
+                            family.D, flowstring, dist_seed, random_seed);
     return savedir
 
 def model_opt_hps(exp_fam, D):
+    scale_layer = False;
+
     if (exp_fam == 'normal'):
         TIF_flow_type = 'AffineFlowLayer';
         nlayers = 1;
@@ -91,10 +96,11 @@ def model_opt_hps(exp_fam, D):
             else:
                 lr_order = -3;
 
-    return TIF_flow_type, nlayers, lr_order;
+    return TIF_flow_type, nlayers, scale_layer, lr_order;
 
 
-def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, shape='linear'):
+def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, \
+                                  shape='linear'):
     if (shape=='linear'):
         upl_inc = int(np.floor(abs(num_theta_params - num_param_net_inputs) / (L + 1)));
         upl_param_net = [];
@@ -132,6 +138,10 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     for i in range(L_theta):
         with tf.variable_scope('ParamNetLayer%d' % (i+1)):
             h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh);
+
+    out_dim = h.shape[1];
+    print(out_dim);
+
     theta = [];
     for i in range(L_flow):
         layer = flow_layers[i];
@@ -141,7 +151,7 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
         # read each parameter out of the last layer.
         for j in range(nparams):
             num_elems = np.prod(param_dims[j]);
-            A_shape = (upl_theta[-1], num_elems);
+            A_shape = (out_dim, num_elems);
             b_shape = (1, num_elems);
             A_ij = tf.get_variable(layer_name+'_'+param_names[j]+'_A', shape=A_shape, \
                                        dtype=tf.float64, \
