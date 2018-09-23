@@ -1,7 +1,7 @@
 from train_efn import train_efn
 import numpy as np
 from scipy.stats import multivariate_normal
-from families import family_from_str
+from tf_util.families import family_from_str
 from efn_util import model_opt_hps
 import os, sys
 
@@ -13,11 +13,12 @@ give_inverse_hint = int(sys.argv[3]) == 1;
 random_seed = int(sys.argv[4]);
 dir_str = str(sys.argv[5]);
 
-TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
+TIF_flow_type, nlayers, scale_layer, lr_order = model_opt_hps(exp_fam, D);
 
 flow_dict = {'latent_dynamics':None, \
              'TIF_flow_type':TIF_flow_type, \
-             'repeats':nlayers};
+             'repeats':nlayers, \
+             'scale_layer':scale_layer};
 
 fam_class = family_from_str(exp_fam);
 family = fam_class(D);

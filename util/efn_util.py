@@ -37,7 +37,7 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
         raise NotImplementedError();
 
     if (model_type_str == 'EFN'):
-        savedir = resdir + 'EFN%s_%s_%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
+        savedir = resdir + 'EFN%s_%s%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
                            % (substr, family.name, eta_str, give_hint_str, family.D, \
                      K, M, flowstring, param_net_hps['L'], random_seed);
     else:
@@ -199,7 +199,10 @@ def get_flowstring(flow_dict):
     latent_dynamics = flow_dict['latent_dynamics'];
     tif_flow_type = flow_dict['TIF_flow_type'];
     repeats = flow_dict['repeats'];
-    tif_str = '%d%s' % (repeats, tif_flow_type[:1]);
+    if (flow_dict['scale_layer']):
+        tif_str = 'M_%d%s' % (repeats, tif_flow_type[:1]);
+    else:
+        tif_str = '%d%s' % (repeats, tif_flow_type[:1]);
     if (latent_dynamics is not None):
         return '%s_%s' % (latent_dynamics, tif_str);
     else:
