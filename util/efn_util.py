@@ -40,10 +40,15 @@ def setup_IO(family, model_type_str, dir_str, param_net_input_type, K, M, flow_d
         savedir = resdir + 'EFN%s_%s%s_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/' \
                            % (substr, family.name, eta_str, give_hint_str, family.D, \
                      K, M, flowstring, param_net_hps['L'], random_seed);
-    else:
+    elif (model_type_str == 'EFN1'):
         dist_seed = dist_info['dist_seed'];
-        savedir = resdir + '%s%s_%s_D=%d_flow=%s_ds=%d_rs=%d/' % \
-                           (model_type_str, substr, family.name, \
+        savedir = resdir + '%s%s_%s%s_D=%d_flow=%s_L=%d_ds=%d_rs=%d/' % \
+                           (model_type_str, substr, family.name, eta_str, \
+                            family.D, flowstring, param_net_hps['L'], dist_seed, random_seed);
+    elif (model_type_str == 'NF1'):
+        dist_seed = dist_info['dist_seed'];
+        savedir = resdir + '%s%s_%s%s_D=%d_flow=%s_ds=%d_rs=%d/' % \
+                           (model_type_str, substr, family.name, eta_str, \
                             family.D, flowstring, dist_seed, random_seed);
     return savedir
 
