@@ -27,6 +27,7 @@ param_net_input_type = 'eta';
 cost_type = 'KL';
 K_eta = 100;
 M_eta = 1000;
+
 stochastic_eta = True;
 dist_seed = 0;
 min_iters = 100000;

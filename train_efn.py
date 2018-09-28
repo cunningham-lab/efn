@@ -21,8 +21,8 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     batch_norm = False;
     dropout = False;
     upl_tau = None;
-    #upl_shape = 'linear';
-    upl_shape = 'overparam'
+    upl_shape = 'linear';
+    #upl_shape = 'overparam'
     T = 1; 
     wsize = 50;
     delta_thresh = 1e-10;
@@ -32,7 +32,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
     # set number of layers in the parameter network
     if (family.name == 'normal'):
-        L = 2;
+        L = 0;
     else:
         L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
 
