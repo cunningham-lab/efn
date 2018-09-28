@@ -31,7 +31,9 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims(param_net_input_type, give_hint);
 
     # set number of layers in the parameter network
-    if (family.name == 'normal'):
+    if (family.name == 'dirichlet'):
+        L = 1;
+    elif (family.name == 'normal'):
         L = 0;
     else:
         L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
