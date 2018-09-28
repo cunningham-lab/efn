@@ -7,7 +7,7 @@ from scipy.stats import ttest_1samp, multivariate_normal, dirichlet, invwishart,
 import statsmodels.sandbox.distributions.mv_normal as mvd
 from tf_util.flows import AffineFlowLayer, PlanarFlowLayer, RadialFlowLayer, SimplexBijectionLayer, \
                   CholProdLayer, StructuredSpinnerLayer, StructuredSpinnerTanhLayer, TanhLayer, ExpLayer, \
-                  SoftPlusLayer, GP_EP_CondRegLayer, GP_EP_CondRegFillLayer, GP_Layer, AR_Layer, VAR_Layer, \
+                  SoftPlusLayer, GP_EP_CondRegLayer, GP_Layer, AR_Layer, VAR_Layer, \
                   FullyConnectedFlowLayer, ElemMultLayer
 from tf_util.stat_util import get_dist_str
 import scipy.io as soio
