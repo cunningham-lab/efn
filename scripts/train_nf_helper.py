@@ -2,7 +2,7 @@ from train_nf import train_nf
 import numpy as np
 from scipy.stats import multivariate_normal
 import os, sys
-from families import family_from_str
+from tf_util.families import family_from_str
 from efn_util import model_opt_hps
 
 os.chdir('../');
@@ -14,9 +14,10 @@ dist_seed = int(sys.argv[4]);
 random_seed = int(sys.argv[5]);
 dir_str = str(sys.argv[6]);
 
-TIF_flow_type, nlayers, lr_order = model_opt_hps(exp_fam, D);
+TIF_flow_type, nlayers, scale_layer, lr_order = model_opt_hps(exp_fam, D);
 
 flow_dict = {'latent_dynamics':None, \
+			 'scale_layer':False, \
              'TIF_flow_type':TIF_flow_type, \
              'repeats':nlayers};
 
