@@ -17,7 +17,6 @@ dir_str = str(sys.argv[6]);
 
 TIF_flow_type, nlayers, scale_layer, lr_order = model_opt_hps(exp_fam, D);
 
-
 flow_dict = {'latent_dynamics':None, \
 			 'scale_layer':scale_layer, \
              'TIF_flow_type':TIF_flow_type, \
