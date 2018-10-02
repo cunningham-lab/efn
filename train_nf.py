@@ -13,7 +13,7 @@ from efn_util import setup_IO, log_grads, cost_fn, test_convergence, \
 from tf_util.tf_util import connect_flow, construct_flow, declare_theta, count_params
 
 def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_seed=0, \
-             min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general'):
+             min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general', profile=False):
     T = 1;
     wsize = 50;
     delta_thresh = 1e-10;
@@ -112,6 +112,10 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
     test_R2s = np.zeros((num_diagnostic_checks, K));
     train_KLs = np.zeros((num_diagnostic_checks, K));
     test_KLs = np.zeros((num_diagnostic_checks, K));
+
+    if (profile):
+        times = np.zeros((max_iters,));
+
     check_it = 0;
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
@@ -151,14 +155,24 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
             z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
             feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
 
-            if (np.mod(i, check_rate)==0):
+            if (profile):
                 start_time = time.time();
-            ts, cost_i, _cost_grads, _R2s, _T_x, _log_h_x, summary = \
-                    sess.run([train_step, cost, cost_grad, R2s, T_x, log_h_x, summary_op], feed_dict);
-
-            if (np.mod(i, check_rate)==0):
+                ts = sess.run(train_step, feed_dict);
                 end_time = time.time();
-                print('iter %d took %f seconds' % (i+1, end_time-start_time));
+                seconds = end_time-start_time;
+                print('iter %d took %f seconds' % (i+1, seconds));
+                times[i] = seconds;
+                i += 1;
+                continue;
+            else:
+                if (np.mod(i, check_rate)==0):
+                    start_time = time.time();
+                ts, cost_i, _cost_grads, _R2s, _T_x, _log_h_x, summary = \
+                        sess.run([train_step, cost, cost_grad, R2s, T_x, log_h_x, summary_op], feed_dict);
+                if (np.mod(i, check_rate)==0):
+                    end_time = time.time();
+                    print('iter %d took %f seconds' % (i+1, end_time-start_time));
+
 
             if (np.mod(i,tb_save_every)==0):
                 print('saving summary', i);
@@ -218,9 +232,14 @@ def train_nf(family, params, flow_dict, cost_type, M=1000, lr_order=-3, random_s
         feed_dict = {Z0:z_i, eta:_eta, T_x_input:_T_x_input};
         _log_p_zs, _X = sess.run([log_p_zs, X], feed_dict);
 
+        if (profile):
+            pfname = savedir + 'profile.npz';
+            np.savez(pfname, times=times, M=M);
+            exit();
+
     if (i < max_iters):
         np.savez(savedir + 'results.npz', it=i, X=train_X, eta=_eta, T_x_input=_T_x_input, params=params, check_rate=check_rate, \
-                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                      train_elbos=train_elbos, test_elbos=test_elbos, M=M, \
                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                       train_KLs=train_KLs, test_KLs=test_KLs, \
                                       converged=True, final_cos=cost_i);

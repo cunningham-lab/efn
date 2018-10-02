@@ -16,11 +16,12 @@ from tf_util.tf_util import connect_flow, construct_flow, count_params
 
 def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \
-              min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general'):
+              min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general', profile=False):
     print('lr_order', lr_order);
     batch_norm = False;
     dropout = False;
     upl_tau = None;
+    #upl_shape = 'exp';
     upl_shape = 'linear';
     #upl_shape = 'overparam'
     T = 1; 
@@ -148,6 +149,9 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     test_R2s = np.zeros((array_init_len, K));
     train_KLs = np.zeros((array_init_len, K));
     test_KLs = np.zeros((array_init_len, K));
+
+    if (profile):
+        times = np.zeros((max_iters,));
     check_it = 0;
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer();
@@ -189,13 +193,23 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
             feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
 
-            if (np.mod(i, check_rate)==0):
+            if (profile):
                 start_time = time.time();
-            ts, cost_i, summary = \
-                sess.run([train_step, cost, summary_op], feed_dict);
-            if (np.mod(i, check_rate)==0):
+                ts = sess.run(train_step, feed_dict);
                 end_time = time.time();
-                print('iter %d took %f seconds' % (i+1, end_time-start_time));
+                seconds = end_time-start_time;
+                print('iter %d took %f seconds' % (i+1, seconds));
+                times[i] = seconds;
+                i += 1;
+                continue;
+            else:
+                if (np.mod(i, check_rate)==0):
+                    start_time = time.time();
+                ts, cost_i, summary = \
+                    sess.run([train_step, cost, summary_op], feed_dict);
+                if (np.mod(i, check_rate)==0):
+                    end_time = time.time();
+                    print('iter %d took %f seconds' % (i+1, end_time-start_time));
 
             if (np.mod(i,tb_save_every)==0):
                 summary_writer.add_summary(summary, i);
@@ -279,8 +293,14 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                     array_cur_len = 2*array_cur_len;
             sys.stdout.flush();
             i += 1;
-        print('saving model before exitting');
-        saver.save(sess, savedir + 'model');
+
+        if (profile):
+            pfname = savedir + 'profile.npz';
+            np.savez(pfname, times=times);
+            exit();
+        else:
+            print('saving model before exitting');
+            saver.save(sess, savedir + 'model');
     if (i < max_iters):
         if (family.name == 'lgc'):
             np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
