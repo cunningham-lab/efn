@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: Bittner_AIStats_2019.aux
+The style file: apalike.bst
+Database file #1: BittnerAIStats2019.bib
+Warning--can't use both volume and number fields in gershman2014amortized
+You've used 41 entries,
+            1935 wiz_defined-function locations,
+            709 strings with 10748 characters,
+and the built_in function-call counts, 18998 in all, are:
+= -- 1897
+> -- 773
+< -- 34
++ -- 270
+- -- 259
+* -- 1527
+:= -- 3102
+add.period$ -- 128
+call.type$ -- 41
+change.case$ -- 327
+chr.to.int$ -- 40
+cite$ -- 42
+duplicate$ -- 792
+empty$ -- 1348
+format.name$ -- 324
+if$ -- 3890
+int.to.chr$ -- 2
+int.to.str$ -- 0
+missing$ -- 44
+newline$ -- 208
+num.names$ -- 125
+pop$ -- 365
+preamble$ -- 1
+purify$ -- 330
+quote$ -- 0
+skip$ -- 614
+stack$ -- 0
+substring$ -- 1370
+swap$ -- 200
+text.length$ -- 20
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 240
+warning$ -- 1
+while$ -- 153
+width$ -- 0
+write$ -- 531
+(There was 1 warning)

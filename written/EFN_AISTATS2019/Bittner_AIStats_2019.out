@@ -1,0 +1,11 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Exponential family networks}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Exponential families as target model P}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Density networks as generic approximating family M}{section.2}% 4
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Exponential family networks as approximating model Q}{subsection.2.2}% 5
+\BOOKMARK [1][-]{section.3}{Relation to variational inference}{}% 6
+\BOOKMARK [1][-]{section.4}{Results}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{Tractable exponential families}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.2}{The hierarchical Dirichlet family}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.3}{The truncated normal Poisson family, and neural spike train analysis}{section.4}% 10
+\BOOKMARK [1][-]{section.5}{Conclusion}{}% 11

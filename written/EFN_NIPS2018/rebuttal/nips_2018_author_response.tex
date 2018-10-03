@@ -1,0 +1,37 @@
+\documentclass{article}
+
+\usepackage{nips_2018_author_response}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\usepackage{lipsum}
+
+\begin{document}
+Reviewer 1: \\
+
+Thank you.  We understand the comments re wordiness and will overhaul the manuscript to focus on precision.  Given that there was low confidence in the review and no substantive strengths or weaknesses noted, other than wordiness, we will just give quick answers to your specific questions: \\
+
+$G$ indicates a parameter-indexed family of deterministic functions, so samping from $q_\theta(z)$ for a choice of $G$ is trivial, so long as sampling the base random variable $p_0$ is trivial.  $q_0$ is a typo, which should read $p_0$.  $\phi$ are the parameters of the paramter network.  Yes, $F$ is an arbitrary mapping from $\eta$ to $\theta$ approximated by a neural network.  Line 130 contains a typo, it should read: $q_\phi(z; \eta)$ rather than $q_{f_\phi}(z; \eta)$.  EFNs learn exponential family models, where distributions are indexed by natural parameters $\eta \in H$.  A distribution $p_\eta$  must be chosen in order to stochastically optimize the EFN.  Specifying a prior distribution on $\eta$, is a tool for prioritizing the approximation of particular exponential family distributions of the model class. \\ \\
+
+
+
+Reviewer 2: \\
+
+Thank you for the thorough review.  We agree on all your points that ``the paper is well written, method well motivated… [but] the experimental section needs more work".  We have spent the past two months, and will continue to spend the next month, fleshing out the experimental section, which we agree was inadequate as it was (one small correction: Figure 5 was not synthetic data; it was neural data gathered from experiments.  Nonetheless your point stands that there was too much synthetic data).  In brief, some updated experiments so far, and some intended experiments to come:
+
+We will do analyses, which provide a satisfying understanding of why density networks (NF) do not scale for many of our tested exponential family distributions, and how the parameter network input differentially affects performance when learning single distributions.  We will demonstrate the bias-variance tradeoff of NFs and EFNs: EFNs act as regularizers on model space.  We have taken our analyses of neural data a step further to demonstrate the computational savings of using an EFN to learn a log-gaussian Poisson model of spiking responses to drift grating stimuli. \\ \\
+
+
+
+Reviewer 3: \\
+
+Respectfully, the reviewer seems to have misunderstood the goal of the paper and the method.  The reviewer writes “The paper proposes a variational inference method for exponential family (EF) models”, but this is not correct.  The paper attempts to learn a *model*, not a distribution from within that model (which is the problem of variational inference, as in VB, SVAE, etc).  As stated in the abstract, “In most all of these settings [VB, SVAE, VI], the goal has been to find a particular member of that model family... Much less attention, however, has been paid to the problem of learning a model itself.”  We will clarify this point further in the manuscript as it is indeed the central point of the work, but we request that this review be reconsidered.
+
+\end{document}
