@@ -14,7 +14,6 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
     print('R2s shape', R2s.shape);
     K_eta = R2s.shape[1];
     its = check_rate*np.arange(1,num_checks+1, dtype=float);
-    print(its);
     its = np.tile(np.expand_dims(its, 1), [1,K_eta]);
     its_vec = np.reshape(its, (num_checks*K_eta,));
     R2s_vec = np.reshape(R2s[:num_checks, :], (num_checks*K_eta,))
@@ -60,12 +59,15 @@ def plotMefnTraining(exp_fam, R2s, KLs, X, log_P, params, check_rate, iters, tit
             plt.suptitle(titlestr, fontsize=fontsize+2);
     return fig;
     
-def plotCategoricalPerformance(x, y, legendstrs=[], plottype='scatter', color_palette=sns.xkcd_palette(colors), dotsize = 5):
+def plotCategoricalPerformance(x, y, legendstrs=[], plottype='scatter', color_palette=sns.xkcd_palette(colors), dotsize = 5, shift=1):
     fontsize = 16;
-    num_trends = y.shape[0];
+    num_trends = len(y);
     xlen = x.shape[0];
-    assert(xlen == y.shape[1]);
-    N = y.shape[2];
+    assert(xlen == y[0].shape[0]);
+    Ns = [];
+    for i in range(num_trends):
+        Ns.append(y[i].shape[1]);
+    maxN = max(Ns);
     
     sizes = dotsize*np.ones((1,));
     # set up legend
@@ -73,35 +75,48 @@ def plotCategoricalPerformance(x, y, legendstrs=[], plottype='scatter', color_pa
         for i in range(num_trends):
             color = np.tile(np.array([color_palette[i]]), [1, 1]);
             if (plottype == 'scatter'):
-                plt.scatter(x[0], y[i,0,0], np.array([dotsize]), c=color);
+                plt.scatter(x[0], y[i][0,0], np.array([dotsize]), c=color);
             elif (plottype == 'errorBar'):
-                plt.scatter(x[0], np.mean(y[i,0,:]), np.array([dotsize]), c=color);
+                plt.scatter(x[0], np.mean(y[i][0,:]), np.array([dotsize]), c=color);
         plt.legend(legendstrs, fontsize=fontsize);
 
     if (plottype == 'scatter'):
-        xvals = np.zeros((num_trends*xlen*N,));
-        yvals = np.zeros((num_trends*xlen*N,));
-        colors = np.zeros((num_trends*xlen*N,3));
-        sizes = dotsize*np.ones((num_trends*xlen*N,));
+        xvals = np.zeros((num_trends*xlen*maxN,));
+        yvals = np.zeros((num_trends*xlen*maxN,));
+        colors = np.zeros((num_trends*xlen*maxN,3));
+        sizes = dotsize*np.ones((num_trends*xlen*maxN,));
         ind = 0;
-        for n in range(N):
-            for i in range(num_trends):
-                for j in range(xlen):
-                    yval = y[i,j,n];
-                    if (yval == 0):
+        sawzorn = False;
+        for i in range(num_trends):
+            if (plottype == 'scatter'):
+                xshift_i = (i - (num_trends-1)/2)*shift;
+            else:
+                xshift_i = 0;
+            N = Ns[i];
+            for j in range(xlen):
+                for n in range(N):
+                    yval = y[i][j,n];
+                    if (not sawzorn and (yval == 0 or np.isnan(yval))):
+                        print('saw a zero or nan');
+                        sawzorn = True;
                         continue;
                     yvals[ind] = yval
                     colors[ind,:] = np.array([color_palette[i]]);
-                    xvals[ind] = x[j] + (i-2)*.5;
+                    xvals[ind] = x[j] + xshift_i
                     ind += 1;
         plt.scatter(xvals[:ind], yvals[:ind], sizes[:ind], c=colors[:ind]);
 
     elif (plottype == 'errorBar'):
-        means = np.mean(y, 2);
-        stds = np.std(y, 2);
         sizes = dotsize*np.ones((xlen,));
+        means = np.zeros((num_trends, xlen));
+        stds = np.zeros((num_trends, xlen));
         for i in range(num_trends):
-            plt.plot(x, means[i], '-', c=color_palette[i], lw=2);
+            # make sure at the end there are no nans!
+            means_i = np.nanmean(y[i], 1);
+            means[i] = means_i;
+            stds_i = np.nanstd(y[i], 1) / np.sqrt(Ns[i]);
+            stds[i] = stds_i;
+            plt.plot(x, means_i, '-', c=color_palette[i], lw=2);
         for i in range(num_trends):
             for j in range(xlen):
                 plt.plot([x[j], x[j]], [means[i,j]-stds[i,j], means[i,j]+stds[i,j]], '-', c=color_palette[i], lw=2);
@@ -143,7 +158,7 @@ def plotContourNormal(mu, Sigma, n_plot):
             Z[i,j] = dist.pdf([x1[i],x2[j]])
     mycm = sns.light_palette("navy", as_cmap=True)
     mycm.set_under('w')
-    plt.imshow(Z,extent=(mu[0]-spread1,mu[0]+spread1,mu[1]-spread2,mu[1]+spread2),cmap=mycm,origin='lower',vmin=0.000325)
+    plt.imshow(Z,extent=(mu[0]-spread1,mu[0]+spread1,mu[1]-spread2,mu[1]+spread2),cmap=mycm,origin='lower')
     plt.axis("off")
     norm_sample = dist.rvs(200)
     xns = norm_sample[:,0]
@@ -191,15 +206,18 @@ def draw_pdf_contours(dist, subdiv=5, **kwargs):
     refiner = tri.UniformTriRefiner(triangle)
     trimesh = refiner.refine_triangulation(subdiv=subdiv)
     pvals = [dist.pdf(xy2bc(xy)) for xy in zip(trimesh.x, trimesh.y)]
-    plt.tricontourf(trimesh, pvals, np.arange(0,15,0.1), cmap=mycm)
+    maxp = np.max(pvals);
+    minp = np.min(pvals);
+    step = ((maxp+1) - minp)/1000.0;
+    contour_levels = np.arange(minp, maxp+1, step);
+    plt.tricontourf(trimesh, pvals, contour_levels, cmap=mycm)
     plt.axis('equal')
     plt.xlim(0, 1)
     plt.ylim(0, 0.75**0.5)
     plt.axis('off')
-    plt.show();
 
 
-def plotContourTruncatedNormal(mu, Sigma, xlim, ylim, n_plot, title='truncated normal', scatter=True):
+def plotContourTruncatedNormal(mu, Sigma, xlim, ylim, n_plot, scatter=True):
     sns.set_palette(sns.color_palette("Set1", n_colors=8, desat=.6))
     sns.set_style("whitegrid")
     sns.set_style("ticks")
@@ -209,28 +227,40 @@ def plotContourTruncatedNormal(mu, Sigma, xlim, ylim, n_plot, title='truncated n
     #width = 21;
     #height = 10;
     dist = multivariate_normal(mu, Sigma);
-    spread1 = 3.5*Sigma[0,0];
-    spread2 = 3.5*Sigma[1,1];
-    x1 = np.linspace(mu[0]-spread1,mu[0]+spread1,n_plot)
-    x2 = np.linspace(mu[1]-spread2,mu[1]+spread2,n_plot)
+    x1 = np.linspace(0,xlim,n_plot)
+    x2 = np.linspace(0,ylim,n_plot)
     Z = np.zeros([n_plot,n_plot])
     for i in range(n_plot):
         for j in range(n_plot):
             Z[i,j] = dist.pdf([x1[i],x2[j]]);
     mycm = sns.light_palette("navy", as_cmap=True)
     mycm.set_under('w')
-    plt.imshow(Z.T,extent=(mu[0]-spread1,mu[0]+spread1,mu[1]-spread2,mu[1]+spread2),cmap=mycm,origin='lower',vmin=0.000325)
+    zmin = np.min(Z);
+    zmax = np.max(Z);
+    nc = 1000.0;
+    z_contours = sattrend(zmin, zmax+(1.0/nc)*(zmax-zmin), nc, 2);
+    plt.contourf(Z.T,levels=z_contours,cmap=mycm)
     #plt.axis("off")
     if (scatter):
         norm_sample = dist.rvs(100)
         xns = norm_sample[:,0]
         yns = norm_sample[:,1]
         plt.scatter(xns,yns,c=sbpal[0])
-    #plt.contourf(x,x,Z,cmap=mycm)
-    plt.title(title)
-    #plt.tight_layout()
-    plt.xlim([0, xlim]);
-    plt.ylim([0, ylim]);
+
+
+def exptrend(v1, v2, n, a):
+    A = v2-v1;
+    x = np.arange(0,1,1.0/n);
+    y = np.exp(a*x) - 1;
+    y = (A*y / np.max(y)) + v1;
+    return y;
+
+def sattrend(v1, v2, n, a):
+    A = v2-v1;
+    x = np.arange(0,1,1.0/n);
+    y = 1 - np.exp(-a*x);
+    y = (A*y / np.max(y)) + v1;
+    return y;
 
 
 

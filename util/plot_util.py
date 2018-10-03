@@ -4,10 +4,11 @@ import seaborn as sns
 import matplotlib.tri as tri
 from scipy.stats import multivariate_normal
 from functools import reduce
-from families import family_from_str
+from tf_util.families import family_from_str
 import os
 import pandas as pd
 from itertools import compress
+import scipy.io as sio
 
 #from dirichlet import simplex
 colors = ["pale red", "medium green", "windows blue", "amber", "dusty purple", "greyish", "faded green", "denim blue"];
@@ -36,7 +37,9 @@ def find_last_ind(x):
     
 
     
-def get_latest_diagnostics(fname, is_train=True):
+def get_latest_diagnostics(fname, is_train=True, ind=None):
+    wsize = 50;
+    delta_thresh = 1e-10;
     file_exists = os.path.isfile(fname);
     dict_prefix = 'train' if is_train else 'test'; 
     if (not file_exists):
@@ -62,12 +65,12 @@ def get_latest_diagnostics(fname, is_train=True):
     R2_nans = np.sum(np.isnan(R2_vals));
     KL_nans = np.sum(np.isnan(KL_vals));
     if (elbo_nz_orig == K and R2_nz_orig == K):
-        last_ind = find_last_ind(elbos);
-        last_ind_R2 = find_last_ind(R2s);
-        assert(last_ind == last_ind_R2);
-        elbo_vals = X['%s_elbos' % dict_prefix][last_ind,:];
-        R2_vals = X['%s_R2s' % dict_prefix][last_ind,:];
-        KL_vals = X['%s_KLs' % dict_prefix][last_ind,:];
+        if (ind is None):
+            ind = find_last_ind(elbos);
+            ind_R2 = find_last_ind(R2s);
+        elbo_vals = X['%s_elbos' % dict_prefix][ind-1,:];
+        R2_vals = X['%s_R2s' % dict_prefix][ind-1,:];
+        KL_vals = X['%s_KLs' % dict_prefix][ind-1,:];
         
     if (elbo_nz_orig > 0 or R2_nz_orig > 0 or elbo_nans > 0 or R2_nans > 0 or (not file_exists)):
         status = report_model_status(fname, elbo_nz_orig, R2_nz_orig, elbo_nans, R2_nans, file_exists);
@@ -191,48 +194,98 @@ def dim_sweep_df(Ds, model_strs, diagnostic_list):
     df = pd.DataFrame.from_dict(d);
     return df;
 
-def EFN_model_df(id_name, id_labels, x_name, x_labels, diagnostic_list):
+def EFN_model_df(id_name, id_labels, param_mat_lists, param_labels, diagnostic_list):
     assert(len(id_labels) == len(diagnostic_list));
     num_ids = len(id_labels);
+    num_param_mats = len(param_labels);
+
     elbos_all = [];
     R2s_all = [];
     KLs_all = [];
-    xs_all = [];
+    params_all = [];
+    for i in range(num_param_mats):
+        params_all.append([]);
+
     ids = [];
     for i in range(num_ids):
         elbos, R2s, KLs = diagnostic_list[i];
         K = elbos.shape[1];
-        elbos_vec = np.reshape(elbos.T, (np.prod(elbos.shape),));
-        R2s_vec = np.reshape(R2s.T, (np.prod(R2s.shape),));
-        KLs_vec = np.reshape(KLs.T, (np.prod(KLs.shape),));
 
-        xs_vec = x_labels*K;
+        elbos_vec = np.reshape(elbos, (np.prod(elbos.shape),));
+        R2s_vec = np.reshape(R2s, (np.prod(R2s.shape),));
+        KLs_vec = np.reshape(KLs, (np.prod(KLs.shape),));
+
+        param_vecs = [];
+        for j in range(num_param_mats):
+            param_mat_list = param_mat_lists[j];
+            param_mat_ij = param_mat_list[i];
+            param_vecs.append(np.reshape(param_mat_ij, (np.prod(param_mat_ij.shape),)));
 
         elbo_isnan = np.isnan(elbos_vec)
         elbo_isnan = np.isnan(elbos_vec)
         R2_isnan = np.isnan(R2s_vec);
-        R2_isnonpositive = R2s_vec <= 0;
-        remove_inds = np.logical_or(elbo_isnan, np.logical_or(R2_isnan, R2_isnonpositive));
+        #R2_isnonpositive = R2s_vec <= 0;
+        #remove_inds = np.logical_or(elbo_isnan, np.logical_or(R2_isnan, R2_isnonpositive));
+        remove_inds = np.logical_or(elbo_isnan, R2_isnan);
 
         elbos_vec = elbos_vec[~remove_inds];
         R2s_vec = R2s_vec[~remove_inds];
         KLs_vec = KLs_vec[~remove_inds];
-        xs_vec = list(compress(xs_vec, ~remove_inds));
+        for j in range(num_param_mats):
+            param_vecs[j] = param_vecs[j][~remove_inds];
 
         elbos_all.append(elbos_vec);
         R2s_all.append(R2s_vec);
         KLs_all.append(KLs_vec);
-        xs_all.append(xs_vec);
+        for j in range(num_param_mats):
+            params_all[j].append(param_vecs[j]);
+
         ids.extend(elbos_vec.shape[0]*[id_labels[i]]);
 
     elbos = np.concatenate(elbos_all, 0);
     R2s = np.concatenate(R2s_all, 0);
     KLs = np.concatenate(KLs_all, 0);
-    xs = np.concatenate(xs_all, 0);
 
-    d = {"elbo":elbos, "R2":R2s, "KL":KLs, x_name:xs, id_name:ids};
+    params = [];
+    for i in range(num_param_mats):
+        params.append(np.concatenate(params_all[i], 0));
+
+    d = {"elbo":elbos, "R2":R2s, "KL":KLs, id_name:ids};
+    for i in range(num_param_mats):
+        d.update({param_labels[i]:params[i]});
+
     df = pd.DataFrame.from_dict(d);
-    return df;
+    return df, d;
+
+
+def load_V1_events(monkey, SNR_thresh=1.5, FR_thresh=1.0):
+    spike_dir = '/Users/sbittner/Documents/efn/data/pvc11/data_and_scripts/spikes_gratings/'
+    fname = spike_dir + 'data_monkey%d_gratings.mat' % monkey;
+    npzfile = sio.loadmat(fname);
+
+    data = npzfile['data'];
+    events = np.array(data['EVENTS'][0,0]);
+
+    # cut by SNR thresh
+    SNR = data['SNR'][0,0];
+    keep_neurons = SNR > SNR_thresh;
+    events = events[keep_neurons[:,0]];
+
+    # cut by mean FR thresh
+    num_neurons, num_oris, num_trials = events.shape;
+    FRs = np.zeros((num_neurons, num_oris, num_trials))
+    for i in range(num_neurons):
+        for j in range(num_oris):
+            for k in range(num_trials):
+                events_ijk = events[i,j,k];
+                inds = np.logical_and(0.28 <= events_ijk, events_ijk < 1.28);
+                events[i,j,k] = events_ijk[inds] - 0.28;
+                FRs[i,j,k] = np.count_nonzero(inds)/1.0;
+    mean_FRs = np.mean(np.mean(FRs, 2), 1);
+    keep_neurons = mean_FRs > FR_thresh;
+    events = events[keep_neurons];
+
+    return events;
 
 def plotContourNormal(mu, Sigma, n_plot):
     sns.set_palette(sns.color_palette("Set1", n_colors=8, desat=.6))
