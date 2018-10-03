@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 OCT 2018 09:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 OCT 2018 16:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1307,42 +1307,42 @@ File: figs/fig2/fig2.pdf Graphic file (type pdf)
 
 <use figs/fig2/fig2.pdf>
 Package pdftex.def Info: figs/fig2/fig2.pdf used on input line 238.
-(pdftex.def)             Requested size: 207.61238pt x 52.96173pt.
+(pdftex.def)             Requested size: 234.8775pt x 59.91489pt.
  <figs/fig3/fig3.pdf, id=262, 855.195pt x 403.55467pt>
 File: figs/fig3/fig3.pdf Graphic file (type pdf)
 
 <use figs/fig3/fig3.pdf>
 Package pdftex.def Info: figs/fig3/fig3.pdf used on input line 246.
-(pdftex.def)             Requested size: 213.79823pt x 100.88841pt.
+(pdftex.def)             Requested size: 234.8775pt x 110.83316pt.
  [5]
-Underfull \vbox (badness 1009) has occurred while \output is active []
-
-
 <figs/fig4/fig4.pdf, id=269, 497.86pt x 277.035pt>
 File: figs/fig4/fig4.pdf Graphic file (type pdf)
  <use figs/fig4/fig4.pdf>
 Package pdftex.def Info: figs/fig4/fig4.pdf used on input line 266.
-(pdftex.def)             Requested size: 124.46469pt x 69.25858pt.
+(pdftex.def)             Requested size: 234.8775pt x 130.70105pt.
 
-[6 <./figs/fig2/fig2.pdf> <./figs/fig3/fig3.pdf> <./figs/fig4/fig4.pdf
+[6 <./figs/fig2/fig2.pdf> <./figs/fig3/fig3.pdf
+
+pdfTeX warning: /Library/TeX/texbin/pdflatex (file ./figs/fig3/fig3.pdf): PDF i
+nclusion: multiple pdfs with page group included in a single page
+> <./figs/fig4/fig4.pdf
 
 pdfTeX warning: /Library/TeX/texbin/pdflatex (file ./figs/fig4/fig4.pdf): PDF i
 nclusion: multiple pdfs with page group included in a single page
->] <figs/fig5/fig5.pdf, id=354, 447.63538pt x 312.36702pt>
+>] <figs/fig5/fig5.pdf, id=351, 447.63538pt x 312.36702pt>
 File: figs/fig5/fig5.pdf Graphic file (type pdf)
 
 <use figs/fig5/fig5.pdf>
 Package pdftex.def Info: figs/fig5/fig5.pdf used on input line 280.
-(pdftex.def)             Requested size: 170.10321pt x 118.7007pt.
- (./Bittner_AIStats_2019.bbl [7 <./figs/fig5/fig5.pdf>]
+(pdftex.def)             Requested size: 234.8775pt x 163.90457pt.
+ (./Bittner_AIStats_2019.bbl [7 <./figs/fig5/fig5.pdf>] [8]
 Underfull \hbox (badness 2050) in paragraph at lines 214--217
 \T1/cmr/m/n/10 (+20) Rnade: The real-valued neu-ral au-tore-gres-sive
  []
 
-[8]
 LaTeX Font Info:    Try loading font information for OMS+cmr on input line 221.
 
- (/usr/local/texlive/2016/texmf-dist/tex/latex/base/omscmr.fd
+(/usr/local/texlive/2016/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <10> not available
@@ -1403,10 +1403,10 @@ st/fonts/type1/public/cm-super/sfrm0700.pfb></usr/local/texlive/2016/texmf-dist
 onts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2016/texmf-dist/fon
 ts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2016/texmf-dist/fonts
 /type1/public/cm-super/sftt1000.pfb>
-Output written on Bittner_AIStats_2019.pdf (9 pages, 1474321 bytes).
+Output written on Bittner_AIStats_2019.pdf (9 pages, 1569678 bytes).
 PDF statistics:
- 514 PDF objects out of 1000 (max. 8388607)
- 413 compressed objects within 5 object streams
+ 511 PDF objects out of 1000 (max. 8388607)
+ 415 compressed objects within 5 object streams
  73 named destinations out of 1000 (max. 500000)
  18076 words of extra memory for PDF output out of 20736 (max. 10000000)
 
