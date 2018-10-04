@@ -4,45 +4,45 @@ The top-level auxiliary file: Bittner_AIStats_2019.aux
 The style file: apalike.bst
 Database file #1: BittnerAIStats2019.bib
 Warning--can't use both volume and number fields in gershman2014amortized
-You've used 41 entries,
+You've used 42 entries,
             1935 wiz_defined-function locations,
-            709 strings with 10748 characters,
-and the built_in function-call counts, 18998 in all, are:
-= -- 1897
-> -- 773
+            713 strings with 11059 characters,
+and the built_in function-call counts, 19520 in all, are:
+= -- 1940
+> -- 821
 < -- 34
-+ -- 270
-- -- 259
-* -- 1527
-:= -- 3102
-add.period$ -- 128
-call.type$ -- 41
-change.case$ -- 327
-chr.to.int$ -- 40
-cite$ -- 42
-duplicate$ -- 792
-empty$ -- 1348
-format.name$ -- 324
-if$ -- 3890
++ -- 288
+- -- 277
+* -- 1578
+:= -- 3202
+add.period$ -- 131
+call.type$ -- 42
+change.case$ -- 341
+chr.to.int$ -- 41
+cite$ -- 43
+duplicate$ -- 805
+empty$ -- 1368
+format.name$ -- 343
+if$ -- 3982
 int.to.chr$ -- 2
 int.to.str$ -- 0
-missing$ -- 44
-newline$ -- 208
-num.names$ -- 125
-pop$ -- 365
+missing$ -- 45
+newline$ -- 213
+num.names$ -- 128
+pop$ -- 379
 preamble$ -- 1
-purify$ -- 330
+purify$ -- 344
 quote$ -- 0
-skip$ -- 614
+skip$ -- 624
 stack$ -- 0
-substring$ -- 1370
-swap$ -- 200
+substring$ -- 1382
+swap$ -- 201
 text.length$ -- 20
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 240
+type$ -- 246
 warning$ -- 1
-while$ -- 153
+while$ -- 155
 width$ -- 0
-write$ -- 531
+write$ -- 543
 (There was 1 warning)

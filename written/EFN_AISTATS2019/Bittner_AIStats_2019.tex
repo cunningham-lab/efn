@@ -226,9 +226,9 @@ To compare model approximations by EFNs to standard methodology, we alternativel
 
 
 We also must make some particular architectural choices for these experiments.  
-We considered a variety of density network architectures; in all the results we use the planar flow layer introduced in \cite{rezende2015variational}.  
+We considered a variety of density network architectures.  For each exponential family, we searched through some candidate architectures which consisted of cascades of normalizing flow layers such as planar and radial flows introduced in \cite{rezende2015variational}, a structured spinner flows inspired by \cite{ bojarski2016structured}, and a single affine transformation.
 The parameter network was given $\tanh$ nonlinearities. 
-In many of the results below we will analyze EFNs across a range of model dimensionality $D$ (that is, $z \in \mathcal{Z} \subseteq \mathbb{R}^D$).    In all cases then we have also $D$ planar flow layers in the density network, with $2D+1$ density network parameters per layer.  In analyses where $D$ was less than 20, 20 planar flows were used.  The number of layers in the parameter network scaled as the square root of $D$, with a minimum of 4 layers, and the number of units per layer scaled linearly from the input to the number of density network parameters. Models were trained using the ADAM optimizer algorithm, with learning rates ranging from $10^{-3}$ to $10^{-5}$.  Optimizations ran for at least 50,000 iterations, and completed once there was a subthreshold increase in ELBO. These choices were made so that model performance saturated, and were held constant within comparative analyses.
+In many of the results below we will analyze EFNs across a range of model dimensionality $D$ (that is, $z \in \mathcal{Z} \subseteq \mathbb{R}^D$).    In all cases then we have also $D$ flow layers in the density network (except when the affine transformation is optimal).  In analyses where $D$ was less than 20, 20 flow layers were used.  The number of layers in the parameter network scaled as the square root of $D$, with a minimum of 4 layers, and the number of units per layer scaled linearly from the input to the number of density network parameters. Models were trained using the ADAM optimizer algorithm, with learning rates ranging from $10^{-3}$ to $10^{-5}$.  Optimizations ran for at least 50,000 iterations, and completed once there was a subthreshold increase in ELBO. These choices were made so that model performance saturated, and were held constant within comparative analyses.
 All code was implemented in tensorflow, and will be available at {\tt https://github.com/anonymous/}.
 
 
@@ -255,7 +255,7 @@ Second, in Figure 3 we consider how this performance scales across dimensionalit
  \begin{figure}
   \centering
 \includegraphics[width=1.0\linewidth]{figs/fig3/fig3.pdf}
-  \caption{Scaling exponential family networks: $D$ denotes the dimensionality of the family being learned, and comparisons are between EFN and its $K=1$ alternatives NF1 and EFN1 (see text).  (A) Dirichlet family (B) Gaussian family  (C) Inverse-Wishart family.}
+  \caption{Scaling exponential family networks: $D$ denotes the dimensionality of the family being learned, and comparisons are between EFN and its alternative NF (see text).  (A) Multivariate normal family (B) Dirichlet family.}
 \end{figure}
 %
 
@@ -265,28 +265,23 @@ However, learning the model with EFN does not necessarily harm the distributiona
 \subsection{Look-up inference in an intractable exponential family}
 
 Of course the main interest of an EFN is to learn intractable exponential families.  The normal family is the ubiquitous prior for real valued parameters, but it does not match well with the nonnegativity requirements of the intensity measure required of certain distributions, most notably the Poisson.  Log Gaussian Cox Processes have been used numerous times in machine learning, and all have required attention to approximate inference in this fundamentally nonconjugate model; furthermore, very many of these examples have been used to analyze the latent firing intensity of neural spike train data \cite{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}.
-Here, we trained an EFN to learn the 20-dimensional log-normal Poisson posterior inference family.  This gives us a model of the posterior distribution for a given prior covariance, and some chosen spiking responses.  We demonstrate the utility of such a model on responses of neurons in primary visual cortex of anesthetized macaques to drift grating stimuli at 6.25 Hz \cite{smith2008spatial}.  We can compare the posterior distribution learned with variational inference (red) for a given neuron’s response, to the posterior distribution we get with immediate look-up after training an EFN (blue) (Fig. 4A-B).  These posteriors are very similar, and neither fits the data better than the other.  
-
-Training an EFN understandably takes more time than an NF (Fig. 4C), but once the EFN is trained we have immediate posterior inference lookup.  If we have a target level of approximation (ELBO target) we can determine when it is faster to get posterior inference on a number of datasets by training an EFN and then using the immediate lookup feature or by running variational inference independently for each distribution.  By computing the amount of computational time it takes to reach the ELBO target on average for both EFN and NF, and then counting how many datasets it would take to learn with NF before eclipsing the training time for the EFN.  This results in a decision boundary (Fig. 4D), where an EFN is more computationally efficient for running posterior inference, and we have infinite computational savings for each additional dataset.
-
+Here, we trained an EFN to learn the 20-dimensional log-normal Poisson posterior inference family.  This gives us a model of the posterior distribution for a given prior covariance, and some chosen spiking responses.  We demonstrate the utility of such a model on responses of neurons in primary visual cortex of anesthetized macaques to drift grating stimuli at 6.25 Hz \cite{smith2008spatial}.  We can compare the posterior distribution learned with variational inference (red) for a given neuron’s response, to the posterior distribution we get with immediate look-up after training an EFN (blue) (Fig. 4A-C).  These posteriors are very similar, and neither fits the data better than the other.  EFNs and NFs were trained with 30 planar flow layers.
 
 \begin{figure}
 \centering
 \includegraphics[width=1.0\linewidth]{figs/fig4/fig4.png}
-\captionof{figure}{Dirichlet families.  See text.}
+\captionof{figure}{Look-up inference in a log-normal Poisson model with V1 responses to drift grating stimuli.  (A-C) Top: Inferred latent intensities from a single EFN (blue) or varitional inference (red) run individually for each dataset.  Shading denotes the standard deviation of the posterior.  Bottom: Corresponding V1 spiking responses.  (D) Distribution of -ELBO throughout training across a held out test group of 100 datasets for the EFN (blue), and across 298 datasets fit with NF (red).  (E)  Decision boundary for what number of datasets for a given target approximation accuracy it is advantageous to train an EFN rather than run variational inference individually for each dataset.}
 \label{fig:test1}
 \end{figure}
+
+Training an EFN understandably takes more time than an NF (Fig. 4D), but once the EFN is trained we have immediate posterior inference lookup.  If we have a target level of approximation (ELBO target) we can determine when it is faster to get posterior inference on a number of datasets by training an EFN and then using the immediate lookup feature or by running variational inference independently for each distribution.  By computing the amount of computational time it takes to reach the ELBO target on average for both EFN and NF, and then counting how many datasets it would take to learn with NF before eclipsing the training time for the EFN.  This results in a decision boundary (Fig. 4E), where an EFN is more computationally efficient for running posterior inference, and we have infinite computational savings for each additional dataset.
+
+
 
 \section{Conclusion}
 
 We have approached the problem of learning an exponential family, using a deep density network as an implicit probability model, the parameters of which are the image of the natural parameters of the target exponential family under another deep neural network.  
-We demonstrated high quality empirical performance across a range of dimensionalities, making a number of previously intractable distributions, including posterior distributions, approximately tractable.
-
-\subsubsection*{Acknowledgements}
-
-Acknowledge the homies.
-
-\subsubsection*{References}
+We demonstrated high quality empirical performance across a range of dimensionalities, the potential for better approximations when learning in a restricted model space, and computational savings afforded by immediate posterior inference look-up.
 
 \bibliography{BittnerAIStats2019}
 \end{document}

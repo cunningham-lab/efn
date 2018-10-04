@@ -35,6 +35,13 @@ Blei, D.~M., Ng, A.~Y., and Jordan, M.~I. (2003).
 \newblock Latent dirichlet allocation.
 \newblock {\em Journal of machine Learning research}, 3(Jan):993--1022.
 
+\bibitem[Bojarski et~al., 2016]{bojarski2016structured}
+Bojarski, M., Choromanska, A., Choromanski, K., Fagan, F., Gouy-Pailler, C.,
+  Morvan, A., Sakr, N., Sarlos, T., and Atif, J. (2016).
+\newblock Structured adaptive and random spinners for fast machine learning
+  computations.
+\newblock {\em arXiv preprint arXiv:1610.06209}.
+
 \bibitem[Cunningham et~al., 2008a]{cunningham2008inferring}
 Cunningham, J.~P., Byron, M.~Y., Shenoy, K.~V., and Sahani, M. (2008a).
 \newblock Inferring neural firing rates from spike trains using gaussian

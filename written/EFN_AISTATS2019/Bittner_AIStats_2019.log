@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 OCT 2018 08:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  4 OCT 2018 09:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1308,14 +1308,14 @@ Package microtype Info: Loading generic settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-<figs/fig2/fig2.pdf, id=255, 830.45155pt x 211.84746pt>
+<figs/fig2/fig2.pdf, id=257, 830.45155pt x 211.84746pt>
 File: figs/fig2/fig2.pdf Graphic file (type pdf)
 
 <use figs/fig2/fig2.pdf>
 Package pdftex.def Info: figs/fig2/fig2.pdf used on input line 246.
 (pdftex.def)             Requested size: 234.8775pt x 59.91489pt.
  [5]
-<figs/fig3/fig3.pdf, id=264, 599.23875pt x 403.55467pt>
+<figs/fig3/fig3.pdf, id=266, 599.23875pt x 403.55467pt>
 File: figs/fig3/fig3.pdf Graphic file (type pdf)
 
 <use figs/fig3/fig3.pdf>
@@ -1328,54 +1328,50 @@ Underfull \vbox (badness 1199) has occurred while \output is active []
 
 pdfTeX warning: /Library/TeX/texbin/pdflatex (file ./figs/fig3/fig3.pdf): PDF i
 nclusion: multiple pdfs with page group included in a single page
->] <figs/fig4/fig4.png, id=323, 569.7285pt x 403.0257pt>
+>] <figs/fig4/fig4.png, id=325, 556.479pt x 410.2527pt>
 File: figs/fig4/fig4.png Graphic file (type png)
 
 <use figs/fig4/fig4.png>
-Package pdftex.def Info: figs/fig4/fig4.png used on input line 275.
-(pdftex.def)             Requested size: 234.8775pt x 166.15175pt.
+Package pdftex.def Info: figs/fig4/fig4.png used on input line 272.
+(pdftex.def)             Requested size: 234.8775pt x 173.15631pt.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 1902) has occurred while \output is active []
 
 
-(./Bittner_AIStats_2019.bbl [7 <./figs/fig4/fig4.png>]
-Underfull \hbox (badness 2050) in paragraph at lines 214--217
+(./Bittner_AIStats_2019.bbl [7 <./figs/fig4/fig4.png>] [8]
+Underfull \hbox (badness 2050) in paragraph at lines 221--224
 \T1/cmr/m/n/10 (+20) Rnade: The real-valued neu-ral au-tore-gres-sive
  []
 
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 221.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 228.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/it' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 221.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 228.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 221.
-) [8]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 292.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 292.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 228.
+)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 287.
+ [9
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 287.
 
 (./Bittner_AIStats_2019.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 292.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 292.
-
-
-Package rerunfilecheck Warning: File `Bittner_AIStats_2019.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `Bittner_AIStats_2019.out':
-(rerunfilecheck)             Before: DBD2C5C8B91A73D6BE44D59F9837B020;732
-(rerunfilecheck)             After:  5ABF781CBC49E4A1C1E14622A3443C5C;744.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 292.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 287.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 287.
+Package rerunfilecheck Info: File `Bittner_AIStats_2019.out' has not changed.
+(rerunfilecheck)             Checksum: 5ABF781CBC49E4A1C1E14622A3443C5C;744.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 287.
  ) 
 Here is how much of TeX's memory you used:
- 24175 strings out of 493014
- 483613 string characters out of 6133351
- 611648 words of memory out of 5000000
- 27030 multiletter control sequences out of 15000+600000
- 22381 words of font info for 124 fonts, out of 8000000 for 9000
+ 24176 strings out of 493014
+ 483702 string characters out of 6133351
+ 612325 words of memory out of 5000000
+ 27033 multiletter control sequences out of 15000+600000
+ 22330 words of font info for 123 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  55i,19n,78p,1524b,843s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2016/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}
@@ -1406,10 +1402,10 @@ st/fonts/type1/public/cm-super/sfrm0700.pfb></usr/local/texlive/2016/texmf-dist
 onts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2016/texmf-dist/fon
 ts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2016/texmf-dist/fonts
 /type1/public/cm-super/sftt1000.pfb>
-Output written on Bittner_AIStats_2019.pdf (8 pages, 1142771 bytes).
+Output written on Bittner_AIStats_2019.pdf (9 pages, 1143011 bytes).
 PDF statistics:
- 443 PDF objects out of 1000 (max. 8388607)
- 373 compressed objects within 4 object streams
+ 447 PDF objects out of 1000 (max. 8388607)
+ 376 compressed objects within 4 object streams
  70 named destinations out of 1000 (max. 500000)
  18063 words of extra memory for PDF output out of 20736 (max. 10000000)
 
