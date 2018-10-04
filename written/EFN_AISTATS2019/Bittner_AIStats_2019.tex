@@ -48,6 +48,9 @@
   every join/.style={->}
 }
 
+\newcommand{\inputTikZ}[2]{%  
+     \scalebox{#1}{\input{#2}}  
+}
 
 \begin{document}
 
@@ -109,7 +112,7 @@ We define this two-network architecture, which we term an \emph{exponential fami
 To define exponential family networks (EFNs), we begin with relevant context for our modeling choice of exponential families (\S2.1).  We then describe the primary network architectural constraint and the background we leverage to satisfy that constraint (\S2.2). We then introduce EFN in detail, including the optimization algorithm used for learning (\S2.3).  The similarities with variational inference are then explored in depth in (\S2.4).
 
 \begin{figure}
-  \resizebox{.45\linewidth}{!}{\centering \parbox{\linewidth}{\input{figs/fig1/efn1b.tex}}}
+ {\centering \inputTikZ{0.55}{figs/fig1/efn1b.tex}  }
 
 
   \caption{(A) Graphical model for conditionally iid sampling from an exponential family likelihood.  (B) Hierarchical Dirichlets -- prior $p_0(z)$ (top), three sample conditional Dirichlet datasets $X$ of $N=2, N=20, N=100$ (middle), and three corresponding posteriors that themselves form an exponential family $\mathcal{P}$ (bottom).  (C) Architecture for exponential family network (EFN) -- density network running top to bottom; parameter network running right to left.}
@@ -263,7 +266,7 @@ Second, in Figure 3 we consider how this performance scales across dimensionalit
 
 \begin{figure}
 \centering
-\includegraphics[width=1.0\linewidth]{figs/fig4/fig4.pdf}
+\includegraphics[width=1.0\linewidth]{figs/fig4/fig4.png}
 \captionof{figure}{Dirichlet families.  See text.}
 \label{fig:test1}
 \end{figure}
@@ -274,13 +277,6 @@ We here consider the hierchical Dirichlet family (as introduced in \S2.1 and Fig
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{The truncated normal Poisson family, and neural spike train analysis}
-
-\begin{figure}
-\centering
-\includegraphics[width=1.0\linewidth]{figs/fig5/fig5.pdf}
-\captionof{figure}{Truncated normal Poisson and neural spike train analysis.  See text.}
-\label{fig:test2}
-\end{figure}
 
 The normal family is the ubiquitous prior for real valued parameters, but it does not match well with the nonnegativity requirements of the intensity measure required of certain distributions, most notably the Poisson.  Truncated normal and log Gaussian Cox Processes have been used numerous times in machine learning, and all have required attention to approximate inference in this fundamentally nonconjugate model; furthermore, very many of these examples have been used to analyze the latent firing intensity of neural spike train data \cite{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}.
 Here, we trained an EFN to learn the 20-dimensional truncated-normal Poisson posterior inference family.  This gives us a model of the posterior distribution for a given prior covariance, and some chosen spiking responses (visualized in 2-dimensions Figure 4A and 4B).  We demonstrate the utility of such a model on responses of neurons in primary visual cortex of anesthetized macaques to drifting grating stimuli.  We compare the accuracy of EFN with standard variational inference in their ability to model the posterior firing rate distribution of a neuron responding to 6.25 Hz drift grating stimuli.  We consider 200 trials of a single neuron from \cite{smith2008spatial}, with 20ms binned spike counts: 100 training, 100 test. The data suggest a prior with average firing rate of $10$ spikes per second and a squared exponential gaussian process covariance with a timescale of 25ms.  Results in Figure 5 show the outperformance of EFN across a range of problem settings.  In panel B we sweep $R$, the number of trials on which we condition the posterior $p(z|x_1,...,x_R)$, and in panel C we sweep the number of available trials $N$.  Both of these pay off the value of using an EFN, in that they demonstrate the benefits of using a restricted model.
