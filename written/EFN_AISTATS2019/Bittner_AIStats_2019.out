@@ -6,5 +6,5 @@
 \BOOKMARK [1][-]{section.3}{Relation to variational inference}{}% 6
 \BOOKMARK [1][-]{section.4}{Results}{}% 7
 \BOOKMARK [2][-]{subsection.4.1}{Tractable exponential families}{section.4}% 8
-\BOOKMARK [2][-]{subsection.4.2}{Look-up inference with neural spike trains}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Look-up inference in an intractable exponential family}{section.4}% 9
 \BOOKMARK [1][-]{section.5}{Conclusion}{}% 10
