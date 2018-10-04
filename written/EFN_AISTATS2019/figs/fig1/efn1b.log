@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  14 MAY 2018 20:44
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  3 OCT 2018 20:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -938,7 +938,7 @@ Missing character: There is no ) in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.33  \node
-            (t0) at (\xb + 2.7,-0.4+0.2) {\includegraphics[width=14mm]{fig/t...
+            (t0) at (\xb + 2.7 - 0.024,-0.4+0.2) {\includegraphics[width=18....
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -960,6 +960,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 7 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 0 in font nullfont!
@@ -971,8 +977,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.33 ... at (\xb + 2.7,-0.4+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t0.eps}};...
+l.33 ... + 2.7 - 0.024,-0.4+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -987,20 +993,28 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 0 in font nullfont!
 Missing character: There is no . in font nullfont!
-Missing character: There is no e in font nullfont!
 Missing character: There is no p in font nullfont!
-Missing character: There is no s in font nullfont!
+Missing character: There is no n in font nullfont!
+Missing character: There is no g in font nullfont!
 Missing character: There is no ; in font nullfont!
 
 Overfull \hbox (20.0pt too wide) in paragraph at lines 31--34
@@ -1235,7 +1249,7 @@ Missing character: There is no ) in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.39  \node
-            (t11) at (\xb + 1.0,-2.3+0.2) {\includegraphics[width=14mm]{fig/...
+            (t11) at (\xb + 1.0 - 0.024,-2.3+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1258,6 +1272,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 1 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 0 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -1269,8 +1289,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.39 ... at (\xb + 1.0,-2.3+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t11.png}}...
+l.39 ... + 1.0 - 0.024,-2.3+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1285,17 +1305,26 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 1 in font nullfont!
 Missing character: There is no 1 in font nullfont!
+Missing character: There is no a in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no p in font nullfont!
 Missing character: There is no n in font nullfont!
@@ -1303,7 +1332,7 @@ Missing character: There is no g in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.40  \node
-            (t12) at (\xb + 2.7,-2.3+0.2) {\includegraphics[width=14mm]{fig/...
+            (t12) at (\xb + 2.7 - 0.024,-2.3+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1326,6 +1355,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 7 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -1337,8 +1372,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.40 ... at (\xb + 2.7,-2.3+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t12.png}}...
+l.40 ... + 2.7 - 0.024,-2.3+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1353,13 +1388,21 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 1 in font nullfont!
@@ -1371,7 +1414,7 @@ Missing character: There is no g in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.41  \node
-            (t13) at (\xb + 4.4,-2.3+0.2) {\includegraphics[width=14mm]{fig/...
+            (t13) at (\xb + 4.4 - 0.024,-2.3+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1394,6 +1437,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 4 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 4 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -1405,8 +1454,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.41 ... at (\xb + 4.4,-2.3+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t13.png}}...
+l.41 ... + 4.4 - 0.024,-2.3+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1421,13 +1470,21 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 1 in font nullfont!
@@ -1724,7 +1781,7 @@ Missing character: There is no ) in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.49  \node
-            (t21) at (\xb + 1.0,-4.7+0.2) {\includegraphics[width=14mm]{fig/...
+            (t21) at (\xb + 1.0 - 0.024,-4.7+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1747,6 +1804,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 1 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 0 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 4 in font nullfont!
@@ -1758,8 +1821,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.49 ... at (\xb + 1.0,-4.7+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t21.png}}...
+l.49 ... + 1.0 - 0.024,-4.7+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1774,13 +1837,21 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -1792,7 +1863,7 @@ Missing character: There is no g in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.50  \node
-            (t22) at (\xb + 2.7,-4.7+0.2) {\includegraphics[width=14mm]{fig/...
+            (t22) at (\xb + 2.7 - 0.024,-4.7+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1815,6 +1886,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 7 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 4 in font nullfont!
@@ -1826,8 +1903,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.50 ... at (\xb + 2.7,-4.7+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t22.png}}...
+l.50 ... + 2.7 - 0.024,-4.7+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1842,13 +1919,21 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -1860,7 +1945,7 @@ Missing character: There is no g in font nullfont!
 Missing character: There is no ; in font nullfont!
 ! Undefined control sequence.
 l.51  \node
-            (t23) at (\xb + 4.4,-4.7+0.2) {\includegraphics[width=14mm]{fig/...
+            (t23) at (\xb + 4.4 - 0.024,-4.7+0.2) {\includegraphics[width=18...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1883,6 +1968,12 @@ Missing character: There is no + in font nullfont!
 Missing character: There is no 4 in font nullfont!
 Missing character: There is no . in font nullfont!
 Missing character: There is no 4 in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 2 in font nullfont!
+Missing character: There is no 4 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 4 in font nullfont!
@@ -1894,8 +1985,8 @@ Missing character: There is no . in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no ) in font nullfont!
 ! Undefined control sequence.
-l.51 ... at (\xb + 4.4,-4.7+0.2) {\includegraphics
-                                                  [width=14mm]{fig/t23.png}}...
+l.51 ... + 4.4 - 0.024,-4.7+0.2) {\includegraphics
+                                                  [width=18.5mm]{figs/fig1/t...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -1910,13 +2001,21 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no h in font nullfont!
 Missing character: There is no = in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 8 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no m in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no g in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
 Missing character: There is no / in font nullfont!
 Missing character: There is no t in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -2403,7 +2502,7 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 68--69
 
 ! Undefined control sequence.
 l.70 \node
-           (w) at (\xc+1.5,0.0) {$w \sim \mathcal{N}(0,I)$};
+           (w) at (\xc+1.5,0.0) {$w\! \sim\! q_0(w)$};
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2418,7 +2517,7 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.70 \node (
-            w) at (\xc+1.5,0.0) {$w \sim \mathcal{N}(0,I)$};
+            w) at (\xc+1.5,0.0) {$w\! \sim\! q_0(w)$};
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
@@ -2447,13 +2546,13 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 70--71
  []
 
 
-Overfull \hbox (17.98376pt too wide) in paragraph at lines 70--71
-\OML/cmm/m/it/10 w \OMS/cmsy/m/n/10 ^^X
+Overfull \hbox (16.31714pt too wide) in paragraph at lines 70--71
+\OML/cmm/m/it/10 w  \OMS/cmsy/m/n/10 ^^X
  []
 
 
-Overfull \hbox (32.08125pt too wide) in paragraph at lines 70--71
-\OMS/cmsy/m/n/10 N\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; I\OT1/cmr/m/n/10 )$ 
+Overfull \hbox (24.15631pt too wide) in paragraph at lines 70--71
+\OML/cmm/m/it/10 q[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 w\OT1/cmr/m/n/10 )$ 
  []
 
 ! Undefined control sequence.
@@ -2922,7 +3021,7 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 80--83
 
 ! Undefined control sequence.
 l.84 \node
-           (nf4) at (\xc+1.5, -4.4)  {$z \sim q_\phi(z;\eta)$};
+           (nf4) at (\xc+1.5, -4.4)  {$z\!=\!g_\theta(w)\! \sim\! q_\phi(z;\...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -2937,7 +3036,8 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.84 \node (
-            nf4) at (\xc+1.5, -4.4)  {$z \sim q_\phi(z;\eta)$};
+            nf4) at (\xc+1.5, -4.4)  {$z\!=\!g_\theta(w)\! \sim\! q_\phi(z;\...
+
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
@@ -3013,8 +3113,14 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 84--86
  []
 
 
-Overfull \hbox (15.64581pt too wide) in paragraph at lines 84--86
-\OML/cmm/m/it/10 z \OMS/cmsy/m/n/10 ^^X
+Overfull \hbox (13.97919pt too wide) in paragraph at lines 84--86
+\OML/cmm/m/it/10 z  \OT1/cmr/m/n/10 =
+ []
+
+
+Overfull \hbox (33.3889pt too wide) in paragraph at lines 84--86
+\OML/cmm/m/it/10 g[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 w\OT1/cmr/m/n/10 )  \OMS/
+cmsy/m/n/10 ^^X
  []
 
 
@@ -3720,7 +3826,7 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 104--110
 
 ! Undefined control sequence.
 l.111 \node
-            (tpe) at (\xc+2.4, -2.5) {$\theta_{\phi} (\eta)$};
+            (tpe) at (\xc+2.3, -2.5) {$\theta\! =\! f_{\phi} (\eta)$};
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -3735,7 +3841,7 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.111 \node (
-             tpe) at (\xc+2.4, -2.5) {$\theta_{\phi} (\eta)$};
+             tpe) at (\xc+2.3, -2.5) {$\theta\! =\! f_{\phi} (\eta)$};
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
@@ -3753,7 +3859,7 @@ Missing character: There is no 4 in font nullfont!
 Missing character: There is no + in font nullfont!
 Missing character: There is no 2 in font nullfont!
 Missing character: There is no . in font nullfont!
-Missing character: There is no 4 in font nullfont!
+Missing character: There is no 3 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no - in font nullfont!
 Missing character: There is no 2 in font nullfont!
@@ -3798,8 +3904,13 @@ Overfull \hbox (20.0pt too wide) in paragraph at lines 111--113
  []
 
 
-Overfull \hbox (23.10466pt too wide) in paragraph at lines 111--113
-\OML/cmm/m/it/10 ^^R[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 ^^Q\OT1/cmr/m/n/10 )$
+Overfull \hbox (13.86111pt too wide) in paragraph at lines 111--113
+\OML/cmm/m/it/10 ^^R  \OT1/cmr/m/n/10 =
+ []
+
+
+Overfull \hbox (23.30608pt too wide) in paragraph at lines 111--113
+\OML/cmm/m/it/10 f[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 ^^Q\OT1/cmr/m/n/10 )$
  []
 
 
