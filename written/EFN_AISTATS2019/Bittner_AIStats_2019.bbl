@@ -111,6 +111,11 @@ Jacobsen, J.-H., Smeulders, A., and Oyallon, E. (2018).
 \newblock i-revnet: Deep invertible networks.
 \newblock {\em arXiv preprint arXiv:1802.07088}.
 
+\bibitem[Kingma and Ba, 2014]{kingma2014adam}
+Kingma, D.~P. and Ba, J. (2014).
+\newblock Adam: A method for stochastic optimization.
+\newblock {\em arXiv preprint arXiv:1412.6980}.
+
 \bibitem[Kingma and Welling, 2013]{Kingma:2013aa}
 Kingma, D.~P. and Welling, M. (2013).
 \newblock Auto-encoding variational bayes.

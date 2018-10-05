@@ -30,21 +30,21 @@
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}}
 \citation{gershman2014amortized,Kingma:2013aa,rezende2014stochastic,stuhlmuller2013learning}
 \citation{wainwright2008graphical}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (A) Graphical model for conditionally iid sampling from an exponential family likelihood. (B) Hierarchical Dirichlets -- prior $p_0(z)$ (top), three sample conditional Dirichlet datasets $X$ of $N=2, N=20, N=100$ (middle), and three corresponding posteriors that themselves form an exponential family $\mathcal  {P}$ (bottom). (C) Architecture for exponential family network (EFN) -- density network running top to bottom; parameter network running right to left.\relax }}{2}{figure.caption.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Exponential family networks}{2}{section.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Exponential families as target model $\mathcal  {P}$}{2}{subsection.2.1}}
 \citation{robert2007bayesian}
 \citation{mackay1995hierarchical}
 \citation{teh2006hdp}
 \citation{blei2003latent,pritchard2000inference}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Exponential family networks}{2}{section.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Exponential families as target model $\mathcal  {P}$}{2}{subsection.2.1}}
+\newlabel{eq:1}{{1}{2}{Exponential families as target model $\mathcal {P}$}{equation.2.1}{}}
+\newlabel{eq:2}{{2}{2}{Exponential families as target model $\mathcal {P}$}{equation.2.2}{}}
+\newlabel{eq:3}{{3}{2}{Exponential families as target model $\mathcal {P}$}{equation.2.3}{}}
 \citation{robert2007bayesian}
 \citation{mackay1997density,baird2005one,tabak2010density,rippel2013high,uria2013rnade,rezende2015variational,dinh2016density,papamakarios2017masked,jacobsen2018revnet}
 \citation{andrychowicz2016learning}
 \citation{rezende2015variational}
-\newlabel{eq:1}{{1}{3}{Exponential families as target model $\mathcal {P}$}{equation.2.1}{}}
-\newlabel{eq:2}{{2}{3}{Exponential families as target model $\mathcal {P}$}{equation.2.2}{}}
-\newlabel{eq:3}{{3}{3}{Exponential families as target model $\mathcal {P}$}{equation.2.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Density networks as generic approximating family $\mathcal  {M}$}{3}{subsection.2.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (A) Probabilistic graphical model. (B) Hierarchical Dirichlets: a Dirichlet prior with conditionally iid Dirichlet draws. (top) prior $p_0(z)$, (middle) three sample conditional Dirichlet datasets $X$ of $N=2, N=20, N=100$, and (bottom) three corresponding posteriors that themselves belong to an exponential family $\mathcal  {P}$. (C) Architecture for exponential family network (EFN) -- density network running top to bottom; parameter network running right to left.\relax }}{3}{figure.caption.2}}
 \newlabel{eq:4}{{4}{3}{Density networks as generic approximating family $\mathcal {M}$}{equation.2.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Exponential family networks as approximating model $\mathcal  {Q}$}{3}{subsection.2.3}}
 \citation{papamakarios2015distilling}
@@ -63,6 +63,7 @@
 \citation{robert2007bayesian}
 \citation{rezende2015variational}
 \citation{bojarski2016structured}
+\citation{kingma2014adam}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Results}{5}{section.4}}
 \citation{gretton2012kernel}
 \citation{cunningham2008fast,cunningham2008inferring,adams2009tractable,gao2016linear}
@@ -71,12 +72,11 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 50-dimensional Dirichlet exponential family network. (A) Distribution of $r^2$ between log density of EFN samples and ground truth across choices of $\eta $ throughout optimization. (B) Distribution of KL divergence throughout optimization. (C) Distribution of maximum mean discrepancy p-values between EFN samples and ground truth after optimization.\relax }}{6}{figure.caption.3}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Tractable exponential families}{6}{subsection.4.1}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Scaling exponential family networks: $D$ denotes the dimensionality of the family being learned, and comparisons are between EFN and its alternative NF (see text). (A) Multivariate normal family (B) Dirichlet family.\relax }}{6}{figure.caption.4}}
-\bibdata{BittnerAIStats2019}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Look-up inference in an intractable exponential family}{7}{subsection.4.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Look-up inference in a log-normal Poisson model with V1 responses to drift grating stimuli. (A-C) Top: Inferred latent intensities from a single EFN (blue) or varitional inference (red) run individually for each dataset. Shading denotes the standard deviation of the posterior. Bottom: Corresponding V1 spiking responses. (D) Distribution of -ELBO throughout training across a held out test group of 100 datasets for the EFN (blue), and across 298 datasets fit with NF (red). (E) Decision boundary for what number of datasets for a given target approximation accuracy it is advantageous to train an EFN rather than run variational inference individually for each dataset.\relax }}{7}{figure.caption.5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Look-up inference in a log-Gaussian Poisson model with V1 responses to drift grating stimuli. (A-C) Top: Inferred latent intensities from a single EFN (blue) or varitional inference (red) run individually for each dataset. Shading denotes the standard deviation of the posterior. Bottom: Corresponding V1 spiking responses. (D) Distribution of -ELBO throughout training across a held out test group of 100 datasets for the EFN (blue), and across 298 datasets fit with NF (red). (E) Decision boundary for what number of datasets for a given target approximation accuracy it is advantageous to train an EFN rather than run variational inference individually for each dataset.\relax }}{7}{figure.caption.5}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:test1}{{4}{7}{Look-up inference in a log-normal Poisson model with V1 responses to drift grating stimuli. (A-C) Top: Inferred latent intensities from a single EFN (blue) or varitional inference (red) run individually for each dataset. Shading denotes the standard deviation of the posterior. Bottom: Corresponding V1 spiking responses. (D) Distribution of -ELBO throughout training across a held out test group of 100 datasets for the EFN (blue), and across 298 datasets fit with NF (red). (E) Decision boundary for what number of datasets for a given target approximation accuracy it is advantageous to train an EFN rather than run variational inference individually for each dataset.\relax }{figure.caption.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{7}{section.5}}
+\newlabel{fig:test1}{{4}{7}{Look-up inference in a log-Gaussian Poisson model with V1 responses to drift grating stimuli. (A-C) Top: Inferred latent intensities from a single EFN (blue) or varitional inference (red) run individually for each dataset. Shading denotes the standard deviation of the posterior. Bottom: Corresponding V1 spiking responses. (D) Distribution of -ELBO throughout training across a held out test group of 100 datasets for the EFN (blue), and across 298 datasets fit with NF (red). (E) Decision boundary for what number of datasets for a given target approximation accuracy it is advantageous to train an EFN rather than run variational inference individually for each dataset.\relax }{figure.caption.5}{}}
+\bibdata{BittnerAIStats2019}
 \bibcite{adams2009tractable}{{1}{2009}{{Adams et~al.}}{{}}}
 \bibcite{andrychowicz2016learning}{{2}{2016}{{Andrychowicz et~al.}}{{}}}
 \bibcite{baird2005one}{{3}{2005}{{Baird et~al.}}{{}}}
@@ -96,26 +96,28 @@
 \bibcite{friedman2001elements}{{17}{2001}{{Hastie et~al.}}{{}}}
 \bibcite{hoffman2015stochastic}{{18}{2015}{{Hoffman and Blei}}{{}}}
 \bibcite{jacobsen2018revnet}{{19}{2018}{{Jacobsen et~al.}}{{}}}
-\bibcite{Kingma:2013aa}{{20}{2013}{{Kingma and Welling}}{{}}}
-\bibcite{loaiza2017maximum}{{21}{2017}{{Loaiza-Ganem et~al.}}{{}}}
-\bibcite{mackay1995hierarchical}{{22}{1995}{{MacKay and Peto}}{{}}}
-\bibcite{mackay1997density}{{23}{1997}{{MacKay and Gibbs}}{{}}}
-\bibcite{mccullagh2002}{{24}{2002}{{McCullagh}}{{}}}
-\bibcite{papamakarios2015distilling}{{25}{2015}{{Papamakarios and Murray}}{{}}}
-\bibcite{papamakarios2017masked}{{26}{2017}{{Papamakarios et~al.}}{{}}}
-\bibcite{pritchard2000inference}{{27}{2000}{{Pritchard et~al.}}{{}}}
-\bibcite{rezende2015variational}{{28}{2015}{{Rezende and Mohamed}}{{}}}
-\bibcite{rezende2014stochastic}{{29}{2014}{{Rezende et~al.}}{{}}}
-\bibcite{rippel2013high}{{30}{2013}{{Rippel and Adams}}{{}}}
-\bibcite{robert2007bayesian}{{31}{2007}{{Robert}}{{}}}
-\bibcite{saul1996exploiting}{{32}{1996}{{Saul and Jordan}}{{}}}
-\bibcite{smith2008spatial}{{33}{2008}{{Smith and Kohn}}{{}}}
-\bibcite{stuhlmuller2013learning}{{34}{2013}{{Stuhlm{\"u}ller et~al.}}{{}}}
-\bibcite{tabak2010density}{{35}{2010}{{Tabak et~al.}}{{}}}
-\bibcite{teh2006hdp}{{36}{2006}{{Teh et~al.}}{{}}}
-\bibcite{tenenbaum2006theory}{{37}{2006}{{Tenenbaum et~al.}}{{}}}
-\bibcite{titsias2014doubly}{{38}{2014}{{Titsias and L{\'a}zaro-Gredilla}}{{}}}
-\bibcite{tran2015copula}{{39}{2015}{{Tran et~al.}}{{}}}
-\bibcite{uria2013rnade}{{40}{2013}{{Uria et~al.}}{{}}}
-\bibcite{wainwright2008graphical}{{41}{2008}{{Wainwright et~al.}}{{}}}
-\bibcite{zhou2018compressibility}{{42}{2018}{{Zhou et~al.}}{{}}}
+\bibcite{kingma2014adam}{{20}{2014}{{Kingma and Ba}}{{}}}
+\bibcite{Kingma:2013aa}{{21}{2013}{{Kingma and Welling}}{{}}}
+\bibcite{loaiza2017maximum}{{22}{2017}{{Loaiza-Ganem et~al.}}{{}}}
+\bibcite{mackay1995hierarchical}{{23}{1995}{{MacKay and Peto}}{{}}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion}{8}{section.5}}
+\bibcite{mackay1997density}{{24}{1997}{{MacKay and Gibbs}}{{}}}
+\bibcite{mccullagh2002}{{25}{2002}{{McCullagh}}{{}}}
+\bibcite{papamakarios2015distilling}{{26}{2015}{{Papamakarios and Murray}}{{}}}
+\bibcite{papamakarios2017masked}{{27}{2017}{{Papamakarios et~al.}}{{}}}
+\bibcite{pritchard2000inference}{{28}{2000}{{Pritchard et~al.}}{{}}}
+\bibcite{rezende2015variational}{{29}{2015}{{Rezende and Mohamed}}{{}}}
+\bibcite{rezende2014stochastic}{{30}{2014}{{Rezende et~al.}}{{}}}
+\bibcite{rippel2013high}{{31}{2013}{{Rippel and Adams}}{{}}}
+\bibcite{robert2007bayesian}{{32}{2007}{{Robert}}{{}}}
+\bibcite{saul1996exploiting}{{33}{1996}{{Saul and Jordan}}{{}}}
+\bibcite{smith2008spatial}{{34}{2008}{{Smith and Kohn}}{{}}}
+\bibcite{stuhlmuller2013learning}{{35}{2013}{{Stuhlm{\"u}ller et~al.}}{{}}}
+\bibcite{tabak2010density}{{36}{2010}{{Tabak et~al.}}{{}}}
+\bibcite{teh2006hdp}{{37}{2006}{{Teh et~al.}}{{}}}
+\bibcite{tenenbaum2006theory}{{38}{2006}{{Tenenbaum et~al.}}{{}}}
+\bibcite{titsias2014doubly}{{39}{2014}{{Titsias and L{\'a}zaro-Gredilla}}{{}}}
+\bibcite{tran2015copula}{{40}{2015}{{Tran et~al.}}{{}}}
+\bibcite{uria2013rnade}{{41}{2013}{{Uria et~al.}}{{}}}
+\bibcite{wainwright2008graphical}{{42}{2008}{{Wainwright et~al.}}{{}}}
+\bibcite{zhou2018compressibility}{{43}{2018}{{Zhou et~al.}}{{}}}
