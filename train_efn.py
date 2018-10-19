@@ -109,7 +109,7 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
     log_h_x = family.compute_log_base_measure(X);
 
     # exponential family optimization
-    cost, costs, R2s = cost_fn(eta, log_p_zs, T_x, log_h_x, K, cost_type)
+    cost, elbos, R2s = cost_fn(eta, log_p_zs, T_x, log_h_x, K)
     cost_grad = tf.gradients(cost, all_params);
 
     grads_and_vars = [];
@@ -168,16 +168,16 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         # compute R^2, KL, and elbo for training set
         z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
         feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
-        train_costs_i, train_R2s_i, train_KLs_i, train_X = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
-        train_elbos[check_it,:] = np.array(train_costs_i);
+        train_elbos_i, train_R2s_i, train_KLs_i, train_X = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, elbos, R2s, eta_draw_params);
+        train_elbos[check_it,:] = np.array(train_elbos_i);
         train_R2s[check_it,:] = np.array(train_R2s_i);
         train_KLs[check_it,:] = np.array(train_KLs_i);
 
         # compute R^2, KL, and elbo for static test set
         feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
-        test_costs_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
+        test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, elbos, R2s, eta_test_draw_params);
 
-        test_elbos[check_it,:] = np.array(test_costs_i);
+        test_elbos[check_it,:] = np.array(test_elbos_i);
         test_R2s[check_it,:] = np.array(test_R2s_i);
         test_KLs[check_it,:] = np.array(test_KLs_i);
 
@@ -227,19 +227,19 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
                 feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
 
-                train_costs_i, train_R2s_i, train_KLs_i, train_X= family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, costs, R2s, eta_draw_params);
-                train_elbos[check_it,:] = np.array(train_costs_i);
+                train_elbos_i, train_R2s_i, train_KLs_i, train_X= family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, elbos, R2s, eta_draw_params);
+                train_elbos[check_it,:] = np.array(train_elbos_i);
                 train_R2s[check_it,:] = np.array(train_R2s_i);
                 train_KLs[check_it,:] = np.array(train_KLs_i);
-                mean_train_elbo = np.mean(train_costs_i);
+                mean_train_elbo = np.mean(train_elbos_i);
                 mean_train_R2 = np.mean(train_R2s_i);
                 mean_train_KL = np.mean(train_KLs_i);
 
                 # compute R^2, KL, and elbo for static test set
                 feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
-                test_costs_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, costs, R2s, eta_test_draw_params);
+                test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, elbos, R2s, eta_test_draw_params);
 
-                test_elbos[check_it,:] = np.array(test_costs_i);
+                test_elbos[check_it,:] = np.array(test_elbos_i);
                 test_R2s[check_it,:] = np.array(test_R2s_i);
                 test_KLs[check_it,:] = np.array(test_KLs_i);
 
