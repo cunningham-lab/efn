@@ -10,7 +10,6 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import (
     setup_IO,
-    log_grads,
     cost_fn,
     test_convergence,
     memory_extension,
@@ -68,7 +67,7 @@ def train_nf(
     M_DIAG = int(1e3)
     # Since optimization may converge early, we dynamically allocate space to record
     # model diagnostics as optimization progresses.
-    OPT_COMPRESS_FAC = 32
+    OPT_COMPRESS_FAC = 128
 
     # Reset tf graph, and set random seeds.
     tf.reset_default_graph()
@@ -167,6 +166,7 @@ def train_nf(
     # for K = 1 distribution we are optimizing.
     max_diagnostic_checks = (max_iters // check_rate) + 1
     array_init_len = int(np.ceil(max_diagnostic_checks / OPT_COMPRESS_FAC))
+    print("array_init_len", array_init_len)
     array_cur_len = array_init_len
     train_elbos = np.zeros((array_init_len, K))
     train_R2s = np.zeros((array_init_len, K))
@@ -231,6 +231,7 @@ def train_nf(
             if np.mod(i, model_save_every) == 0:
                 saver.save(sess, savedir + "model")
 
+            # Log and print diagnostic information periodically.
             if np.mod(i + 1, check_rate) == 0:
                 print(42 * "*")
                 print(savedir)
@@ -281,14 +282,20 @@ def train_nf(
                         "Extending log length from %d to %d"
                         % (array_cur_len, 2 * array_cur_len)
                     )
-                    train_elbos, train_R2s, train_KLs, _, _, _ = memory_extension(
-                        train_elbos,
-                        train_R2s,
-                        train_KLs,
-                        None,
-                        None,
-                        None,
-                        array_cur_len,
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
+                    train_elbos, train_R2s, train_KLs = memory_extension(
+                        [train_elbos, train_R2s, train_KLs], array_cur_len
                     )
                     array_cur_len = 2 * array_cur_len
 

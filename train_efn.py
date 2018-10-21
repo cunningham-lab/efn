@@ -80,7 +80,7 @@ def train_efn(
     M_DIAG = int(1e3)
     # Since optimization may converge early, we dynamically allocate space to record
     # model diagnostics as optimization progresses.
-    OPT_COMPRESS_FAC = 32
+    OPT_COMPRESS_FAC = 128
 
     # Minimum parameter network layers.
     MIN_LAYERS = 4
@@ -422,13 +422,27 @@ def train_efn(
                         "Extending log length from %d to %d"
                         % (array_cur_len, 2 * array_cur_len)
                     )
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
+                    print(
+                        "Extending log length from %d to %d"
+                        % (array_cur_len, 2 * array_cur_len)
+                    )
                     train_elbos, train_R2s, train_KLs, test_elbos, test_R2s, test_KLs = memory_extension(
-                        train_elbos,
-                        train_R2s,
-                        train_KLs,
-                        test_elbos,
-                        test_R2s,
-                        test_KLs,
+                        [
+                            train_elbos,
+                            train_R2s,
+                            train_KLs,
+                            test_elbos,
+                            test_R2s,
+                            test_KLs,
+                        ],
                         array_cur_len,
                     )
                     array_cur_len = 2 * array_cur_len
