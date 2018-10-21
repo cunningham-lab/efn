@@ -22,14 +22,14 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import (
+from util.efn_util import (
     setup_IO,
     cost_fn,
     test_convergence,
     memory_extension,
     setup_param_logging,
 )
-from tf_util.tf_util import (
+from lib.tf_util.tf_util import (
     connect_density_network,
     construct_density_network,
     declare_theta,

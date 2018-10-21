@@ -16,8 +16,8 @@
 from train_efn import train_efn
 import numpy as np
 from scipy.stats import multivariate_normal
-from tf_util.families import family_from_str
-from efn_util import model_opt_hps
+from lib.tf_util.families import family_from_str
+from util.efn_util import model_opt_hps
 import os, sys
 
 os.chdir("../")

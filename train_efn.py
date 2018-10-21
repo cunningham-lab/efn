@@ -23,7 +23,7 @@ import os
 import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
-from efn_util import (
+from util.efn_util import (
     setup_IO,
     construct_param_network,
     cost_fn,
@@ -33,7 +33,7 @@ from efn_util import (
     get_param_network_upl,
     test_convergence,
 )
-from tf_util.tf_util import (
+from lib.tf_util.tf_util import (
     connect_density_network,
     construct_density_network,
     count_params,
