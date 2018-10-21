@@ -104,7 +104,7 @@ def model_opt_hps(exp_fam, D):
     return TIF_flow_type, nlayers, scale_layer, lr_order;
 
 
-def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, \
+def get_param_network_upl(L, num_param_net_inputs, num_theta_params, upl_tau, \
                                   shape='linear'):
     if (shape=='linear'):
         upl_inc = int(np.floor(abs(num_theta_params - num_param_net_inputs) / (L + 1)));
@@ -129,11 +129,15 @@ def get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl
     if (num_param_net_inputs > num_theta_params):
         upl_param_net = np.flip(upl_param_net, axis=0);
 
-    print(num_param_net_inputs, '->', num_theta_params);
-    print(upl_param_net, 'sum', sum(upl_param_net));
-    param_net_hps = {'L':L, 'upl':upl_param_net};
-    return param_net_hps;
+    return upl_param_net;
 
+def efn_tensor_shape(z):
+    # could use eager execution to iterate over shape instead.  Avoiding for now.
+    K = tf.shape(z)[0];
+    M = tf.shape(z)[1];
+    D = tf.shape(z)[2];
+    T = tf.shape(z)[3];
+    return K, M, D, T;
 
 def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     L_theta = param_net_hps['L']
@@ -172,31 +176,31 @@ def construct_param_network(param_net_input, K_eta, flow_layers, param_net_hps):
     return theta;
 
 
-def cost_fn(eta, log_p_zs, T_x, log_h_x, K_eta, cost_type):
+def cost_fn(eta, log_p_zs, T_z, log_h_z, K_eta):
     y = log_p_zs;
     R2s = [];
     elbos = [];
     for k in range(K_eta):
         # get eta-specific log-probs and T(x)'s
         y_k = tf.expand_dims(y[k,:], 1);
-        T_x_k = T_x[k,:,:];
-        log_h_x_k = tf.expand_dims(log_h_x[k,:], 1);
+        T_z_k = T_z[k,:,:];
+        log_h_z_k = tf.expand_dims(log_h_z[k,:], 1);
         eta_k = tf.expand_dims(eta[k,:], 1);
         # compute optimial linear regression offset term for eta
-        alpha_k = tf.reduce_mean(y_k - (tf.matmul(T_x_k, eta_k) + log_h_x_k));
-        residuals = y_k - (tf.matmul(T_x_k, eta_k)+log_h_x_k) - alpha_k;
+        alpha_k = tf.reduce_mean(y_k - (tf.matmul(T_z_k, eta_k) + log_h_z_k));
+        residuals = y_k - (tf.matmul(T_z_k, eta_k)+log_h_z_k) - alpha_k;
         RSS_k = tf.matmul(tf.transpose(residuals), residuals);
         y_k_mc = y_k - tf.reduce_mean(y_k);
         TSS_k = tf.reduce_sum(tf.square(y_k_mc));
         # compute the R^2 of the exponential family fit
         R2s.append(1.0 - (RSS_k[0,0] / TSS_k));
-        elbos.append(tf.reduce_mean(y_k - (tf.matmul(T_x_k, eta_k)+log_h_x_k)));
+        elbos.append(-tf.reduce_mean(y_k - (tf.matmul(T_z_k, eta_k)+T_z_k)));
 
     y = tf.expand_dims(log_p_zs, 2);
-    log_h_x = tf.expand_dims(log_h_x, 2);
+    log_h_z = tf.expand_dims(log_h_z, 2);
     eta = tf.expand_dims(eta, 2);
-    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(T_x, eta) + log_h_x), [1,2]));
-    #return cost, costs, R2s;
+    # we want to minimize the mean negative elbo
+    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(T_z, eta) + log_h_z), [1,2]));
     return cost, elbos, R2s;
 
 
@@ -572,6 +576,29 @@ def find_convergence(mean_test_elbos, last_ind, wsize, delta_thresh):
 
 def factors(n):
     return [f for f in range(1,n+1) if n%f==0]
+
+def easy_inds():
+    num_monkeys = 3;
+    num_neurons = [83, 59, 105]
+    num_oris = 12;
+    N = int(sum(num_neurons*num_oris));
+    monkeys = np.zeros((N,));
+    neurons = np.zeros((N,));
+    oris = np.zeros((N,));
+
+    ind = 0;
+    for i in range(num_monkeys):
+        monkey = i+1;
+        nneurons = num_neurons[i];
+        for j in range(nneurons):
+            neuron = j+1;
+            for k in range(num_oris):
+                ori = k+1;
+                monkeys[ind] = monkey;
+                neurons[ind] = neuron;
+                oris[ind] = ori;
+                ind += 1;
+    return monkeys, neurons, oris;
 
 
 

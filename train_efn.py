@@ -10,106 +10,130 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn_util import setup_IO, construct_param_network, \
                      cost_fn, check_convergence, memory_extension, \
-                     setup_param_logging, get_param_network_hyperparams, \
+                     setup_param_logging, get_param_network_upl, \
                      test_convergence
-from tf_util.tf_util import connect_flow, construct_flow, count_params
+from tf_util.tf_util import connect_density_network, construct_density_network, count_params
 
-def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
+def train_efn(family, flow_dict, param_net_input_type, K, M, \
               stochastic_eta, give_hint=False, lr_order=-3, dist_seed=0, random_seed=0, \
               min_iters=100000, max_iters=1000000, check_rate=100, dir_str='general', profile=False):
-    print('lr_order', lr_order);
-    batch_norm = False;
-    dropout = False;
-    upl_tau = None;
-    #upl_shape = 'exp';
-    upl_shape = 'linear';
-    #upl_shape = 'overparam'
-    T = 1; 
+    """Trains an exponential family network (EFN).
+
+        Args:
+            family (obj): Instance of tf_util.families.Family.
+            flow_dict (dict): Specifies structure of approximating density network.
+            param_net_input_type (str): Specifies input to param network.
+                'eta':        Give full eta to parameter network.
+                'prior':      Part of eta that is prior-dependent.
+                'likelihood': Part of eta that is likelihood-dependent.
+                'data':       The data itself.
+            K (int): Number of distributions per gradient descent batch.
+            M (int): Number of samples per distribution per gradient descent batch.
+            stochastic_eta (bool): Sample a new K distributions from the eta prior
+                                   for each step of gradient descent.
+            give_hint (bool): Provide hint to parameter network.
+            lr_order (float): Adam learning rate is 10^(lr_order).
+            dist_seed (int): Numpy random seed for drawing from eta prior.
+            random_seed (int): Tensorflow random seed for initialization.
+            min_iters (int): Minimum number of training interations.
+            max_iters (int): Maximum number of training iterations.
+            check_rate (int): Log diagonstics at every check_rate iterations.
+            dir_str (str): Specifiy where to save off off '/efn/results/' filepath.
+            profile (bool): Time gradient steps and save to file if True.
+
+        """
+
+    # Convergence criteria: mean test elbos are averaged over windows of wsize 
+    # diagnostic checks.  If the mean test elbo hasn't decreased more than 
+    # delta_thresh, the optimization exits, provided there have already been
+    # min_iters iterations.
     wsize = 50;
     delta_thresh = 1e-10;
 
+    # Reset tf graph, and set random seeds.
+    tf.reset_default_graph();
+    tf.set_random_seed(random_seed);
+    np.random.seed(dist_seed);
+    dist_info = {'dist_seed':dist_seed};
 
-    D_Z, num_suff_stats, num_param_net_inputs, num_T_x_inputs = family.get_efn_dims(param_net_input_type, give_hint);
+    # Set optimization hyperparameters.
+    lr = 10**lr_order
+    # Save tensorboard summary in intervals.
+    tb_save_every = 50;
+    model_save_every = 5000;
+    tb_save_params = False;
 
-    # set number of layers in the parameter network
+    # Get the dimensionality of various components of the EFN given the parameter
+    # network input type, and whether or not a hint is given to the param network.
+    D_Z, num_suff_stats, num_param_net_inputs, num_T_z_inputs = family.get_efn_dims(param_net_input_type, give_hint);
+
+    # Declare isotropic gaussian input placeholder.
+    W = tf.placeholder(tf.float64, shape=(None, None, D_Z, None), name='W');
+    p0 = tf.reduce_prod(tf.exp((-tf.square(W))/2.0)/np.sqrt(2.0*np.pi), axis=[2,3]); 
+    base_log_q_z = tf.log(p0[:,:]);
+
+    # Assemble density network.
+    flow_layers, num_theta_params = construct_density_network(flow_dict, D_Z, family.T);
+    flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
+
+    # Set number of layers in the parameter network.
     if (family.name == 'normal'):
         L = 0;
     else:
-        L = max(int(np.ceil(np.sqrt(D_Z))), 4);  # we use at least four layers
+        # We use at least four layers.
+        L = max(int(np.ceil(np.sqrt(D_Z))), 4);
+    # The number of units per layer is a linear interpolation between the dimensionality
+    # of the parameter network input and the number of parameters in the density network.
+    upl_tau = None;
+    upl_shape = 'linear';
+    upl = get_param_network_upl(L, num_param_net_inputs, num_theta_params, upl_tau, upl_shape);
+    param_net_hps = {'L':L, 'upl':upl};
 
-    # good practice
-    tf.reset_default_graph();
-    # seed RNGs
-    tf.set_random_seed(random_seed);
-    np.random.seed(dist_seed);
-
-    flow_layers, Z0, Z_AR, base_log_p_z, num_theta_params = construct_flow(flow_dict, D_Z, T);
-    flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params);
-    Z0_shape = tf.shape(Z0);
-    batch_size = tf.multiply(Z0_shape[0], Z0_shape[1]);
-
-    n = K*M;
-
-    # optimization hyperparameters
-    opt_method = 'adam';
-    lr = 10**lr_order
-    # save tensorboard summary in intervals
-    tb_save_every = 50;
-    model_save_every = 5000;
-    #model_save_every = max_iters-1;
-    tb_save_params = False;
-
+    # Declare EFN input placeholders.
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats));
     param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs));
-    T_x_input = tf.placeholder(tf.float64, shape=(None, num_T_x_inputs));
+    T_z_input = tf.placeholder(tf.float64, shape=(None, num_T_z_inputs));
+
 
     if (not stochastic_eta):
-        # get etas based on constraint_id
-        _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        # Use the same fixed training and testing eta lattice.
+        _eta, _param_net_input, _T_z_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
         _eta_test = _eta
         _param_net_input_test = _param_net_input;
-        _T_x_input_test = _T_x_input;
+        _T_z_input_test = _T_z_input;
         eta_test_draw_params = eta_draw_params;
     else:
+        # Draw the eta test lattice, which will remain fixed throughout training.
         np.random.seed(0);
         if (family.name == 'log_gaussian_cox'):
-            _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint, False);
+            _eta_test, _param_net_input_test, _T_z_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint, train=False);
         else:
-            _eta_test, _param_net_input_test, _T_x_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
-       
+            _eta_test, _param_net_input_test, _T_z_input_test, eta_test_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
 
-    param_net_hps = get_param_network_hyperparams(L, num_param_net_inputs, num_theta_params, upl_tau, \
-                                                  upl_shape);
-    dist_info = {'dist_seed':dist_seed};
+    # Create model save directory if doesn't exist.
     efn_str = 'EFN1' if (K ==1) else 'EFN';
     savedir = setup_IO(family, efn_str, dir_str, param_net_input_type, K, M, flow_dict, \
                        param_net_hps, give_hint, random_seed, dist_info);
-
     if not os.path.exists(savedir):
         print('Making directory %s' % savedir );
         os.makedirs(savedir);
 
-    # construct the parameter network
+    # Construct the parameter network.
     theta = construct_param_network(param_net_input, K, flow_layers, param_net_hps);
-    #feed_dict = {param_net_input:_param_net_input};
 
-    # connect time-invariant flow
-    Z, sum_log_det_jacobian, Z_by_layer = connect_flow(Z_AR, flow_layers, theta);
+    # Connect parameter network to the density network.
+    Z, sum_log_det_jacobian, Z_by_layer = connect_density_network(W, flow_layers, theta);
+    log_q_zs = base_log_q_z - sum_log_det_jacobian;
 
-
-    log_p_zs = base_log_p_z - sum_log_det_jacobian;
-
-    # generative model is fully specified
     all_params = tf.trainable_variables();
     nparams = len(all_params);
 
-    X = Z; # [n,D,T] 
     # set up the constraint computation
-    T_x = family.compute_suff_stats(X, Z_by_layer, T_x_input);
-    log_h_x = family.compute_log_base_measure(X);
+    T_z = family.compute_suff_stats(Z, Z_by_layer, T_z_input);
+    log_h_z = family.compute_log_base_measure(Z);
 
     # exponential family optimization
-    cost, elbos, R2s = cost_fn(eta, log_p_zs, T_x, log_h_x, K)
+    cost, elbos, R2s = cost_fn(eta, log_q_zs, T_z, log_h_z, K)
     cost_grad = tf.gradients(cost, all_params);
 
     grads_and_vars = [];
@@ -117,12 +141,12 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         grads_and_vars.append((cost_grad[i], all_params[i]));
 
     # set optimization hyperparameters
-    tf.add_to_collection('Z0', Z0);
-    tf.add_to_collection('X', X);
+    tf.add_to_collection('W', W);
+    tf.add_to_collection('Z', Z);
     tf.add_to_collection('eta', eta);
     tf.add_to_collection('param_net_input', param_net_input);
-    tf.add_to_collection('log_p_zs', log_p_zs);
-    tf.add_to_collection('T_x_input', T_x_input);
+    tf.add_to_collection('log_q_zs', log_q_zs);
+    tf.add_to_collection('T_z_input', T_z_input);
     saver = tf.train.Saver();
 
     # tensorboard logging
@@ -157,29 +181,20 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
         init_op = tf.global_variables_initializer();
         sess.run(init_op);
 
-        z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
+        w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0);
         if (stochastic_eta):
-            _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
-        feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
-
-        cost_i, summary = \
-            sess.run([cost, summary_op], feed_dict);
+            _eta, _param_net_input, _T_z_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+        feed_dict = {W:w_i, eta:_eta, param_net_input:_param_net_input, T_z_input:_T_z_input};
+        cost_i, summary = sess.run([cost, summary_op], feed_dict);
 
         # compute R^2, KL, and elbo for training set
-        z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
-        feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
-        train_elbos_i, train_R2s_i, train_KLs_i, train_X = family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, elbos, R2s, eta_draw_params);
-        train_elbos[check_it,:] = np.array(train_elbos_i);
-        train_R2s[check_it,:] = np.array(train_R2s_i);
-        train_KLs[check_it,:] = np.array(train_KLs_i);
+        w_i = np.random.normal(np.zeros((K, int(1e3), D_Z, family.T)), 1.0);
+        feed_dict_train = {W:w_i, eta:_eta, param_net_input:_param_net_input, T_z_input:_T_z_input};
+        train_elbos[check_it,:], train_R2s[check_it,:], train_KLs[check_it,:], train_Z = family.batch_diagnostics(K, sess, feed_dict_train, Z, log_q_zs, elbos, R2s, eta_draw_params);
 
         # compute R^2, KL, and elbo for static test set
-        feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
-        test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, elbos, R2s, eta_test_draw_params);
-
-        test_elbos[check_it,:] = np.array(test_elbos_i);
-        test_R2s[check_it,:] = np.array(test_R2s_i);
-        test_KLs[check_it,:] = np.array(test_KLs_i);
+        feed_dict_test = {W:w_i, eta:_eta_test, param_net_input:_param_net_input_test, T_z_input:_T_z_input_test};
+        test_elbos[check_it,:], test_R2s[check_it,:], test_KLs[check_it,:], test_Z = family.batch_diagnostics(K, sess, feed_dict_test, Z, log_q_zs, elbos, R2s, eta_test_draw_params);
 
         check_it += 1;
 
@@ -187,11 +202,11 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
 
         print('starting opt');
         while (i < max_iters):
-            z_i = np.random.normal(np.zeros((K, M, D_Z, T)), 1.0);
+            w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0);
             if (stochastic_eta): 
-                _eta, _param_net_input, _T_x_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
+                _eta, _param_net_input, _T_z_input, eta_draw_params = family.draw_etas(K, param_net_input_type, give_hint);
 
-            feed_dict = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
+            feed_dict = {W:w_i, eta:_eta, param_net_input:_param_net_input, T_z_input:_T_z_input};
 
             if (profile):
                 start_time = time.time();
@@ -224,58 +239,34 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
                 start_time = time.time();
                 
                 # compute R^2, KL, and elbo for training set
-                z_i = np.random.normal(np.zeros((K, int(1e3), D_Z, T)), 1.0);
-                feed_dict_train = {Z0:z_i, eta:_eta, param_net_input:_param_net_input, T_x_input:_T_x_input};
-
-                train_elbos_i, train_R2s_i, train_KLs_i, train_X= family.batch_diagnostics(K, sess, feed_dict_train, X, log_p_zs, elbos, R2s, eta_draw_params);
-                train_elbos[check_it,:] = np.array(train_elbos_i);
-                train_R2s[check_it,:] = np.array(train_R2s_i);
-                train_KLs[check_it,:] = np.array(train_KLs_i);
-                mean_train_elbo = np.mean(train_elbos_i);
-                mean_train_R2 = np.mean(train_R2s_i);
-                mean_train_KL = np.mean(train_KLs_i);
+                w_i = np.random.normal(np.zeros((K, int(1e3), D_Z, family.T)), 1.0);
+                feed_dict_train = {W:w_i, eta:_eta, param_net_input:_param_net_input, T_z_input:_T_z_input};
+                train_elbos[check_it,:], train_R2s[check_it,:], train_KLs[check_it,:], train_Z= family.batch_diagnostics(K, sess, feed_dict_train, Z, log_q_zs, elbos, R2s, eta_draw_params);
 
                 # compute R^2, KL, and elbo for static test set
-                feed_dict_test = {Z0:z_i, eta:_eta_test, param_net_input:_param_net_input_test, T_x_input:_T_x_input_test};
-                test_elbos_i, test_R2s_i, test_KLs_i, test_X = family.batch_diagnostics(K, sess, feed_dict_test, X, log_p_zs, elbos, R2s, eta_test_draw_params);
-
-                test_elbos[check_it,:] = np.array(test_elbos_i);
-                test_R2s[check_it,:] = np.array(test_R2s_i);
-                test_KLs[check_it,:] = np.array(test_KLs_i);
-
-                mean_test_elbo = np.mean(test_elbos[check_it,:]);
-                mean_test_R2 = np.mean(test_R2s[check_it,:]);
-                mean_test_KL = np.mean(test_KLs[check_it,:]);
+                feed_dict_test = {W:w_i, eta:_eta_test, param_net_input:_param_net_input_test, T_z_input:_T_z_input_test};
+                test_elbos[check_it,:], test_R2s[check_it,:], test_KLs[check_it,:], test_Z = family.batch_diagnostics(K, sess, feed_dict_test, Z, log_q_zs, elbos, R2s, eta_test_draw_params);
                                 
-                print('train elbo: %f' % mean_train_elbo);
-                print('train R2: %f' % mean_train_R2);
+                print('train elbo: %f' % np.mean(train_elbos[check_it,:]));
+                print('train R2: %f' % np.mean(train_R2s[check_it,:]));
                 if (family.name in ['dirichlet', 'normal', 'inv_wishart']):
-                    print('train KL: %f' % mean_train_KL);
+                    print('train KL: %f' % np.mean(train_KLs[check_it,:]));
 
-                print('test elbo: %f' % mean_test_elbo);
-                print('test R2: %f' % mean_test_R2);
+                print('test elbo: %f' % np.mean(test_elbos[check_it,:]));
+                print('test R2: %f' % np.mean(test_R2s[check_it,:]));
                 if (family.name in ['dirichlet', 'normal', 'inv_wishart']):
-                    print('test KL: %f' % mean_test_KL);
+                    print('test KL: %f' % np.mean(test_KLs[check_it,:]));
 
-                if (family.name == 'lgc'):
-                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                      train_X=train_X, test_X=test_X, eta=_eta, eta_dist=family.eta_dist, \
+                np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                                                      train_Z=train_Z, test_Z=test_Z, eta=_eta, eta_dist=family.eta_dist, \
                                                       param_net_input=_param_net_input, \
                                                       train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                                      T_x_input=_T_x_input, converged=False, \
-                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
-                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
-                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i, \
-                                                      test_set=family.test_set, train_set=family.train_set);
-                else:
-                    np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                                      train_X=train_X, test_X=test_X, eta=_eta, eta_dist=family.eta_dist, \
-                                                      param_net_input=_param_net_input, \
-                                                      train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                                      T_x_input=_T_x_input, converged=False, \
+                                                      T_z_input=_T_z_input, converged=False, \
                                                       train_elbos=train_elbos, test_elbos=test_elbos, \
                                                       train_R2s=train_R2s, test_R2s=test_R2s, \
                                                       train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
+                if (family.name == 'lgc'):
+                    np.savez(savedir + 'data_info.npz', test_set=family.test_set, train_set=family.train_set);
 
                 if (check_it >= 2*wsize - 1):
                     mean_test_elbos = np.mean(test_elbos, 1);
@@ -298,28 +289,21 @@ def train_efn(family, flow_dict, param_net_input_type, cost_type, K, M, \
             pfname = savedir + 'profile.npz';
             np.savez(pfname, times=times);
             exit();
-        else:
-            print('saving model before exitting');
-            saver.save(sess, savedir + 'model');
+            
+        print('saving model before exitting');
+        saver.save(sess, savedir + 'model');
     if (i < max_iters):
+        np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
+                                                      train_Z=train_Z, test_Z=test_Z, eta=_eta, eta_dist=family.eta_dist, \
+                                                      param_net_input=_param_net_input, \
+                                                      train_params=eta_draw_params, test_params=eta_test_draw_params, \
+                                                      T_z_input=_T_z_input, converged=False, \
+                                                      train_elbos=train_elbos, test_elbos=test_elbos, \
+                                                      train_R2s=train_R2s, test_R2s=test_R2s, \
+                                                      train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
         if (family.name == 'lgc'):
-            np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                          train_X=train_X, test_X=test_X, eta=_eta, param_net_input=_param_net_input, \
-                                          train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                          T_x_input=_T_x_input, converged=True, \
-                                          train_elbos=train_elbos, test_elbos=test_elbos, \
-                                          train_R2s=train_R2s, test_R2s=test_R2s, \
-                                          train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i, \
-                                          test_set=family.test_set, train_set=family.train_set);
-        else:
-            np.savez(savedir + 'results.npz', it=i, check_rate=check_rate, \
-                                          train_X=train_X, test_X=test_X, eta=_eta, param_net_input=_param_net_input, \
-                                          train_params=eta_draw_params, test_params=eta_test_draw_params, \
-                                          T_x_input=_T_x_input, converged=True, \
-                                          train_elbos=train_elbos, test_elbos=test_elbos, \
-                                          train_R2s=train_R2s, test_R2s=test_R2s, \
-                                          train_KLs=train_KLs, test_KLs=test_KLs, final_cost=cost_i);
+            np.savez(savedir + 'data_info.npz', test_set=family.test_set, train_set=family.train_set);
 
 
-    return test_X, train_KLs, i;
+    return None;
 
