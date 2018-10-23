@@ -28,6 +28,7 @@ from efn.util.efn_util import (
     construct_param_network,
     cost_fn,
     check_convergence,
+    memory_extension,
     setup_param_logging,
     get_param_network_upl,
     test_convergence,
@@ -36,7 +37,6 @@ from tf_util.tf_util import (
     connect_density_network,
     construct_density_network,
     count_params,
-    memory_extension,
 )
 
 

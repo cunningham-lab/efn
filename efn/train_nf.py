@@ -26,6 +26,7 @@ from efn.util.efn_util import (
     setup_IO,
     cost_fn,
     test_convergence,
+    memory_extension,
     setup_param_logging,
 )
 from tf_util.tf_util import (
@@ -33,7 +34,6 @@ from tf_util.tf_util import (
     construct_density_network,
     declare_theta,
     count_params,
-    memory_extension,
 )
 
 
@@ -92,8 +92,8 @@ def train_nf(
     # Set optimization hyperparameters.
     lr = 10 ** lr_order
     # Save tensorboard summary in intervals.
-    TB_SAVE_EVERY = 50
-    MODEL_SAVE_EVERY = 5000
+    tb_save_every = 50
+    model_save_every = 5000
     tb_save_params = False
 
     # Get the dimensionality of various components of the EFN given the parameter
@@ -238,11 +238,11 @@ def train_nf(
                     print("iter %d took %f seconds" % (i + 1, end_time - start_time))
 
             # Write to tensorboard periodically.
-            if np.mod(i, TB_SAVE_EVERY) == 0:
+            if np.mod(i, tb_save_every) == 0:
                 summary_writer.add_summary(summary, i)
 
             # Save model periodically.
-            if np.mod(i, MODEL_SAVE_EVERY) == 0:
+            if np.mod(i, model_save_every) == 0:
                 saver.save(sess, savedir + "model")
 
             # Log and print diagnostic information periodically.
