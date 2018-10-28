@@ -12,6 +12,3 @@ setup(name='efn',
                         'scipy', 'cvxopt', 'matplotlib', 'scikit-learn'],
       dependency_links=['https://github.com/cunningham-lab/tf_util/tarball/master#egg=tf_util-1.0'],
      )
-~                                                                                                                      
-~                                                                                                                      
-~      
