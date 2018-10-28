@@ -19,10 +19,11 @@ import time
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
 import statsmodels.sandbox.distributions.mv_normal as mvd
-from tf_util.stat_util import get_dist_str
 import scipy.io as soio
 import os
 import re
+from tf_util.stat_util import get_dist_str
+from tf_util.tf_util import get_flowstring
 from scipy.stats import (
     ttest_1samp,
     multivariate_normal,
@@ -363,29 +364,6 @@ def cost_fn(eta, log_p_zs, T_z, log_h_z, K):
     # we want to minimize the mean negative elbo
     cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(T_z, eta) + log_h_z), [1, 2]))
     return cost, elbos, R2s
-
-
-def get_flowstring(flow_dict):
-    """Get string description of density network.
-
-        Args:
-            flow_dict (dict): Specifies structure of approximating density network.
-
-        Returns:
-            tif_str (str): String specifying time-invariant flow network architecture.
-
-        """
-    latent_dynamics = flow_dict["latent_dynamics"]
-    tif_flow_type = flow_dict["TIF_flow_type"]
-    repeats = flow_dict["repeats"]
-    if flow_dict["scale_layer"]:
-        tif_str = "M_%d%s" % (repeats, tif_flow_type[:1])
-    else:
-        tif_str = "%d%s" % (repeats, tif_flow_type[:1])
-    if latent_dynamics is not None:
-        return "%s_%s" % (latent_dynamics, tif_str)
-    else:
-        return tif_str
 
 
 def setup_param_logging(all_params):
