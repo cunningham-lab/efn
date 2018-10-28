@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 # ==============================================================================
+import tensorflow as tf
 import numpy as np
 import time
 import csv
@@ -26,7 +27,6 @@ from efn.util.efn_util import (
     setup_IO,
     cost_fn,
     test_convergence,
-    memory_extension,
     setup_param_logging,
 )
 from tf_util.tf_util import (
@@ -34,6 +34,7 @@ from tf_util.tf_util import (
     construct_density_network,
     declare_theta,
     count_params,
+    memory_extension,
 )
 
 
@@ -49,6 +50,7 @@ def train_nf(
     check_rate=100,
     dir_str="general",
     profile=False,
+    savedir=None,
 ):
     """Trains an normalizing flow (NF).
 
@@ -64,6 +66,7 @@ def train_nf(
             check_rate (int): Log diagonstics at every check_rate iterations.
             dir_str (str): Specifiy where to save off off '/efn/results/' filepath.
             profile (bool): Time gradient steps and save to file if True.
+            savedir (str): If not None, use this as model save directory.
 
         """
 
@@ -81,7 +84,7 @@ def train_nf(
     M_DIAG = int(1e3)
     # Since optimization may converge early, we dynamically allocate space to record
     # model diagnostics as optimization progresses.
-    OPT_COMPRESS_FAC = 128
+    OPT_COMPRESS_FAC = 16
 
     # Reset tf graph, and set random seeds.
     tf.reset_default_graph()
@@ -120,9 +123,10 @@ def train_nf(
     )
 
     # Create model save directory if doesn't exist.
-    savedir = setup_IO(
-        family, "NF1", dir_str, "", K, M, flow_dict, {}, False, random_seed, dist_info
-    )
+    if (savedir is None):
+        savedir = setup_IO(
+            family, "NF1", dir_str, "", K, M, flow_dict, {}, False, random_seed, dist_info
+        )
     if not os.path.exists(savedir):
         print("Making directory %s" % savedir)
         os.makedirs(savedir)
@@ -142,6 +146,8 @@ def train_nf(
 
     all_params = tf.trainable_variables()
     nparams = len(all_params)
+
+    saver = tf.train.Saver(all_params)
 
     # Compute family-specific sufficient statistics and log base measure on samples.
     T_z = family.compute_suff_stats(Z, Z_by_layer, T_z_input)
@@ -163,16 +169,15 @@ def train_nf(
     tf.add_to_collection("eta", eta)
     tf.add_to_collection("log_q_zs", log_q_zs)
     tf.add_to_collection("T_z_input", T_z_input)
-    saver = tf.train.Saver()
+
+    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+    train_step = optimizer.apply_gradients(grads_and_vars)
 
     # Tensorboard logging.
     summary_writer = tf.summary.FileWriter(savedir)
     tf.summary.scalar("cost", cost)
     if tb_save_params:
         setup_param_logging(all_params)
-
-    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-    train_step = optimizer.apply_gradients(grads_and_vars)
 
     summary_op = tf.summary.merge_all()
 
@@ -280,10 +285,10 @@ def train_nf(
 
                 # Test for convergence.
                 if check_it >= 2 * WSIZE - 1:
-                    mean_test_elbos = np.mean(test_elbos, 1)
+                    mean_train_elbos = np.mean(train_elbos, 1)
                     if i >= min_iters:
                         if test_convergence(
-                            mean_test_elbos, check_it, WSIZE, DELTA_THRESH
+                            mean_train_elbos, check_it, WSIZE, DELTA_THRESH
                         ):
                             print("converged!")
                             break
@@ -292,18 +297,6 @@ def train_nf(
 
                 # Dynamically extend memory if necessary.
                 if check_it == array_cur_len:
-                    print(
-                        "Extending log length from %d to %d"
-                        % (array_cur_len, 2 * array_cur_len)
-                    )
-                    print(
-                        "Extending log length from %d to %d"
-                        % (array_cur_len, 2 * array_cur_len)
-                    )
-                    print(
-                        "Extending log length from %d to %d"
-                        % (array_cur_len, 2 * array_cur_len)
-                    )
                     print(
                         "Extending log length from %d to %d"
                         % (array_cur_len, 2 * array_cur_len)
@@ -325,6 +318,21 @@ def train_nf(
         # Save model.
         print("Saving model before exitting.")
         saver.save(sess, savedir + "model")
+
+        # save parameters
+        final_thetas = {};
+        for i in range(nparams):
+            print('recording', all_params[i].name);
+            final_thetas.update({all_params[i].name:sess.run(all_params[i])});
+
+        np.savez(
+                savedir + "final_theta.npz",
+                theta=final_thetas
+            )
+
+    summary_writer.flush();
+
+
 
     # Save training diagnostics and model info.
     if i < max_iters:

@@ -19,7 +19,7 @@ import time
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
 import statsmodels.sandbox.distributions.mv_normal as mvd
-from lib.tf_util.stat_util import get_dist_str
+from tf_util.stat_util import get_dist_str
 import scipy.io as soio
 import os
 import re
@@ -30,7 +30,7 @@ from scipy.stats import (
     invwishart,
     truncnorm,
 )
-from lib.tf_util.flows import (
+from tf_util.flows import (
     AffineFlowLayer,
     PlanarFlowLayer,
     RadialFlowLayer,
