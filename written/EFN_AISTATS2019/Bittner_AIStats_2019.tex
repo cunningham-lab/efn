@@ -193,7 +193,7 @@ which is equivalent to minimizing
 
 {\small 
 \begin{multline}  
-\mathbb{E}_{q_\phi} \Bigg( \log q_\phi(z;\eta) - \eta^\top t(z) \Bigg) \\ = \mathbb{E}_{q_\phi} \left( q_0\left( g_\theta^{-1}(z)\right) + \sum_{\ell=1}^L  \log | J^\ell_\theta(z) | - \eta^\top t(z)) \right),
+\mathbb{E}_{q_\phi} \Bigg( \log q_\phi(z;\eta) - \eta^\top t(z) \Bigg) \\ = \mathbb{E}_{q_\phi} \left( \log q_0\left( g_\theta^{-1}(z)\right) + \sum_{\ell=1}^L  \log | J^\ell_\theta(z) | - \eta^\top t(z)) \right),
 \label{eq:51}
 \end{multline}}
 
@@ -213,7 +213,7 @@ Unbiased estimates of this objective are immediate: $q_\phi(z;\eta)$ is sampled 
 {\small 
 \begin{equation}
 \begin{split}
- \mathbb{L}(\phi) = \frac{1}{K}\frac{1}{M}\sum_{k=1}^K & \sum_{m=1}^M \bigg( q_0\left( g_{\theta^k}^{-1}\left(z^m\right)\right) \\ & + \sum_{\ell=1}^L  \log | J^\ell_{\theta^k}\left(z^m\right) | - \eta_k^\top t\left(z^m\right) \bigg),
+ \mathbb{L}(\phi) = \frac{1}{K}\frac{1}{M}\sum_{k=1}^K & \sum_{m=1}^M \bigg( \log q_0\left( g_{\theta^k}^{-1}\left(z^m\right)\right) \\ & + \sum_{\ell=1}^L  \log | J^\ell_{\theta^k}\left(z^m\right) | - \eta_k^\top t\left(z^m\right) \bigg),
 \end{split}
 \label{eq:obj}
 \end{equation} }
