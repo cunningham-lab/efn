@@ -1,0 +1,12 @@
+/Users/sbittner/anaconda/lib/python3.6/site-packages/efn-1.0-py3.6.egg
+/Users/sbittner/anaconda/bin/freeze_graph
+/Users/sbittner/anaconda/bin/saved_model_cli
+/Users/sbittner/anaconda/bin/tensorboard
+/Users/sbittner/anaconda/bin/tflite_convert
+/Users/sbittner/anaconda/bin/toco
+/Users/sbittner/anaconda/bin/toco_from_protos
+/Users/sbittner/anaconda/bin/easy_install
+/Users/sbittner/anaconda/bin/easy_install-3.6
+/Users/sbittner/anaconda/bin/wheel
+/Users/sbittner/anaconda/bin/tensorboard
+/Users/sbittner/anaconda/bin/markdown_py
