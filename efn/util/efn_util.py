@@ -53,7 +53,7 @@ from tf_util.flows import (
 p_eps = 10e-6
 
 
-def setup_IO(
+def get_savedir(
     family,
     model_type_str,
     dir_str,
@@ -71,7 +71,7 @@ def setup_IO(
         Args:
             family (obj): Instance of tf_util.families.Family.
             model_type_str (str): Specifies model type (like NF or EFN).
-            dir_str (str): Specifiy where to save off off '/efn/results/' filepath.
+            dir_str (str): Specifiy where to save off off '/efn/models/' filepath.
             param_net_input_type (str): Specifies input to param network.
                 'eta':        Give full eta to parameter network.
                 'prior':      Part of eta that is prior-dependent.
@@ -89,7 +89,7 @@ def setup_IO(
             savedir (str): Path to model save directory.
 
         """
-    resdir = "results/%s/" % dir_str
+    resdir = "models/%s/" % dir_str
     eta_str = get_dist_str(family.eta_dist)
     give_hint_str = "giveHint_" if give_hint else ""
     flowstring = get_flowstring(flow_dict)

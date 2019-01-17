@@ -24,7 +24,7 @@ import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn.util.efn_util import (
-    setup_IO,
+    get_savedir,
     construct_param_network,
     cost_fn,
     check_convergence,
@@ -176,7 +176,7 @@ def train_efn(
 
     # Create model save directory if doesn't exist.
     efn_str = "EFN1" if (K == 1) else "EFN"
-    savedir = setup_IO(
+    savedir = get_savedir(
         family,
         efn_str,
         dir_str,

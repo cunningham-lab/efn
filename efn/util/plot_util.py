@@ -35,6 +35,14 @@ def find_last_ind(x):
         found = not (vals_nz == K);
     return max_checks-dec-1;
     
+def get_seed(exp_fam, D, ds):
+    if (exp_fam == 'normal'):
+        seeds = range(1,11);
+    elif (exp_fam == 'dirichlet'):
+        seeds = [1,2,3,4,5,6,6,7,8,9,11];
+    else:
+        seeds = range(10);
+    return seeds[ds];
 
     
 def get_latest_diagnostics(fname, is_train=True, ind=None):
@@ -133,16 +141,16 @@ def load_dim_sweep(exp_fam, model, datadir, Ds, K, M, give_hint, max_iters, num_
         flowstring = get_flowstring(flow_dict);
         L = max(int(np.ceil(np.sqrt(D_Z))), 4);
         if (model == 'EFN'):
-            fname = datadir + 'EFN_%s_stochasticEta_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/results.npz' \
+            fname = datadir + 'EFN_%s_stochasticEta_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/opt_info.npz' \
                                    % (exp_fam, give_inv_str, D, K, M, flowstring, L, 0);
             elbos[i, :], R2s[i,:], KLs[i,:], status = get_latest_diagnostics(fname, max_iters);
             log_fname(fname, status, status_lists);
         else:
             for rs in range(num_rs):
                 if (model == 'NF1'):
-                    fname = datadir + 'NF1/NF1_%s_D=%d_flow=%s_rs=%d/results.npz' % (exp_fam, D, flowstring, rs+1);
+                    fname = datadir + 'NF1/NF1_%s_D=%d_flow=%s_rs=%d/opt_info.npz' % (exp_fam, D, flowstring, rs+1);
                 elif (model == 'EFN1'):
-                    fname = datadir + 'EFN1/EFN_%s_fixedEta_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/results.npz' \
+                    fname = datadir + 'EFN1/EFN_%s_fixedEta_%sD=%d_K=%d_M=%d_flow=%s_L=%d_rs=%d/opt_info.npz' \
                            % (exp_fam, give_inv_str, D, 1, M, flowstring, L, rs+1);
                 elbos[i, rs], R2s[i,rs], KLs[i,rs], status = get_latest_diagnostics(fname, max_iters);
                 log_fname(fname, status, status_lists);
@@ -259,7 +267,7 @@ def EFN_model_df(id_name, id_labels, param_mat_lists, param_labels, diagnostic_l
 
 
 def load_V1_events(monkey, SNR_thresh=1.5, FR_thresh=1.0):
-    spike_dir = '/Users/sbittner/Documents/efn/data/pvc11/data_and_scripts/spikes_gratings/'
+    spike_dir = '/Users/sbittner/Documents/efn/efn/data/pvc11/data_and_scripts/spikes_gratings/'
     fname = spike_dir + 'data_monkey%d_gratings.mat' % monkey;
     npzfile = sio.loadmat(fname);
 
@@ -538,4 +546,53 @@ def plotCategoricalPerformance(x, y, legendstrs=[], plottype='scatter', color_pa
             for j in range(xlen):
                 plt.plot([x[j], x[j]], [means[i,j]-stds[i,j], means[i,j]+stds[i,j]], '-', c=color_palette[i], lw=2);
     
+    return None;
+
+def load_counts_spikes(monkey, neuron, ori):
+    # get counts
+    respdir = '/Users/sbittner/Documents/efn/efn/data/responses/';
+    fname = respdir + 'spike_counts_monkey%d_neuron%d_ori%d.mat' % (monkey, neuron, ori);
+    M = sio.loadmat(fname);
+    counts = M['x'];
+    
+     # get spikes
+    SNR_thresh = 1.5;
+    FR_thresh = 1.0;
+    events = load_V1_events(monkey, SNR_thresh, FR_thresh);
+    spikes = events[neuron-1, ori-1,:];
+    return counts, spikes;
+
+def cut_trailing_spikes(events, D, T_s):
+    ntrials = events.shape[0];
+    spikes = [];
+    t_end = D*T_s;
+    for i in range(ntrials):
+        _event_i = events[i];
+        _event_i = [0.0] + _event_i[_event_i < t_end].tolist();
+        spikes.append(_event_i);
+    return spikes
+    
+
+def time_series_contour(Z, prctiles, T_s):
+    num_prctiles = len(prctiles);
+    is_odd = np.mod(num_prctiles,2)==1;
+    if (not is_odd):
+        print('Error: use odd number of symmetric percentiles');
+        return None;
+    mid_prctile_ind = num_prctiles // 2;
+        
+    
+    T = Z.shape[1];
+    zs = np.zeros((num_prctiles,T));
+    for i in range(num_prctiles):
+        for t in range(T):
+            zs[i,t] = np.percentile(Z[:,t], prctiles[i]);
+    
+
+    t = np.linspace(0,(T-1)*T_s, T) + (T_s/2.0);
+    for i in range(num_prctiles):
+        if (i == mid_prctile_ind):
+            plt.plot(t,zs[i], 'k');
+        else:
+            plt.plot(t,zs[i], 'k--');
     return None;

@@ -30,10 +30,7 @@ from efn.util.efn_util import (
     setup_param_logging,
 )
 from tf_util.tf_util import (
-    connect_density_network,
-    construct_density_network,
-    declare_theta,
-    count_params,
+    density_network,
     memory_extension,
 )
 
@@ -41,7 +38,7 @@ from tf_util.tf_util import (
 def train_nf(
     family,
     params,
-    flow_dict,
+    arch_dict,
     M=1000,
     lr_order=-3,
     random_seed=0,
@@ -57,14 +54,14 @@ def train_nf(
         Args:
             family (obj): Instance of tf_util.families.Family.
             params (dict): Mean parameters of distribution to learn with NF.
-            flow_dict (dict): Specifies structure of approximating density network.
+            arch_dict (dict): Specifies structure of approximating density network.
             M (int): Number of samples per distribution per gradient descent batch.
             lr_order (float): Adam learning rate is 10^(lr_order).
             random_seed (int): Tensorflow random seed for initialization.
             min_iters (int): Minimum number of training interations.
             max_iters (int): Maximum number of training iterations.
             check_rate (int): Log diagonstics at every check_rate iterations.
-            dir_str (str): Specifiy where to save off off '/efn/results/' filepath.
+            dir_str (str): Specifiy where to save off off '/efn/models/' filepath.
             profile (bool): Time gradient steps and save to file if True.
             savedir (str): If not None, use this as model save directory.
 
@@ -106,15 +103,11 @@ def train_nf(
     )
 
     # Declare isotropic gaussian input placeholder.
-    W = tf.placeholder(tf.float64, shape=(None, None, D_Z, None), name="W")
+    W = tf.placeholder(tf.float64, shape=(None, None, D_Z), name="W")
     p0 = tf.reduce_prod(
-        tf.exp((-tf.square(W)) / 2.0) / np.sqrt(2.0 * np.pi), axis=[2, 3]
+        tf.exp((-tf.square(W)) / 2.0) / np.sqrt(2.0 * np.pi), axis=2
     )
-    base_log_q_z = tf.log(p0[:, :])
-
-    # Assemble density network.
-    flow_layers, num_theta_params = construct_density_network(flow_dict, D_Z, family.T)
-    flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params)
+    base_log_q_z = tf.log(p0)
 
     # Declare NF input placeholders.
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats), name="eta")
@@ -125,7 +118,7 @@ def train_nf(
     # Create model save directory if doesn't exist.
     if (savedir is None):
         savedir = setup_IO(
-            family, "NF1", dir_str, "", K, M, flow_dict, {}, False, random_seed, dist_info
+            family, "NF1", dir_str, "", K, M, arch_dict, {}, False, random_seed, dist_info
         )
     if not os.path.exists(savedir):
         print("Making directory %s" % savedir)
@@ -137,11 +130,8 @@ def train_nf(
     _T_z_input = family.mu_to_T_z_input(params)
     _T_z_input = np.expand_dims(_T_z_input, 0)
 
-    # Declare density network parameters.
-    theta = declare_theta(flow_layers)
-
-    # Connect declared tf Variables theta to the density network.
-    Z, sum_log_det_jacobian, Z_by_layer = connect_density_network(W, flow_layers, theta)
+    # Construct density network parameters.
+    Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict, family)
     log_q_zs = base_log_q_z - sum_log_det_jacobian
 
     all_params = tf.trainable_variables()
@@ -149,6 +139,7 @@ def train_nf(
 
     saver = tf.train.Saver(all_params)
 
+    Z_by_layer = []
     # Compute family-specific sufficient statistics and log base measure on samples.
     T_z = family.compute_suff_stats(Z, Z_by_layer, T_z_input)
     log_h_z = family.compute_log_base_measure(Z)
@@ -201,7 +192,7 @@ def train_nf(
         sess.run(init_op)
 
         # compute R^2, KL, and elbo
-        w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0)
+        w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
         feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
         summary = sess.run(summary_op, feed_dict)
         summary_writer.add_summary(summary, 0)
@@ -217,7 +208,7 @@ def train_nf(
         print("Starting NF optimization.")
         while i < max_iters:
             # Draw a new noise tensor.
-            w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0)
+            w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
             feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
 
             if profile:
@@ -255,7 +246,7 @@ def train_nf(
                 print(42 * "*")
                 print(savedir)
                 print("it = %d " % (i + 1))
-                w_i = np.random.normal(np.zeros((K, M_DIAG, D_Z, family.T)), 1.0)
+                w_i = np.random.normal(np.zeros((K, M_DIAG, D_Z)), 1.0)
                 feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
                 train_elbos[check_it, :], train_R2s[check_it, :], train_KLs[
                     check_it, :
@@ -269,7 +260,7 @@ def train_nf(
                     print("train KL: %f" % np.mean(train_KLs[check_it, :]))
 
                 np.savez(
-                    savedir + "results.npz",
+                    savedir + "opt_info.npz",
                     it=i,
                     Z=train_Z,
                     eta=_eta,
@@ -337,7 +328,7 @@ def train_nf(
     # Save training diagnostics and model info.
     if i < max_iters:
         np.savez(
-            savedir + "results.npz",
+            savedir + "opt_info.npz",
             it=i,
             M=M,
             Z=train_Z,
