@@ -24,7 +24,7 @@ import io
 from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn.util.efn_util import (
-    setup_IO,
+    get_savedir,
     cost_fn,
     test_convergence,
     setup_param_logging,
@@ -117,7 +117,7 @@ def train_nf(
 
     # Create model save directory if doesn't exist.
     if (savedir is None):
-        savedir = setup_IO(
+        savedir = get_savedir(
             family, "NF1", dir_str, "", K, M, arch_dict, {}, False, random_seed, dist_info
         )
     if not os.path.exists(savedir):

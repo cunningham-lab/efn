@@ -78,7 +78,7 @@ def train_efn(
             min_iters (int): Minimum number of training interations.
             max_iters (int): Maximum number of training iterations.
             check_rate (int): Log diagonstics at every check_rate iterations.
-            dir_str (str): Specifiy where to save off off '/efn/results/' filepath.
+            dir_str (str): Specifiy where to save off off '/efn/models/' filepath.
             profile (bool): Time gradient steps and save to file if True.
 
         """
@@ -393,7 +393,7 @@ def train_efn(
                     print("test KL: %f" % np.mean(test_KLs[check_it, :]))
 
                 np.savez(
-                    savedir + "results.npz",
+                    savedir + "opt_info.npz",
                     it=i,
                     check_rate=check_rate,
                     train_Z=train_Z,
@@ -477,7 +477,7 @@ def train_efn(
     # Save training diagnostics and model info.
     if i < max_iters:
         np.savez(
-            savedir + "results.npz",
+            savedir + "opt_info.npz",
             it=i,
             check_rate=check_rate,
             train_Z=train_Z,
