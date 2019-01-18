@@ -23,7 +23,7 @@ import scipy.io as soio
 import os
 import re
 from tf_util.stat_util import get_dist_str
-from tf_util.tf_util import get_flowstring
+from tf_util.tf_util import get_archstring
 from scipy.stats import (
     ttest_1samp,
     multivariate_normal,
@@ -92,7 +92,7 @@ def get_savedir(
     resdir = "models/%s/" % dir_str
     eta_str = get_dist_str(family.eta_dist)
     give_hint_str = "giveHint_" if give_hint else ""
-    flowstring = get_flowstring(flow_dict)
+    archstring = get_archstring(flow_dict)
 
     if param_net_input_type in ["eta", ""]:
         substr = ""
@@ -115,7 +115,7 @@ def get_savedir(
             family.D,
             K,
             M,
-            flowstring,
+            archstring,
             param_net_hps["L"],
             random_seed,
         )
@@ -127,7 +127,7 @@ def get_savedir(
             family.name,
             eta_str,
             family.D,
-            flowstring,
+            archstring,
             param_net_hps["L"],
             dist_seed,
             random_seed,
@@ -140,7 +140,7 @@ def get_savedir(
             family.name,
             eta_str,
             family.D,
-            flowstring,
+            archstring,
             dist_seed,
             random_seed,
         )
@@ -362,7 +362,7 @@ def cost_fn(eta, log_p_zs, T_z, log_h_z, K):
     log_h_z = tf.expand_dims(log_h_z, 2)
     eta = tf.expand_dims(eta, 2)
     # we want to minimize the mean negative elbo
-    cost = tf.reduce_sum(tf.reduce_mean(y - (tf.matmul(T_z, eta) + log_h_z), [1, 2]))
+    cost = tf.reduce_mean(tf.reduce_mean(y - (tf.matmul(T_z, eta) + log_h_z), [1, 2]))
     return cost, elbos, R2s
 
 

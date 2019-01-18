@@ -131,7 +131,8 @@ def train_nf(
     _T_z_input = np.expand_dims(_T_z_input, 0)
 
     # Construct density network parameters.
-    Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict, family)
+    # TODO support mapping stuff needs to be set up
+    Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict)
     log_q_zs = base_log_q_z - sum_log_det_jacobian
 
     all_params = tf.trainable_variables()
@@ -187,9 +188,12 @@ def train_nf(
         times = np.zeros((max_iters,))
 
     check_it = 0
+    print('beginning session')
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer()
+        print('in session')
         sess.run(init_op)
+        print('base initialization')
 
         # compute R^2, KL, and elbo
         w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
@@ -201,6 +205,7 @@ def train_nf(
         ], train_Z = family.batch_diagnostics(
             K, sess, feed_dict, Z, log_q_zs, elbos, R2s, [params], True
         )
+        print('after bd')
 
         check_it += 1
         i = 1
@@ -313,11 +318,10 @@ def train_nf(
         # save parameters
         final_thetas = {};
         for i in range(nparams):
-            print('recording', all_params[i].name);
             final_thetas.update({all_params[i].name:sess.run(all_params[i])});
 
         np.savez(
-                savedir + "final_theta.npz",
+                savedir + "theta.npz",
                 theta=final_thetas
             )
 
