@@ -188,6 +188,7 @@ def train_nf(
         times = np.zeros((max_iters,))
 
     check_it = 0
+    converged = False
     print('beginning session')
     with tf.Session() as sess:
         init_op = tf.global_variables_initializer()
@@ -275,7 +276,7 @@ def train_nf(
                     train_elbos=train_elbos,
                     train_R2s=train_R2s,
                     train_KLs=train_KLs,
-                    converged=False,
+                    converged=converged,
                     final_cos=cost_i,
                 )
 
@@ -287,6 +288,7 @@ def train_nf(
                             mean_train_elbos, check_it, WSIZE, DELTA_THRESH
                         ):
                             print("converged!")
+                            converged = True
                             break
 
                 check_it += 1
@@ -343,8 +345,8 @@ def train_nf(
             train_elbos=train_elbos,
             train_R2s=train_R2s,
             train_KLs=train_KLs,
-            converged=True,
-            final_cos=cost_i,
+            converged=converged,
+            final_cost=cost_i,
         )
 
-    return None
+    return converged
