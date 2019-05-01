@@ -1,0 +1,274 @@
+\begin{thebibliography}{42}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Adams et~al.(2009)Adams, Murray, and MacKay]{adams2009tractable}
+Adams, R.~P., Murray, I., and MacKay, D.~J.
+\newblock Tractable nonparametric bayesian inference in poisson processes with
+  gaussian process intensities.
+\newblock In \emph{Proceedings of the 26th Annual International Conference on
+  Machine Learning}, pp.\  9--16. ACM, 2009.
+
+\bibitem[Andrychowicz et~al.(2016)Andrychowicz, Denil, Gomez, Hoffman, Pfau,
+  Schaul, and de~Freitas]{andrychowicz2016learning}
+Andrychowicz, M., Denil, M., Gomez, S., Hoffman, M.~W., Pfau, D., Schaul, T.,
+  and de~Freitas, N.
+\newblock Learning to learn by gradient descent by gradient descent.
+\newblock In \emph{NIPS}, pp.\  3981--3989, 2016.
+
+\bibitem[Baird et~al.(2005)Baird, Smalenberger, and Ingkiriwang]{baird2005one}
+Baird, L., Smalenberger, D., and Ingkiriwang, S.
+\newblock One-step neural network inversion with pdf learning and emulation.
+\newblock In \emph{Neural Networks, 2005. IJCNN'05. Proceedings. 2005 IEEE
+  International Joint Conference on}, volume~2, pp.\  966--971. IEEE, 2005.
+
+\bibitem[Barber \& Wiegerinck(1999)Barber and Wiegerinck]{barber1999tractable}
+Barber, D. and Wiegerinck, W.
+\newblock Tractable variational structures for approximating graphical models.
+\newblock In \emph{NIPS}, pp.\  183--189, 1999.
+
+\bibitem[Blei et~al.(2003)Blei, Ng, and Jordan]{blei2003latent}
+Blei, D.~M., Ng, A.~Y., and Jordan, M.~I.
+\newblock Latent dirichlet allocation.
+\newblock \emph{Journal of machine Learning research}, 3\penalty0
+  (Jan):\penalty0 993--1022, 2003.
+
+\bibitem[Blei et~al.(2017)Blei, Kucukelbir, and McAuliffe]{blei2017variational}
+Blei, D.~M., Kucukelbir, A., and McAuliffe, J.~D.
+\newblock Variational inference: A review for statisticians.
+\newblock \emph{Journal of the American Statistical Association}, 112\penalty0
+  (518):\penalty0 859--877, 2017.
+
+\bibitem[Bojarski et~al.(2016)Bojarski, Choromanska, Choromanski, Fagan,
+  Gouy-Pailler, Morvan, Sakr, Sarlos, and Atif]{bojarski2016structured}
+Bojarski, M., Choromanska, A., Choromanski, K., Fagan, F., Gouy-Pailler, C.,
+  Morvan, A., Sakr, N., Sarlos, T., and Atif, J.
+\newblock Structured adaptive and random spinners for fast machine learning
+  computations.
+\newblock \emph{arXiv preprint arXiv:1610.06209}, 2016.
+
+\bibitem[Cunningham et~al.(2008{\natexlab{a}})Cunningham, Byron, Shenoy, and
+  Sahani]{cunningham2008inferring}
+Cunningham, J.~P., Byron, M.~Y., Shenoy, K.~V., and Sahani, M.
+\newblock Inferring neural firing rates from spike trains using gaussian
+  processes.
+\newblock In \emph{NIPS}, pp.\  329--336, 2008{\natexlab{a}}.
+
+\bibitem[Cunningham et~al.(2008{\natexlab{b}})Cunningham, Shenoy, and
+  Sahani]{cunningham2008fast}
+Cunningham, J.~P., Shenoy, K.~V., and Sahani, M.
+\newblock Fast gaussian process methods for point process intensity estimation.
+\newblock In \emph{Proceedings of the 25th international conference on Machine
+  learning}, pp.\  192--199. ACM, 2008{\natexlab{b}}.
+
+\bibitem[Dayan et~al.(1995)Dayan, Hinton, Neal, and Zemel]{dayan1995helmholtz}
+Dayan, P., Hinton, G.~E., Neal, R.~M., and Zemel, R.~S.
+\newblock The helmholtz machine.
+\newblock \emph{Neural computation}, 7\penalty0 (5):\penalty0 889--904, 1995.
+
+\bibitem[Dinh et~al.(2016)Dinh, Sohl-Dickstein, and Bengio]{dinh2016density}
+Dinh, L., Sohl-Dickstein, J., and Bengio, S.
+\newblock Density estimation using real nvp.
+\newblock \emph{arXiv preprint arXiv:1605.08803}, 2016.
+
+\bibitem[Gao et~al.(2016)Gao, Archer, Paninski, and Cunningham]{gao2016linear}
+Gao, Y., Archer, E.~W., Paninski, L., and Cunningham, J.~P.
+\newblock Linear dynamical neural population models through nonlinear
+  embeddings.
+\newblock In \emph{NIPS}, pp.\  163--171, 2016.
+
+\bibitem[Gelman et~al.(2014)Gelman, Carlin, Stern, Dunson, Vehtari, and
+  Rubin]{gelman2014bayesian}
+Gelman, A., Carlin, J.~B., Stern, H.~S., Dunson, D.~B., Vehtari, A., and Rubin,
+  D.~B.
+\newblock \emph{Bayesian data analysis}, volume~2.
+\newblock CRC press Boca Raton, FL, 2014.
+
+\bibitem[Gershman \& Goodman(2014)Gershman and Goodman]{gershman2014amortized}
+Gershman, S. and Goodman, N.
+\newblock Amortized inference in probabilistic reasoning.
+\newblock In \emph{Proceedings of the Annual Meeting of the Cognitive Science
+  Society}, volume~36, 2014.
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Pouget-Abadie, Mirza, Xu,
+  Warde-Farley, Ozair, Courville, and Bengio]{Goodfellow:2014aa}
+Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair,
+  S., Courville, A., and Bengio, Y.
+\newblock Generative adversarial nets.
+\newblock In Ghahramani, Z., Welling, M., Cortes, C., Lawrence, N.~D., and
+  Weinberger, K.~Q. (eds.), \emph{NIPS 27}, pp.\  2672--2680. Curran
+  Associates, Inc., 2014.
+\newblock URL
+  \url{http://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf}.
+
+\bibitem[Gretton et~al.(2012)Gretton, Borgwardt, Rasch, Sch{\"o}lkopf, and
+  Smola]{gretton2012kernel}
+Gretton, A., Borgwardt, K.~M., Rasch, M.~J., Sch{\"o}lkopf, B., and Smola, A.
+\newblock A kernel two-sample test.
+\newblock \emph{Journal of Machine Learning Research}, 13\penalty0
+  (Mar):\penalty0 723--773, 2012.
+
+\bibitem[Hastie et~al.(2001)Hastie, Tibshirani, and
+  Friedman]{friedman2001elements}
+Hastie, T., Tibshirani, R., and Friedman, J.
+\newblock \emph{The elements of statistical learning}, volume~1.
+\newblock Springer series in statistics New York, 2001.
+
+\bibitem[Hoffman \& Blei(2015)Hoffman and Blei]{hoffman2015stochastic}
+Hoffman, M. and Blei, D.
+\newblock Stochastic structured variational inference.
+\newblock In \emph{Artificial Intelligence and Statistics}, pp.\  361--369,
+  2015.
+
+\bibitem[Jacobsen et~al.(2018)Jacobsen, Smeulders, and
+  Oyallon]{jacobsen2018revnet}
+Jacobsen, J.-H., Smeulders, A., and Oyallon, E.
+\newblock i-revnet: Deep invertible networks.
+\newblock \emph{arXiv preprint arXiv:1802.07088}, 2018.
+
+\bibitem[Kingma \& Ba(2014)Kingma and Ba]{kingma2014adam}
+Kingma, D.~P. and Ba, J.
+\newblock Adam: A method for stochastic optimization.
+\newblock \emph{arXiv preprint arXiv:1412.6980}, 2014.
+
+\bibitem[Kingma \& Welling(2013)Kingma and Welling]{Kingma:2013aa}
+Kingma, D.~P. and Welling, M.
+\newblock Auto-encoding variational bayes.
+\newblock \emph{arXiv}, 12 2013.
+\newblock URL \url{https://arxiv.org/pdf/1312.6114}.
+
+\bibitem[MacKay \& Peto(1995)MacKay and Peto]{mackay1995hierarchical}
+MacKay, D.~J. and Peto, L. C.~B.
+\newblock A hierarchical dirichlet language model.
+\newblock \emph{Natural language engineering}, 1\penalty0 (3):\penalty0
+  289--308, 1995.
+
+\bibitem[MacKay \& Gibbs(1997)MacKay and Gibbs]{mackay1997density}
+MacKay, D. J.~C. and Gibbs, M.~N.
+\newblock Density networks.
+\newblock In \emph{Statistics and Neural Networks}, pp.\  129--146. Oxford,
+  1997.
+
+\bibitem[McCullagh(2002)]{mccullagh2002}
+McCullagh, P.
+\newblock What is a statistical model?
+\newblock \emph{The Annals of Statistics}, 30\penalty0 (5):\penalty0
+  1225--1267, 2002.
+\newblock ISSN 00905364.
+\newblock URL \url{http://www.jstor.org/stable/1558705}.
+
+\bibitem[Papamakarios \& Murray(2015)Papamakarios and
+  Murray]{papamakarios2015distilling}
+Papamakarios, G. and Murray, I.
+\newblock Distilling intractable generative models.
+\newblock In \emph{Probabilistic Integration Workshop at Neural Information
+  Processing Systems}, 2015.
+
+\bibitem[Papamakarios et~al.(2017)Papamakarios, Murray, and
+  Pavlakou]{papamakarios2017masked}
+Papamakarios, G., Murray, I., and Pavlakou, T.
+\newblock Masked autoregressive flow for density estimation.
+\newblock In \emph{NIPS}, pp.\  2335--2344, 2017.
+
+\bibitem[Pritchard et~al.(2000)Pritchard, Stephens, and
+  Donnelly]{pritchard2000inference}
+Pritchard, J.~K., Stephens, M., and Donnelly, P.
+\newblock Inference of population structure using multilocus genotype data.
+\newblock \emph{Genetics}, 155\penalty0 (2):\penalty0 945--959, 2000.
+
+\bibitem[Rezende \& Mohamed(2015)Rezende and Mohamed]{rezende2015variational}
+Rezende, D.~J. and Mohamed, S.
+\newblock Variational inference with normalizing flows.
+\newblock \emph{arXiv preprint arXiv:1505.05770}, 2015.
+
+\bibitem[Rezende et~al.(2014)Rezende, Mohamed, and
+  Wierstra]{rezende2014stochastic}
+Rezende, D.~J., Mohamed, S., and Wierstra, D.
+\newblock Stochastic backpropagation and approximate inference in deep
+  generative models.
+\newblock \emph{arXiv preprint arXiv:1401.4082}, 2014.
+
+\bibitem[Rippel \& Adams(2013)Rippel and Adams]{rippel2013high}
+Rippel, O. and Adams, R.~P.
+\newblock High-dimensional probability estimation with deep density models.
+\newblock \emph{arXiv preprint arXiv:1302.5125}, 2013.
+
+\bibitem[Robert(2007)]{robert2007bayesian}
+Robert, C.
+\newblock \emph{The Bayesian choice: from decision-theoretic foundations to
+  computational implementation}.
+\newblock Springer Science \& Business Media, 2007.
+
+\bibitem[Saul \& Jordan(1996)Saul and Jordan]{saul1996exploiting}
+Saul, L.~K. and Jordan, M.~I.
+\newblock Exploiting tractable substructures in intractable networks.
+\newblock In \emph{NIPS}, pp.\  486--492, 1996.
+
+\bibitem[Smith \& Kohn(2008)Smith and Kohn]{smith2008spatial}
+Smith, M.~A. and Kohn, A.
+\newblock Spatial and temporal scales of neuronal correlation in primary visual
+  cortex.
+\newblock \emph{Journal of Neuroscience}, 28\penalty0 (48):\penalty0
+  12591--12603, 2008.
+
+\bibitem[Stuhlm{\"u}ller et~al.(2013)Stuhlm{\"u}ller, Taylor, and
+  Goodman]{stuhlmuller2013learning}
+Stuhlm{\"u}ller, A., Taylor, J., and Goodman, N.
+\newblock Learning stochastic inverses.
+\newblock In \emph{NIPS}, pp.\  3048--3056, 2013.
+
+\bibitem[Tabak et~al.(2010)Tabak, Vanden-Eijnden, et~al.]{tabak2010density}
+Tabak, E.~G., Vanden-Eijnden, E., et~al.
+\newblock Density estimation by dual ascent of the log-likelihood.
+\newblock \emph{Communications in Mathematical Sciences}, 8\penalty0
+  (1):\penalty0 217--233, 2010.
+
+\bibitem[Teh et~al.(2006)Teh, Jordan, Beal, and Blei]{teh2006hdp}
+Teh, Y.~W., Jordan, M.~I., Beal, M.~J., and Blei, D.~M.
+\newblock Hierarchical dirichlet processes.
+\newblock \emph{Journal of the American Statistical Association}, 101\penalty0
+  (476):\penalty0 1566--1581, 2006.
+\newblock \doi{10.1198/016214506000000302}.
+\newblock URL \url{https://doi.org/10.1198/016214506000000302}.
+
+\bibitem[Tenenbaum et~al.(2006)Tenenbaum, Griffiths, and
+  Kemp]{tenenbaum2006theory}
+Tenenbaum, J.~B., Griffiths, T.~L., and Kemp, C.
+\newblock Theory-based bayesian models of inductive learning and reasoning.
+\newblock \emph{Trends in cognitive sciences}, 10\penalty0 (7):\penalty0
+  309--318, 2006.
+
+\bibitem[Titsias \& L{\'a}zaro-Gredilla(2014)Titsias and
+  L{\'a}zaro-Gredilla]{titsias2014doubly}
+Titsias, M. and L{\'a}zaro-Gredilla, M.
+\newblock Doubly stochastic variational bayes for non-conjugate inference.
+\newblock In \emph{International Conference on Machine Learning}, pp.\
+  1971--1979, 2014.
+
+\bibitem[Tran et~al.(2015)Tran, Blei, and Airoldi]{tran2015copula}
+Tran, D., Blei, D., and Airoldi, E.~M.
+\newblock Copula variational inference.
+\newblock In \emph{NIPS}, pp.\  3564--3572, 2015.
+
+\bibitem[Uria et~al.(2013)Uria, Murray, and Larochelle]{uria2013rnade}
+Uria, B., Murray, I., and Larochelle, H.
+\newblock Rnade: The real-valued neural autoregressive density-estimator.
+\newblock In \emph{NIPS}, pp.\  2175--2183, 2013.
+
+\bibitem[Wainwright et~al.(2008)Wainwright, Jordan,
+  et~al.]{wainwright2008graphical}
+Wainwright, M.~J., Jordan, M.~I., et~al.
+\newblock Graphical models, exponential families, and variational inference.
+\newblock \emph{Foundations and Trends{\textregistered} in Machine Learning},
+  1\penalty0 (1--2):\penalty0 1--305, 2008.
+
+\bibitem[Zhou et~al.(2018)Zhou, Veitch, Austern, Adams, and
+  Orbanz]{zhou2018compressibility}
+Zhou, W., Veitch, V., Austern, M., Adams, R.~P., and Orbanz, P.
+\newblock Compressibility and generalization in large-scale deep learning.
+\newblock \emph{arXiv preprint arXiv:1804.05862}, 2018.
+
+\end{thebibliography}
