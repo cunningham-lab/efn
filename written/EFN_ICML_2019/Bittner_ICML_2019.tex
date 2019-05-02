@@ -48,10 +48,10 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
 % Use the following line for the initial blind version submitted for review:
-\usepackage{icml2019}
+%\usepackage{icml2019}
 
 % If accepted, instead use the following line for the camera-ready submission:
-%\usepackage[accepted]{icml2019}
+\usepackage[accepted]{icml2019}
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
@@ -60,7 +60,7 @@
 \begin{document}
 
 \twocolumn[
-\icmltitle{Approximating exponential family models (not single distributions) with a two-network architecture (ICML 2019)}
+\icmltitle{Approximating exponential family models (not single distributions) with a two-network architecture}
 
 % It is OKAY to include author information, even for blind
 % submissions: the style file will automatically remove it for you
@@ -78,15 +78,13 @@
 \icmlsetsymbol{equal}{*}
 
 \begin{icmlauthorlist}
-\icmlauthor{Sean R. Bittner}{neuro}
-\icmlauthor{John P. Cunningham}{stats}
+\icmlauthor{Sean R Bittner}{columbia}
+\icmlauthor{John P Cunningham}{columbia}
 \end{icmlauthorlist}
 
-\icmlaffiliation{neuro}{Department of Neuroscience, Columbia University, New York, United States}
-\icmlaffiliation{stats}{Department of Statistics, Columbia University, New York, United States}
+\icmlaffiliation{columbia}{Columbia University, New York City, USA}
 
-\icmlcorrespondingauthor{Cieua Vvvvv}{c.vvvvv@googol.com}
-\icmlcorrespondingauthor{Eee Pppp}{ep@eden.co.uk}
+\icmlcorrespondingauthor{Sean R Bittner}{srb2201@columbia.edu}
 
 % You may provide any keywords that you
 % find helpful for describing your paper; these are used to populate
@@ -105,10 +103,10 @@
 % Remove it (just {}) if you do not need this facility.
 
 %\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
-\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+\printAffiliationsAndNotice{} % otherwise use the standard text.
 
 \begin{abstract}
-In most settings, the goal of deep generative modeling has been to find a \emph{particular member} of that model family: optimized parameters index a distribution that is close to a target distribution.  Much less attention, however, has been paid to the \emph{model itself}.   Here we introduce a two-network architecture(one of which is invertible) and optimization procedure for learning intractable exponential family models (\emph{not} a single distribution from those models).  These exponential families are learned accurately, allowing operations like posterior inference to be executed directly and generically with an input choice of natural parameters, rather than performing inference via optimization for each particular distribution within that model.
+In most settings, the goal of deep generative modeling has been to find a \emph{particular member} of that model family: optimized parameters index a distribution that is close to a target distribution.  Much less attention, however, has been paid to learning the \emph{model itself}.   Here we introduce a two-network architecture (one of which is invertible) and optimization procedure for learning intractable exponential family models (\emph{not} a single distribution from those models).  These exponential families are learned accurately, allowing operations like posterior inference to be executed directly and generically with an input choice of natural parameters, rather than performing inference via optimization for each particular distribution within that model.
 \end{abstract}
 
 \section{Introduction}
@@ -229,7 +227,7 @@ We considered a variety of density network architectures.  For each exponential 
 The parameter network was given $\tanh$ nonlinearities. 
 In many of the results below we will analyze EFNs across a range of model dimensionality $D$ (that is, $z \in \mathcal{Z} \subseteq \mathbb{R}^D$).    In all cases then we have also $D$ flow layers in the density network (except when the affine transformation is optimal).  In analyses where $D$ was less than 20, 20 flow layers were used.  The number of layers in the parameter network scaled as the square root of $D$, with a minimum of 4 layers, and the number of units per layer scaled linearly from the input to the number of density network parameters. Models were trained using the Adam optimizer algorithm \citep{kingma2014adam}, with learning rates ranging from $10^{-3}$ to $10^{-5}$.  Optimizations ran for at least 50,000 iterations, and completed once there was a subthreshold increase in ELBO. These choices were made so that model performance saturated, and were held constant within comparative analyses.
 
-All code was implemented in tensorflow, and is available at {\tt https://github.com/anonymous/}.
+All code was implemented in tensorflow, and is available at {\tt https://github.com/cunningham-lab/efn}.
 
 \subsection{Tractable exponential families}
 
