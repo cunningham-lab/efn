@@ -130,9 +130,12 @@ def train_nf(
     _T_z_input = family.mu_to_T_z_input(params)
     _T_z_input = np.expand_dims(_T_z_input, 0)
 
+    if (family.has_support_map):
+        support_mapping = family.support_mapping
+    else:
+        support_mapping = None
     # Construct density network parameters.
-    # TODO support mapping stuff needs to be set up
-    Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict)
+    Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict, support_mapping)
     log_q_zs = base_log_q_z - sum_log_det_jacobian
 
     all_params = tf.trainable_variables()
@@ -143,7 +146,10 @@ def train_nf(
     Z_by_layer = []
     # Compute family-specific sufficient statistics and log base measure on samples.
     T_z = family.compute_suff_stats(Z, Z_by_layer, T_z_input)
-    log_h_z = family.compute_log_base_measure(Z)
+    if (family.constant_base_measure):
+        log_h_z = 0.0
+    else:
+        log_h_z = family.compute_log_base_measure(Z)
 
     # Compute total cost, and ELBO and r^2 for K=1 distribution.
     cost, elbos, R2s = cost_fn(eta, log_q_zs, T_z, log_h_z, K)
@@ -231,8 +237,8 @@ def train_nf(
                 # Take a gradient step.
                 if np.mod(i, check_rate) == 0:
                     start_time = time.time()
-                ts, cost_i, _cost_grads, _R2s, _T_z, _T_z, summary = sess.run(
-                    [train_step, cost, cost_grad, R2s, T_z, log_h_z, summary_op],
+                ts, cost_i, _cost_grads, _R2s, _T_z, summary = sess.run(
+                    [train_step, cost, cost_grad, R2s, T_z, summary_op],
                     feed_dict,
                 )
                 if np.mod(i, check_rate) == 0:

@@ -346,7 +346,10 @@ def cost_fn(eta, log_p_zs, T_z, log_h_z, K):
         # get eta-specific log-probs and T(x)'s
         y_k = tf.expand_dims(y[k, :], 1)
         T_z_k = T_z[k, :, :]
-        log_h_z_k = tf.expand_dims(log_h_z[k, :], 1)
+        if (log_h_z == 0.0):
+            log_h_z_k = 0.0
+        else:
+            log_h_z_k = tf.expand_dims(log_h_z[k, :], 1)
         eta_k = tf.expand_dims(eta[k, :], 1)
         # compute optimial linear regression offset term for eta
         alpha_k = tf.reduce_mean(y_k - (tf.matmul(T_z_k, eta_k) + log_h_z_k))
@@ -359,7 +362,10 @@ def cost_fn(eta, log_p_zs, T_z, log_h_z, K):
         elbos.append(-tf.reduce_mean(y_k - (tf.matmul(T_z_k, eta_k) + T_z_k)))
 
     y = tf.expand_dims(log_p_zs, 2)
-    log_h_z = tf.expand_dims(log_h_z, 2)
+    if (log_h_z == 0.0):
+        log_h_z = 0.0
+    else:
+        log_h_z = tf.expand_dims(log_h_z, 2)
     eta = tf.expand_dims(eta, 2)
     # we want to minimize the mean negative elbo
     cost = tf.reduce_mean(tf.reduce_mean(y - (tf.matmul(T_z, eta) + log_h_z), [1, 2]))
