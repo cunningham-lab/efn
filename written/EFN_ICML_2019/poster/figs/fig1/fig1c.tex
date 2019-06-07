@@ -1,0 +1,64 @@
+\renewcommand{\large}{\fontsize{29.86}{37}\selectfont}
+\renewcommand{\Large}{\fontsize{35.83}{45}\selectfont}
+\renewcommand{\LARGE}{\fontsize{43}{54}\selectfont}
+\renewcommand{\veryLarge}{\fontsize{47.7}{60}\selectfont}
+\renewcommand{\huge}{\fontsize{51.6}{64}\selectfont}
+\renewcommand{\Huge}{\fontsize{55.7}{69.3}\selectfont}
+\renewcommand{\HUGE}{\fontsize{74.3}{93}\selectfont}
+
+\def\xnode{\node[align=left, draw,thick,circle,black,minimum size=1.0cm,fill=gray!20!white]}
+\def\znode{\node[align=left, draw,thick,circle,black,minimum size=1.0cm,fill=white]}
+
+% IMPORTANT: define relative positions of the subpanels here.  Allows easy shuffling.
+
+\HUGE
+
+\begin{tikzpicture}[scale=6, >=triangle 45, triangle/.style = {fill=white, regular polygon, regular polygon sides=3 }]%,transform canvas={scale=0.8}]
+
+% panel C
+\node (w) at (1.5,0.0) {$w\! \sim\! q_0(w)$};
+
+\node (nf1) at (1.5, -1.1)  {};
+\draw[draw=black,thick] (0.5, -1.2) rectangle ++(2.2,0.2);
+\draw[thick,-{Latex[length=0.8cm]}] (w.south)--(nf1.north);
+
+\node (nf2) at (1.5, -2.1)  {};
+\draw[draw=black,thick] (0.5, -2.2) rectangle ++(2.2,0.2);
+\draw[thick,-{Latex[length=0.8cm]}] (nf1.south)--(nf2.north);
+
+\node (nf3) at (1.5, -3.1)  {};
+\draw[draw=black,thick] (0.5, -3.2) rectangle ++(2.2,0.2);
+\draw[thick,dotted,-{Latex[length=0.8cm]}]  (nf2.south)--(nf3.north);
+
+\node (nf4) at (1.5, -4.4)  {$z\!=\!g_\theta(w)\! \sim\! q_\phi(z;\eta)$};
+\draw[thick,-{Latex[length=0.8cm]}] (nf3.south)--(nf4.north);
+
+% now the theta of eta network.
+\node (eta) at (5.6, -2.1) {$\eta$};
+
+\node (te1) at (4.9, -2.1)  {};
+\draw[draw=black, thick,-{Latex[length=0.8cm]}]  (4.8, -3.2) rectangle ++(0.2,2.2);
+\draw[thick,-{Latex[length=0.8cm]}] (eta)--(te1);
+
+\node (te2) at (4.3, -2.1)  {};
+\draw[draw=black,thick,-{Latex[length=0.8cm]}]  (4.2, -3.2) rectangle ++(0.2,2.2);
+\draw[thick,-{Latex[length=0.8cm]}]  (te1)--(te2);
+
+\node (te3) at (3.7, -2.1)  {};
+\draw[draw=black,thick,-{Latex[length=0.8cm]}]  (3.6, -3.2) rectangle ++(0.2,2.2);
+\draw[thick,dotted,-{Latex[length=0.8cm]}]  (te2)--(te3);
+
+
+% connect networks
+\node (nf1r) at (2.6, -1.1)  {};
+\node (nf2r) at (2.6, -2.1)  {};
+\node (nf3r) at (2.6, -3.1)  {};
+\draw[thick,-{Latex[length=0.8cm]}]  (te3)--(nf1r); 
+\draw[thick,-{Latex[length=0.8cm]}]  (te3)--(nf2r); 
+\draw[thick,-{Latex[length=0.8cm]}]  (te3)--(nf3r); 
+
+\node (tpe) at (2.3, -2.5) {$\theta\! =\! f_{\phi} (\eta)$};
+\node (phi) at (4.3, -3.5) {$\phi$};
+ 
+  
+\end{tikzpicture}

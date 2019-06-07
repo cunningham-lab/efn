@@ -1,0 +1,29 @@
+\usetikzlibrary{arrows.meta}
+\def\xnode{\node[align=left, draw,thick,circle,black,minimum size=1.0cm,fill=gray!20!white]}
+\def\znode{\node[align=left, draw,thick,circle,black,minimum size=1.0cm,fill=white]}
+
+% IMPORTANT: define relative positions of the subpanels here.  Allows easy shuffling.
+\def\xa{-6.0}
+\def\xb{-2.7}
+\def\xc{2.4}
+
+\huge
+
+\begin{tikzpicture}[scale=3, >=triangle 45, triangle/.style = {fill=white, regular polygon, regular polygon sides=3 }]%,transform canvas={scale=0.8}]
+
+% panel A
+\xnode (x) at (\xa+2,-2.0) {{\bf $x$}};
+\znode (z) at (\xa+2,0.0) {$z$};
+\node (a0) at (\xa+0.5,0.0) {$\alpha$};
+\node (a) at (\xa+0.5,-2.0) {$\beta$};
+  
+\draw[thick,-{Latex[length=0.5cm]}] (z)--(x);
+\draw[thick,-{Latex[length=0.5cm]}] (a0)--(z);
+\draw[thick,-{Latex[length=0.5cm]}] (a)--(x);
+ \node[rectangle,draw=black, thick, rounded corners, fit=(x),inner sep=3.5mm](plate1) {};
+ 
+\node (zx) at (\xa+2,-4.5) {\huge $p(z | x_1,...,x_N) $};
+ \node (post) at (\xa+2,-3.0) {};
+\draw[thick,dashed,-{Latex[length=0.5cm]}] (post)--(zx); 
+  
+\end{tikzpicture}
