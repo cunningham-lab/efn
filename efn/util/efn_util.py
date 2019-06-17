@@ -60,7 +60,7 @@ def get_savedir(
     param_net_input_type,
     K,
     M,
-    flow_dict,
+    arch_dict,
     param_net_hps,
     give_hint,
     random_seed,
@@ -79,7 +79,7 @@ def get_savedir(
                 'data':       The data itself.
             K (int): Number of distributions per gradient descent batch during training.
             M (int): Number of samples per distribution per batch during training.
-            flow_dict (dict): Specifies structure of approximating density network.
+            arch_dict (dict): Specifies structure of approximating density network.
             param_net_hps (dict): Parameter network hyperparameters.
             give_hint (bool): Provide hint to parameter network.
             random_seed (int): Tensorflow random seed for initialization.
@@ -92,7 +92,7 @@ def get_savedir(
     resdir = "models/%s/" % dir_str
     eta_str = get_dist_str(family.eta_dist)
     give_hint_str = "giveHint_" if give_hint else ""
-    archstring = get_archstring(flow_dict)
+    archstring = get_archstring(arch_dict)
 
     if param_net_input_type in ["eta", ""]:
         substr = ""
@@ -164,12 +164,12 @@ def model_opt_hps(exp_fam, D):
     scale_layer = False
 
     if exp_fam == "normal":
-        TIF_flow_type = "AffineFlowLayer"
+        flow_type = "AffineFlow"
         nlayers = 1
         lr_order = -3
     else:
         # flow type
-        TIF_flow_type = "PlanarFlowLayer"
+        flow_type = "PlanarFlow"
 
         # number of layers
         if exp_fam == "inv_wishart":
@@ -209,7 +209,7 @@ def model_opt_hps(exp_fam, D):
             else:
                 lr_order = -3
 
-    return TIF_flow_type, nlayers, scale_layer, lr_order
+    return flow_type, nlayers, scale_layer, lr_order
 
 
 def get_param_network_upl(
