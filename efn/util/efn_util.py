@@ -18,7 +18,6 @@ import numpy as np
 import time
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import pairwise_kernels
-import statsmodels.sandbox.distributions.mv_normal as mvd
 import scipy.io as soio
 import os
 import re
@@ -208,8 +207,7 @@ def model_opt_hps(exp_fam, D):
                 lr_order = -4
             else:
                 lr_order = -3
-
-    return TIF_flow_type, nlayers, scale_layer, lr_order
+return TIF_flow_type, nlayers, scale_layer, lr_order
 
 
 def get_param_network_upl(
