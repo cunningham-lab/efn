@@ -25,7 +25,7 @@ from sklearn.metrics import pairwise_distances
 from statsmodels.tsa.ar_model import AR
 from efn.util.efn_util import (
     get_savedir,
-    construct_param_network,
+    parameter_network,
     cost_fn,
     check_convergence,
     setup_param_logging,
@@ -33,20 +33,20 @@ from efn.util.efn_util import (
     test_convergence,
 )
 from tf_util.tf_util import (
-    connect_density_network,
-    construct_density_network,
-    count_params,
+    density_network,
     memory_extension,
 )
+
+from tf_util.normalizing_flows import count_params
 
 
 def train_efn(
     family,
-    flow_dict,
-    param_net_input_type,
-    K,
-    M,
-    stochastic_eta,
+    arch_dict,
+    param_net_input_type="eta",
+    K=100,
+    M=1000,
+    stochastic_eta=True,
     give_hint=False,
     lr_order=-3,
     dist_seed=0,
@@ -61,7 +61,7 @@ def train_efn(
 
         Args:
             family (obj): Instance of tf_util.families.Family.
-            flow_dict (dict): Specifies structure of approximating density network.
+            arch_dict (dict): Specifies structure of approximating density network.
             param_net_input_type (str): Specifies input to param network.
                 'eta':        Give full eta to parameter network.
                 'prior':      Part of eta that is prior-dependent.
@@ -121,17 +121,6 @@ def train_efn(
         param_net_input_type, give_hint
     )
 
-    # Declare isotropic gaussian input placeholder.
-    W = tf.placeholder(tf.float64, shape=(None, None, D_Z, None), name="W")
-    p0 = tf.reduce_prod(
-        tf.exp((-tf.square(W)) / 2.0) / np.sqrt(2.0 * np.pi), axis=[2, 3]
-    )
-    base_log_q_z = tf.log(p0[:, :])
-
-    # Assemble density network.
-    flow_layers, num_theta_params = construct_density_network(flow_dict, D_Z, family.T)
-    flow_layers, num_theta_params = family.map_to_support(flow_layers, num_theta_params)
-
     # Set number of layers in the parameter network.
     if family.name == "normal":
         L = MVN_LAYERS
@@ -139,6 +128,10 @@ def train_efn(
         # We use square root scaling of layer count with density network dimensionality,
         # while enforcing a minimum of MIN_LAYERS layers.
         L = max(int(np.ceil(np.sqrt(D_Z))), MIN_LAYERS)
+
+    # Get the total number of parameters in the density network.
+    num_theta_params = count_params(arch_dict, D_Z)
+
     # The number of units per layer is a linear interpolation between the dimensionality
     # of the parameter network input and the number of parameters in the density network.
     upl_tau = None
@@ -148,10 +141,29 @@ def train_efn(
     )
     param_net_hps = {"L": L, "upl": upl}
 
+    # Declare isotropic gaussian input placeholder.
+    W = tf.placeholder(tf.float64, shape=(None, None, D_Z), name="W")
+    p0 = tf.reduce_prod(
+        tf.exp((-tf.square(W)) / 2.0) / np.sqrt(2.0 * np.pi), axis=2
+    )
+    base_log_q_z = tf.log(p0)
+
     # Declare EFN input placeholders.
     eta = tf.placeholder(tf.float64, shape=(None, num_suff_stats))
     param_net_input = tf.placeholder(tf.float64, shape=(None, num_param_net_inputs))
     T_z_input = tf.placeholder(tf.float64, shape=(None, num_T_z_inputs))
+
+    # Construct the parameter network.
+    theta = parameter_network(family, arch_dict, param_net_hps, param_net_input)
+
+    # Support mapping
+    if (family.has_support_map):
+        support_mapping = family.support_mapping
+    else:
+        support_mapping = None
+
+    # Assemble density network.
+    Z, sum_log_det_jacobians, flow_layers = density_network(W, arch_dict, support_mapping, theta=theta)
 
     if not stochastic_eta:
         # Use the same fixed training and testing eta lattice.
@@ -183,7 +195,7 @@ def train_efn(
         param_net_input_type,
         K,
         M,
-        flow_dict,
+        arch_dict,
         param_net_hps,
         give_hint,
         random_seed,
@@ -193,17 +205,14 @@ def train_efn(
         print("Making directory %s" % savedir)
         os.makedirs(savedir)
 
-    # Construct the parameter network.
-    theta = construct_param_network(param_net_input, K, flow_layers, param_net_hps)
-
     # Connect parameter network to the density network.
-    Z, sum_log_det_jacobian, Z_by_layer = connect_density_network(W, flow_layers, theta)
-    log_q_zs = base_log_q_z - sum_log_det_jacobian
+    log_q_zs = base_log_q_z - sum_log_det_jacobians
 
     all_params = tf.trainable_variables()
     nparams = len(all_params)
 
     # Compute family-specific sufficient statistics and log base measure on samples.
+    Z_by_layer = [] # TODO this should be updated in density_network()
     T_z = family.compute_suff_stats(Z, Z_by_layer, T_z_input)
     log_h_z = family.compute_log_base_measure(Z)
 
@@ -261,7 +270,7 @@ def train_efn(
         sess.run(init_op)
 
         # compute R^2, KL, and elbo for training set
-        w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0)
+        w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
         if stochastic_eta:
             _eta, _param_net_input, _T_z_input, eta_draw_params = family.draw_etas(
                 K, param_net_input_type, give_hint
@@ -299,7 +308,7 @@ def train_efn(
         print("Starting EFN optimization.")
         while i < max_iters:
             # Draw a new noise tensor.
-            w_i = np.random.normal(np.zeros((K, M, D_Z, family.T)), 1.0)
+            w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
             # Draw a new set of K etas from the eta prior (unless fixed).
             if stochastic_eta:
                 _eta, _param_net_input, _T_z_input, eta_draw_params = family.draw_etas(
@@ -349,7 +358,7 @@ def train_efn(
                 start_time = time.time()
 
                 # compute R^2, KL, and elbo for training set
-                w_i = np.random.normal(np.zeros((K, M_DIAG, D_Z, family.T)), 1.0)
+                w_i = np.random.normal(np.zeros((K, M_DIAG, D_Z)), 1.0)
                 feed_dict_train = {
                     W: w_i,
                     eta: _eta,

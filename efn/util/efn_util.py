@@ -31,23 +31,9 @@ from scipy.stats import (
     invwishart,
     truncnorm,
 )
-from tf_util.flows import (
-    AffineFlowLayer,
-    PlanarFlowLayer,
-    RadialFlowLayer,
-    SimplexBijectionLayer,
-    CholProdLayer,
-    StructuredSpinnerLayer,
-    StructuredSpinnerTanhLayer,
-    TanhLayer,
-    ExpLayer,
-    SoftPlusLayer,
-    GP_EP_CondRegLayer,
-    GP_Layer,
-    AR_Layer,
-    VAR_Layer,
-    FullyConnectedFlowLayer,
-    ElemMultLayer,
+from tf_util.normalizing_flows import (
+    get_flow_class, 
+    get_num_flow_params,
 )
 
 p_eps = 10e-6
@@ -157,11 +143,11 @@ def model_opt_hps(exp_fam, D):
         Returns:
             TIF_flow_type (str): Specification of time-invariant flow network class.
             nlayers (int): Number of layers in the time-invariant flow network.
-            scale_layer (bool): An initial element-wise scaling layer is used if True.
+            post_affine (bool): Elemwise mult and shift are used at end of flow.
             lr_order (float): Order of magnitude of the learning rate for Adam optimizer.
 
         """
-    scale_layer = False
+    post_affine = False
 
     if exp_fam == "normal":
         flow_type = "AffineFlow"
@@ -209,7 +195,7 @@ def model_opt_hps(exp_fam, D):
             else:
                 lr_order = -3
 
-    return flow_type, nlayers, scale_layer, lr_order
+    return flow_type, nlayers, post_affine, lr_order
 
 
 def get_param_network_upl(
@@ -258,65 +244,89 @@ def get_param_network_upl(
     return upl_param_net
 
 
-def construct_param_network(param_net_input, K, flow_layers, param_net_hps):
+def parameter_network(family, arch_dict, param_net_hps, param_net_input):
     """Instantiate and connect layers of the parameter network.
 
         The parameter network (parameterized by phi in EFN paper) maps natural parameters
         eta to the parameters of the the density network theta.
 
         Args:
+            family (obj): Instance of tf_util.families.Family.
+            arch_dict (dict): Specifies structure of approximating density network.
+            param_net_hps (dict): Parameter network hyperparameters.
             param_net_input (tf.placeholder): Usually this is a (K X|eta|) tensor holding
                                               eta for each of the K distributions.
                                               Sometimes we provide hints for the parameter
                                               network in addition to eta, which are
                                               concatenated onto the end.
-            K (int): Number of distributions.
-            flow_layers (list): List of layers of the density network.
-            param_net_hps (dict): Parameter network hyperparameters.
 
         Returns:
             theta (tf.Tensor): Output of the parameter network.
 
     """
-
+    K = tf.shape(param_net_input)[0]
     L_theta = param_net_hps["L"]
     upl_theta = param_net_hps["upl"]
-    L_flow = len(flow_layers)
     h = param_net_input
     for i in range(L_theta):
         with tf.variable_scope("ParamNetLayer%d" % (i + 1)):
             h = tf.layers.dense(h, upl_theta[i], activation=tf.nn.tanh)
 
     out_dim = h.shape[1]
-    print(out_dim)
 
     theta = []
-    for i in range(L_flow):
-        layer = flow_layers[i]
-        layer_name, param_names, param_dims, _, _ = layer.get_layer_info()
-        nparams = len(param_names)
-        layer_i_params = []
-        # read each parameter out of the last layer.
-        for j in range(nparams):
-            num_elems = np.prod(param_dims[j])
-            A_shape = (out_dim, num_elems)
-            b_shape = (1, num_elems)
-            A_ij = tf.get_variable(
-                layer_name + "_" + param_names[j] + "_A",
-                shape=A_shape,
+    flow_class = get_flow_class(arch_dict["flow_type"])
+    num_params_i = get_num_flow_params(flow_class, family.D_Z)
+    with tf.variable_scope("ParamNetReadout"):
+        for i in range(arch_dict['repeats']):
+            A_i = tf.get_variable(
+                "layer%d_A" % (i+1),
+                shape=(out_dim, num_params_i),
                 dtype=tf.float64,
                 initializer=tf.glorot_uniform_initializer(),
             )
-            b_ij = tf.get_variable(
-                layer_name + "_" + param_names[j] + "_b",
-                shape=b_shape,
+            b_i = tf.get_variable(
+                "layer%d_b" % (i+1),
+                shape=(1, num_params_i),
                 dtype=tf.float64,
                 initializer=tf.glorot_uniform_initializer(),
             )
-            param_ij = tf.matmul(h, A_ij) + b_ij
-            param_ij = tf.reshape(param_ij, (K,) + param_dims[j])
-            layer_i_params.append(param_ij)
-        theta.append(layer_i_params)
+            params_i = tf.matmul(h, A_i) + b_i
+            theta.append(params_i)
+
+    if (arch_dict['post_affine']):
+        # elem mult
+        A_em = tf.get_variable(
+            "em_A" % (i+1),
+            shape=(out_dim, family.D_Z),
+            dtype=tf.float64,
+            initializer=tf.glorot_uniform_initializer(),
+        )
+        b_em = tf.get_variable(
+            "em_b" % (i+1),
+            shape=(1, family.D_Z),
+            dtype=tf.float64,
+            initializer=tf.glorot_uniform_initializer(),
+        )
+        params_em = tf.matmul(h, A_em) + b_em
+        theta.append(params_em)
+
+        # shift
+        A_s = tf.get_variable(
+            "s_A" % (i+1),
+            shape=(out_dim, family.D_Z),
+            dtype=tf.float64,
+            initializer=tf.glorot_uniform_initializer(),
+        )
+        b_s = tf.get_variable(
+            "s_b" % (i+1),
+            shape=(1, family.D_Z),
+            dtype=tf.float64,
+            initializer=tf.glorot_uniform_initializer(),
+        )
+        params_s = tf.matmul(h, A_s) + b_s
+        theta.append(params_s)
+        
     return theta
 
 

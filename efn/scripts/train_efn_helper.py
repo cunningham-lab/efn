@@ -28,16 +28,19 @@ give_hint = int(sys.argv[3]) == 1
 random_seed = int(sys.argv[4])
 dir_str = str(sys.argv[5])
 
-TIF_flow_type, nlayers, scale_layer, lr_order = model_opt_hps(exp_fam, D)
+flow_type, nlayers, post_affine, lr_order = model_opt_hps(exp_fam, D)
 fam_class = family_from_str(exp_fam)
 
 family = fam_class(D)
-flow_dict = {
-    "latent_dynamics": None,
-    "TIF_flow_type": TIF_flow_type,
+
+arch_dict = {
+    "D":family.D_Z,
+    "K":1,
+    "post_affine":post_affine,
+    "flow_type": flow_type,
     "repeats": nlayers,
-    "scale_layer": scale_layer,
 }
+
 param_net_input_type = "eta"
 K_eta = 100
 M_eta = 1000
@@ -49,7 +52,7 @@ check_rate = 100
 
 train_efn(
     family,
-    flow_dict,
+    arch_dict,
     param_net_input_type,
     K_eta,
     M_eta,
