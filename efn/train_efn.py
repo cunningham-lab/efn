@@ -130,7 +130,7 @@ def train_efn(
         L = max(int(np.ceil(np.sqrt(D_Z))), MIN_LAYERS)
 
     # Get the total number of parameters in the density network.
-    num_theta_params = count_params(arch_dict, D_Z)
+    num_theta_params = count_params(arch_dict)
 
     # The number of units per layer is a linear interpolation between the dimensionality
     # of the parameter network input and the number of parameters in the density network.
