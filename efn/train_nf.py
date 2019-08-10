@@ -83,6 +83,9 @@ def train_nf(
     # model diagnostics as optimization progresses.
     OPT_COMPRESS_FAC = 16
 
+    # Save fisher information matrix
+    FIM = True
+
     # Reset tf graph, and set random seeds.
     tf.reset_default_graph()
     tf.set_random_seed(random_seed)
@@ -138,10 +141,46 @@ def train_nf(
     Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict, support_mapping)
     log_q_zs = base_log_q_z - sum_log_det_jacobian
 
+    # recored permutations of they exist
+    final_thetas = {};
+    for i in range(len(flow_layers)):
+        flow_layer = flow_layers[i]
+        if (flow_layer.name == 'PermutationFlow'):
+            final_thetas.update({'DensityNetwork/Layer%d/perm_inds' % (i+1):flow_layer.inds})
+    print('Saved', final_thetas.keys())
+
+    
+    if (FIM):
+        if (arch_dict['flow_type'] == 'RealNVP'):
+            print('computing inverse of realNVP')
+            Z_INV = Z
+            layer_ind = len(flow_layers) - 1
+            if (family.has_support_map):
+                support_mapping = flow_layers[layer_ind]
+                Z_INV = support_mapping.inverse(Z_INV)
+                layer_ind = layer_ind - 1
+
+            if (arch_dict['post_affine']):
+                # unshift
+                shift_layer = flow_layers[layer_ind]
+                Z_INV = (Z_INV - tf.expand_dims(shift_layer.b, 1))
+                layer_ind = layer_ind - 1
+
+                # unmult
+                elem_mult_layer = flow_layers[layer_ind]
+                Z_INV = Z_INV / tf.expand_dims(elem_mult_layer.a, 1)
+                layer_ind = layer_ind - 1
+
+            while (layer_ind > -1):
+                layer = flow_layers[layer_ind]
+                Z_INV = layer.inverse(Z_INV)
+                layer_ind -= 1
+
+        else:
+            Z_INV = tf.placeholder(tf.float64, (1,))
+
     all_params = tf.trainable_variables()
     nparams = len(all_params)
-
-    saver = tf.train.Saver(all_params)
 
     Z_by_layer = []
     # Compute family-specific sufficient statistics and log base measure on samples.
@@ -164,9 +203,13 @@ def train_nf(
     # Add inputs and outputs of NF to saved tf model.
     tf.add_to_collection("W", W)
     tf.add_to_collection("Z", Z)
+    if (FIM):
+        tf.add_to_collection("Z_INV", Z_INV)
     tf.add_to_collection("eta", eta)
     tf.add_to_collection("log_q_zs", log_q_zs)
     tf.add_to_collection("T_z_input", T_z_input)
+
+    saver = tf.train.Saver(all_params)
 
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
     train_step = optimizer.apply_gradients(grads_and_vars)
@@ -251,6 +294,7 @@ def train_nf(
 
             # Save model periodically.
             if np.mod(i, model_save_every) == 0:
+                print("Saving model at iter %d." % i)
                 saver.save(sess, savedir + "model")
 
             # Log and print diagnostic information periodically.
@@ -321,10 +365,10 @@ def train_nf(
 
         # Save model.
         print("Saving model before exitting.")
+        print("Saving model at iter %d." % i)
         saver.save(sess, savedir + "model")
 
         # save parameters
-        final_thetas = {};
         for i in range(nparams):
             final_thetas.update({all_params[i].name:sess.run(all_params[i])});
 
@@ -332,10 +376,6 @@ def train_nf(
                 savedir + "theta.npz",
                 theta=final_thetas
             )
-
-    summary_writer.flush();
-
-
 
     # Save training diagnostics and model info.
     if i < max_iters:
