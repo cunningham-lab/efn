@@ -141,12 +141,30 @@ def train_nf(
     Z, sum_log_det_jacobian, flow_layers = density_network(W, arch_dict, support_mapping)
     log_q_zs = base_log_q_z - sum_log_det_jacobian
 
-    # recored permutations of they exist
+    # Permutations and batch norms
     final_thetas = {};
+    batch_norm_mus = []
+    batch_norm_sigmas = []
+    batch_norm_layer_means = []
+    batch_norm_layer_vars = []
+    _batch_norm_mus = []
+    _batch_norm_sigmas = []
+    batch_norm = False
     for i in range(len(flow_layers)):
         flow_layer = flow_layers[i]
         if (flow_layer.name == 'PermutationFlow'):
             final_thetas.update({'DensityNetwork/Layer%d/perm_inds' % (i+1):flow_layer.inds})
+        if (flow_layer.name == 'RealNVP' and flow_layer.batch_norm):
+            batch_norm = True
+            num_masks = arch_dict['real_nvp_arch']['num_masks']
+            for j in range(num_masks):
+                batch_norm_mus.append(flow_layer.mus[j])
+                batch_norm_sigmas.append(flow_layer.sigmas[j])
+                batch_norm_layer_means.append(flow_layer.layer_means[j])
+                batch_norm_layer_vars.append(flow_layer.layer_vars[j])
+                _batch_norm_mus.append(np.zeros((D_Z,)))
+                _batch_norm_sigmas.append(np.ones((D_Z,)))
+                
     print('Saved', final_thetas.keys())
 
     
@@ -248,6 +266,17 @@ def train_nf(
         # compute R^2, KL, and elbo
         w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
         feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
+
+        # Initialize the batch norms.  Iteratively run out the coupling layers.
+        if (batch_norm):
+            print('Initializing batch norm parameters.')
+            num_batch_norms = len(batch_norm_mus)
+            for j in range(num_batch_norms):
+                _batch_norm_mus[j] = sess.run(batch_norm_layer_means[j], feed_dict)
+                _batch_norm_sigmas[j] = np.sqrt(sess.run(batch_norm_layer_vars[j], feed_dict))
+                feed_dict.update({batch_norm_mus[j]:_batch_norm_mus[j]})
+                feed_dict.update({batch_norm_sigmas[j]:_batch_norm_sigmas[j]})
+
         summary = sess.run(summary_op, feed_dict)
         summary_writer.add_summary(summary, 0)
         train_elbos[check_it, :], train_R2s[check_it, :], train_KLs[
@@ -264,7 +293,7 @@ def train_nf(
         while i < max_iters:
             # Draw a new noise tensor.
             w_i = np.random.normal(np.zeros((K, M, D_Z)), 1.0)
-            feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
+            feed_dict.update({W: w_i})
 
             if profile:
                 # Time a single gradient step.
@@ -280,10 +309,26 @@ def train_nf(
                 # Take a gradient step.
                 if np.mod(i, check_rate) == 0:
                     start_time = time.time()
-                ts, cost_i, _cost_grads, _R2s, _T_z, summary = sess.run(
-                    [train_step, cost, cost_grad, R2s, T_z, summary_op],
-                    feed_dict,
-                )
+
+                args = [train_step, cost, cost_grad, R2s, T_z, summary_op]
+                if (batch_norm):
+                    args += batch_norm_layer_means + batch_norm_layer_vars
+                _args = sess.run(args, feed_dict)
+                cost_i = _args[1]
+                _cost_grads = _args[2]
+                _R2s = _args[3]
+                _T_z = _args[4]
+                summary = _args[5]
+
+                # Update batch norm params
+                if (batch_norm):
+                    mom = 0.99
+
+                    _batch_norm_list = _args[6:]
+                    for j in range(num_batch_norms):
+                        _batch_norm_mus[j] = mom*_batch_norm_mus[j] + (1.0-mom)*_batch_norm_list[j]
+                        _batch_norm_sigmas[j] = mom*_batch_norm_sigmas[j] + (1.0-mom)*np.sqrt(_batch_norm_list[j+num_batch_norms])
+
                 if np.mod(i, check_rate) == 0:
                     end_time = time.time()
                     print("iter %d took %f seconds" % (i + 1, end_time - start_time))
@@ -303,7 +348,7 @@ def train_nf(
                 print(savedir)
                 print("it = %d " % (i + 1))
                 w_i = np.random.normal(np.zeros((K, M_DIAG, D_Z)), 1.0)
-                feed_dict = {W: w_i, eta: _eta, T_z_input: _T_z_input}
+                feed_dict.update({W: w_i})
                 train_elbos[check_it, :], train_R2s[check_it, :], train_KLs[
                     check_it, :
                 ], train_Z = family.batch_diagnostics(
@@ -354,6 +399,11 @@ def train_nf(
                     )
                     array_cur_len = 2 * array_cur_len
 
+            if (batch_norm):
+                for j in range(num_batch_norms):
+                    feed_dict.update({batch_norm_mus[j]:_batch_norm_mus[j]})
+                    feed_dict.update({batch_norm_sigmas[j]:_batch_norm_sigmas[j]})
+
             sys.stdout.flush()
             i += 1
 
@@ -371,6 +421,9 @@ def train_nf(
         # save parameters
         for i in range(nparams):
             final_thetas.update({all_params[i].name:sess.run(all_params[i])});
+            for j in range(num_batch_norms):
+                final_thetas.update({'DensityNetwork/batch_norm_mu%d' % (j+1):_batch_norm_mus[j]})
+                final_thetas.update({'DensityNetwork/batch_norm_sigma%d' % (j+1):_batch_norm_sigmas[j]})
 
         np.savez(
                 savedir + "theta.npz",
