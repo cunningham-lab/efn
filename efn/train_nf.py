@@ -314,7 +314,7 @@ def train_nf(
                     args += [batch_norm_layer_means, batch_norm_layer_vars]
                 _args = sess.run(args, feed_dict)
                 cost_i = _args[1]
-                _cost_grads = _args[2]
+                _cost_rads = _args[2]
                 _R2s = _args[3]
                 _T_z = _args[4]
                 summary = _args[5]
