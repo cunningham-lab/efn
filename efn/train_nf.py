@@ -69,6 +69,7 @@ def train_nf(
 
     # Learn a single (K=1) distribution with an NF.
     K = 1
+    D_Z = family.D_Z
 
     # Convergence criteria: training elbos are averaged over windows of WSIZE
     # diagnostic checks.  If the elbo hasn't decreased more than DELTA_THRESH,
@@ -99,11 +100,9 @@ def train_nf(
     model_save_every = 5000
     tb_save_params = False
 
-    # Get the dimensionality of various components of the EFN given the parameter
-    # network input type, and whether or not a hint is given to the param network.
-    D_Z, num_suff_stats, num_param_net_inputs, num_T_z_inputs = family.get_efn_dims(
-        "eta", False
-    )
+    # Get the dimensionality of various components of the EFN given the parameter 
+    # network input type, and whether or not a hint is given to the param network.  
+    D_Z, num_suff_stats, num_param_net_inputs, num_T_z_inputs = family.get_efn_dims( "eta", False)
 
     # Declare isotropic gaussian input placeholder.
     W = tf.placeholder(tf.float64, shape=(None, None, D_Z), name="W")
@@ -312,7 +311,7 @@ def train_nf(
 
                 args = [train_step, cost, cost_grad, R2s, T_z, summary_op]
                 if (batch_norm):
-                    args += batch_norm_layer_means + batch_norm_layer_vars
+                    args += [batch_norm_layer_means, batch_norm_layer_vars]
                 _args = sess.run(args, feed_dict)
                 cost_i = _args[1]
                 _cost_grads = _args[2]
@@ -324,10 +323,11 @@ def train_nf(
                 if (batch_norm):
                     mom = 0.99
 
-                    _batch_norm_list = _args[6:]
+                    _batch_norm_layer_means = _args[6]
+                    _batch_norm_layer_vars = _args[7]
                     for j in range(num_batch_norms):
-                        _batch_norm_mus[j] = mom*_batch_norm_mus[j] + (1.0-mom)*_batch_norm_list[j]
-                        _batch_norm_sigmas[j] = mom*_batch_norm_sigmas[j] + (1.0-mom)*np.sqrt(_batch_norm_list[j+num_batch_norms])
+                        _batch_norm_mus[j] = mom*_batch_norm_mus[j] + (1.0-mom)*_batch_norm_layer_means[j]
+                        _batch_norm_sigmas[j] = mom*_batch_norm_sigmas[j] + (1.0-mom)*np.sqrt(_batch_norm_layer_vars[j])
 
                 if np.mod(i, check_rate) == 0:
                     end_time = time.time()
