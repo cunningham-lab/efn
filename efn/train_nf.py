@@ -41,7 +41,6 @@ def train_nf(
     arch_dict,
     M=1000,
     lr_order=-3,
-    mo=0.99,
     random_seed=0,
     min_iters=100000,
     max_iters=1000000,
@@ -58,7 +57,6 @@ def train_nf(
             arch_dict (dict): Specifies structure of approximating density network.
             M (int): Number of samples per distribution per gradient descent batch.
             lr_order (float): Adam learning rate is 10^(lr_order).
-            mo (float): Batch norm momentum parameter when applicable (e.g. RealNVP).
             random_seed (int): Tensorflow random seed for initialization.
             min_iters (int): Minimum number of training interations.
             max_iters (int): Maximum number of training iterations.
@@ -323,6 +321,7 @@ def train_nf(
 
                 # Update batch norm params
                 if (batch_norm):
+                    mo = arch_dict['mo']
                     _batch_norm_layer_means = _args[6]
                     _batch_norm_layer_vars = _args[7]
                     for j in range(num_batch_norms):
