@@ -420,10 +420,10 @@ def train_nf(
         # save parameters
         for i in range(nparams):
             final_thetas.update({all_params[i].name:sess.run(all_params[i])});
-            if (batch_norm):
-                for j in range(num_batch_norms):
-                    final_thetas.update({'DensityNetwork/batch_norm_mu%d' % (j+1):_batch_norm_mus[j]})
-                    final_thetas.update({'DensityNetwork/batch_norm_sigma%d' % (j+1):_batch_norm_sigmas[j]})
+        if (batch_norm):
+            for j in range(num_batch_norms):
+                final_thetas.update({'DensityNetwork/batch_norm_mu%d' % (j+1):_batch_norm_mus[j]})
+                final_thetas.update({'DensityNetwork/batch_norm_sigma%d' % (j+1):_batch_norm_sigmas[j]})
 
         np.savez(
                 savedir + "theta.npz",
