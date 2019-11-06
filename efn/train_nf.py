@@ -166,7 +166,8 @@ def train_nf(
                 
     print('Saved', final_thetas.keys())
 
-    
+   
+    """
     if (FIM):
         if (arch_dict['flow_type'] == 'RealNVP'):
             print('computing inverse of realNVP')
@@ -195,6 +196,25 @@ def train_nf(
 
         else:
             Z_INV = tf.placeholder(tf.float64, (1,))
+    """
+
+    # Compute inverse of dgm if known
+    Z_input = tf.placeholder(tf.float64, (1,None,D_Z))
+    if (FIM):
+        if (arch_dict['flow_type'] == 'RealNVP'):
+            print('computing inverse of realNVP')
+            Z_INV = Z_input
+            layer_ind = len(flow_layers) - 1
+            while (layer_ind > -1):
+                layer = flow_layers[layer_ind]
+                Z_INV = layer.inverse(Z_INV)
+                layer_ind -= 1
+
+        else:
+            Z_INV = tf.placeholder(tf.float64, (1,))
+
+    print('Z_input', Z_input)
+    print('Z_INV', Z_INV)
 
     all_params = tf.trainable_variables()
     nparams = len(all_params)
@@ -221,6 +241,7 @@ def train_nf(
     tf.add_to_collection("W", W)
     tf.add_to_collection("Z", Z)
     if (FIM):
+        tf.add_to_collection("Z_input", Z_input)
         tf.add_to_collection("Z_INV", Z_INV)
     tf.add_to_collection("eta", eta)
     tf.add_to_collection("log_q_zs", log_q_zs)
