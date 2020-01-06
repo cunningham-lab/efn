@@ -41,11 +41,11 @@ six=1.11.0=py36_1
 statsmodels=0.9.0
 sqlite=3.25.2
 tensorboard=1.11.0
-tensorflow=1.11.0
-tensorflow-base=1.11.0
+tensorflow=1.15.0
+tensorflow-base=1.15.0
 termcolor=1.1.0=py36_1
 tk=8.6.8
-werkzeug=0.14.1=py36_0
+werkzeug=0.15.3=py36_0
 wheel=0.32.1=py36_0
 xz=5.2.4
 zlib=1.2.11
