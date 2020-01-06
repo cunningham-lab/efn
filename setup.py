@@ -8,6 +8,6 @@ setup(name='efn',
       author='Sean Bittner',
       author_email='srb2201@columbia.edu',
       packages=['efn', 'efn.util'],
-      install_requires=['tensorflow==1.15', 'numpy', 'statsmodels', \
+      install_requires=['tensorflow==1.15.0', 'numpy', 'statsmodels', \
                         'scipy', 'cvxopt', 'matplotlib', 'scikit-learn'],
      )
